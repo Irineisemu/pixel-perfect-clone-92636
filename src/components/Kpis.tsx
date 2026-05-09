@@ -50,8 +50,7 @@ export function KpiRow({ stats }) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       <Kpi icon="layers" label="Total monitorado"
-        value={stats.totalMonitorado.toLocaleString("pt-BR")} hint="processos ativos"
-        trend={{ dir: "up", label: "+12 esta semana" }}
+        value={stats.totalMonitorado.toLocaleString("pt-BR")} hint={stats.totalMonitorado === 1 ? "alvo ativo" : "alvos ativos"}
         spark={[40,42,41,44,46,48,50,49,52,55,57,58]} />
       <Kpi icon="activity" label="Novas mov. (24h)"
         value={stats.novas24h} hint="desde ontem às 14:32"

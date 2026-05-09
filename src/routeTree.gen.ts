@@ -9,8 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
+import { Route as AlvosRouteImport } from './routes/alvos'
 import { Route as IndexRouteImport } from './routes/index'
 
+const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlvosRoute = AlvosRouteImport.update({
+  id: '/alvos',
+  path: '/alvos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +31,50 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/alvos': typeof AlvosRoute
+  '/configuracoes': typeof ConfiguracoesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/alvos': typeof AlvosRoute
+  '/configuracoes': typeof ConfiguracoesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/alvos': typeof AlvosRoute
+  '/configuracoes': typeof ConfiguracoesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/alvos' | '/configuracoes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/alvos' | '/configuracoes'
+  id: '__root__' | '/' | '/alvos' | '/configuracoes'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AlvosRoute: typeof AlvosRoute
+  ConfiguracoesRoute: typeof ConfiguracoesRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/configuracoes': {
+      id: '/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof ConfiguracoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/alvos': {
+      id: '/alvos'
+      path: '/alvos'
+      fullPath: '/alvos'
+      preLoaderRoute: typeof AlvosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,6 +87,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AlvosRoute: AlvosRoute,
+  ConfiguracoesRoute: ConfiguracoesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

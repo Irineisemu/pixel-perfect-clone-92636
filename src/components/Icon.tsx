@@ -1,7 +1,6 @@
-// Icon component — inline SVG, lucide-style strokes. Single global Icon comp.
-// Usage: <Icon name="search" className="h-4 w-4" />
-(function () {
-  const P = {
+// @ts-nocheck
+// Icon component — inline SVG, lucide-style strokes.
+const P = {
     // outline strokes; 24x24, stroke=currentColor 2 px, round caps.
     search: 'M11 4a7 7 0 1 0 4.95 11.95L21 21M11 18a7 7 0 0 1-7-7',
     bell: 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0',

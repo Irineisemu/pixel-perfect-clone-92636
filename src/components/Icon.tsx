@@ -54,20 +54,18 @@ const P = {
     flag: 'M4 22V4a1 1 0 0 1 1-1h12l-2 5 2 5H5M4 22h6',
   };
 
-  function Icon({ name, className = "h-4 w-4", strokeWidth = 2, ...rest }) {
-    const d = P[name];
-    if (!d) return null;
-    const paths = d.split(/(?<=Z)|(?=M)/i).filter(Boolean);
-    return (
-      <svg
-        viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round"
-        className={className} aria-hidden="true" {...rest}
-      >
-        {paths.map((p, i) => <path key={i} d={p.trim()} />)}
-      </svg>
-    );
-  }
-
-  window.Icon = Icon;
-})();
+export function Icon({ name, className = "h-4 w-4", strokeWidth = 2, ...rest }) {
+  const d = P[name];
+  if (!d) return null;
+  const paths = d.split(/(?<=Z)|(?=M)/i).filter(Boolean);
+  return (
+    <svg
+      viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round"
+      className={className} aria-hidden="true" {...rest}
+    >
+      {paths.map((p, i) => <path key={i} d={p.trim()} />)}
+    </svg>
+  );
+}
+export default Icon;

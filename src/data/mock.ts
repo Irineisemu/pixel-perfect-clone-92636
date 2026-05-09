@@ -1,7 +1,7 @@
-// Mock dataset — wrapped in IIFE to avoid global redeclaration in Babel-inline.
-// Em produção, substituir por chamadas a /api/movimentacoes.
+// @ts-nocheck
+// Mock dataset — ESM port.
 
-(function () {
+{
   const now = new Date("2026-05-09T14:32:00-03:00").getTime();
   const min = 60 * 1000, hr = 60 * min, day = 24 * hr;
   const iso = (offsetMs) => new Date(now - offsetMs).toISOString();

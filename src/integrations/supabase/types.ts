@@ -45,7 +45,7 @@ export type Database = {
         Row: {
           against_state_only: boolean | null
           aliases: string[] | null
-          class_codes: number[] | null
+          class_codes: string[] | null
           cpf_enc: string | null
           cpf_hash: string | null
           created_at: string
@@ -66,7 +66,7 @@ export type Database = {
         Insert: {
           against_state_only?: boolean | null
           aliases?: string[] | null
-          class_codes?: number[] | null
+          class_codes?: string[] | null
           cpf_enc?: string | null
           cpf_hash?: string | null
           created_at?: string
@@ -87,7 +87,7 @@ export type Database = {
         Update: {
           against_state_only?: boolean | null
           aliases?: string[] | null
-          class_codes?: number[] | null
+          class_codes?: string[] | null
           cpf_enc?: string | null
           cpf_hash?: string | null
           created_at?: string

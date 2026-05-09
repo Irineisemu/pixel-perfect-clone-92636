@@ -4,6 +4,20 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+  font-family: "Grafika";
+  src: url("/fonts/Grafika.ttf") format("truetype");
+  font-weight: 400 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Roboto Cond";
+  src: url("/fonts/RobotoBoldCondensed.ttf") format("truetype");
+  font-weight: 400 900;
+  font-stretch: 75% 100%;
+  font-display: swap;
+}
+
 /*
  * Design system definition.
  *

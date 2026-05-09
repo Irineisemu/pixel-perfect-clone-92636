@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Mock } from "../data/mock";
 import { Utils } from "../lib/jr-utils";
 import { useTargets } from "../lib/useTargets";
+import { useAuth } from "../lib/auth";
 import { Header } from "./Header";
 import { KpiRow } from "./Kpis";
 import { Filtros } from "./Filtros";
@@ -41,6 +42,8 @@ function RegrasCard() {
 
 export function AppShell({ route, children }: { route: "inicio" | "alvos" | "configuracoes"; children?: React.ReactNode }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const greetingName = ((user?.user_metadata as any)?.name || user?.email?.split("@")[0] || "advogado(a)").split(" ")[0];
   const onNav = (id: string) => {
     if (id === "inicio") navigate({ to: "/" });
     else if (id === "alvos") navigate({ to: "/alvos" });
@@ -117,8 +120,8 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
     const urgentes = movimentacoes.filter((m) => m.urgencia === "critico" || m.urgencia === "alto").length;
     const tribunaisAtivos = tribunais.filter((t) => t.status === "ativo").length;
     const tribunaisAtrasados = tribunais.filter((t) => t.status !== "ativo").length;
-    return { totalMonitorado: 487, novas24h, urgentes, tribunaisAtivos, tribunaisTotal: tribunais.length, tribunaisAtrasados };
-  }, [movimentacoes, tribunais, NOW]);
+    return { totalMonitorado: targetsCount.active, novas24h, urgentes, tribunaisAtivos, tribunaisTotal: tribunais.length, tribunaisAtrasados };
+  }, [movimentacoes, tribunais, NOW, targetsCount.active]);
 
   const [selected, setSelected] = useState(null);
   const [cmdkOpen, setCmdkOpen] = useState(false);
@@ -154,9 +157,9 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
           <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
             <div>
               <div className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">Painel</div>
-              <h1 className="font-display text-2xl md:text-[28px] tracking-tight text-zinc-900">Bom dia, Helena.</h1>
+              <h1 className="font-display text-2xl md:text-[28px] tracking-tight text-zinc-900">Bom dia, {greetingName}.</h1>
               <p className="text-[13.5px] text-zinc-600 mt-0.5">
-                {stats.novas24h} novas movimentações desde ontem · {stats.urgentes} pedem atenção hoje.
+                Você está monitorando {targetsCount.active} alvo{targetsCount.active !== 1 ? "s" : ""} ativo{targetsCount.active !== 1 ? "s" : ""}.
               </p>
             </div>
             <div className="text-[11.5px] text-zinc-500">

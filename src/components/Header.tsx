@@ -1,11 +1,26 @@
 // @ts-nocheck
 import { useEffect, useState, useRef } from "react";
 import { Icon } from "./Icon";
-import { Mock } from "../data/mock";
 import { Utils } from "../lib/jr-utils";
+import { useAuth } from "../lib/auth";
+import { toast } from "sonner";
+
+function initialsOf(nameOrEmail: string) {
+  const s = (nameOrEmail || "").trim();
+  if (!s) return "?";
+  const parts = s.split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return s.slice(0, 2).toUpperCase();
+}
 
 export function Header({ onOpenCmdK, onNav, route, onOpenAlerts }) {
-  const { usuario } = Mock;
+  const { user } = useAuth();
+  const displayName = (user?.user_metadata as any)?.name || user?.email?.split("@")[0] || "Usuário";
+  const usuario = {
+    nome: displayName,
+    email: user?.email || "",
+    iniciais: initialsOf(displayName),
+  };
   return (
     <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70">
       <div className="flex h-14 items-center gap-3 px-4 md:px-6">
@@ -57,6 +72,7 @@ export function Header({ onOpenCmdK, onNav, route, onOpenAlerts }) {
 function UserMenu({ usuario, onNav }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const { signOut } = useAuth();
   useEffect(() => {
     const onClick = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener("mousedown", onClick);
@@ -79,10 +95,15 @@ function UserMenu({ usuario, onNav }) {
           </div>
           <div className="h-px bg-zinc-100 my-1" />
           <button onClick={() => { onNav("configuracoes"); setOpen(false); }} className="w-full text-left px-3 py-1.5 rounded hover:bg-zinc-50">Configurações de alerta</button>
-          <button className="w-full text-left px-3 py-1.5 rounded hover:bg-zinc-50">Equipe</button>
-          <button className="w-full text-left px-3 py-1.5 rounded hover:bg-zinc-50">Faturamento</button>
           <div className="h-px bg-zinc-100 my-1" />
-          <button className="w-full text-left px-3 py-1.5 rounded hover:bg-zinc-50 text-zinc-600">Sair</button>
+          <button
+            onClick={async () => {
+              setOpen(false);
+              await signOut();
+              toast.success("Sessão encerrada");
+              window.location.href = "/login";
+            }}
+            className="w-full text-left px-3 py-1.5 rounded hover:bg-zinc-50 text-zinc-600">Sair</button>
         </div>
       )}
     </div>

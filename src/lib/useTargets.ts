@@ -2,8 +2,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Mock } from "../data/mock";
 import { Utils, NOW, isProfessor } from "./jr-utils";
-
-const STORAGE_KEY = "jusradar.targets.v1";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./auth";
 
 export function validateCNJNumber(formatted) {
   const clean = String(formatted || "").replace(/\D/g, "");
@@ -77,72 +77,57 @@ export function detectTribunalAlias(cnj) {
   return (map[J] && map[J][TR]) || "";
 }
 
-const SEED: any[] = [
-  { id: "t1", type: "person", active: true, createdAt: Date.now() - 1000*60*60*24*12,
-    full_name: "Maria Clara Andrade", cpf: "", oab: "", qualification: "Professor",
-    aliases: ["Maria C. Andrade"], notes: "Cliente — magistério estadual",
-    stats30d: 18, sparkline: [2,3,1,4,2,1,5] },
-  { id: "t2", type: "process", active: true, createdAt: Date.now() - 1000*60*60*24*30,
-    process_number: "1003421-55.2024.8.26.0100", tribunal_alias: "TJSP", nickname: "Andrade — reintegração",
-    stats30d: 9, sparkline: [0,1,0,2,1,3,2] },
-  { id: "t3", type: "radar", active: true, createdAt: Date.now() - 1000*60*60*24*45,
-    tribunal_aliases: ["TJSP","TJRJ","TJMG"], class_codes: ["Recurso em MS","Ações de Cobrança contra o Estado"],
-    keywords: ["professor","magistério"], against_state_only: true,
-    stats30d: 142, sparkline: [12,18,9,22,15,28,38] },
-  { id: "t4", type: "radar", active: false, createdAt: Date.now() - 1000*60*60*24*60,
-    tribunal_aliases: ["TRF3"], class_codes: ["Liquidação de Sentença"],
-    keywords: ["quintos","incorporação"], against_state_only: true,
-    stats30d: 23, sparkline: [3,2,4,5,3,4,2] },
-  { id: "t5", type: "person", active: true, createdAt: Date.now() - 1000*60*60*24*5,
-    full_name: "João Batista Ferreira", cpf: "", oab: "SP145220", qualification: "Servidor Público",
-    aliases: [], notes: "", stats30d: 6, sparkline: [0,1,2,0,1,1,1] },
-];
+// ---------- Supabase row <-> UI shape ----------
+function rowToUi(r: any) {
+  return {
+    id: r.id,
+    type: r.type,
+    active: r.is_active,
+    createdAt: new Date(r.created_at).getTime(),
+    full_name: r.full_name || "",
+    oab: r.oab || "",
+    qualification: r.qualification || "Outro",
+    aliases: r.aliases || [],
+    process_number: r.process_number || "",
+    tribunal_alias: r.tribunal_alias || "",
+    nickname: r.nickname || "",
+    tribunal_aliases: r.tribunal_aliases || [],
+    class_codes: r.class_codes || [],
+    keywords: r.keywords || [],
+    against_state_only: !!r.against_state_only,
+    cpf: "", // never returned from db
+    notes: "", // not persisted
+    stats30d: 0,
+    sparkline: [0, 0, 0, 0, 0, 0, 0],
+  };
+}
 
-let _state: any[] | null = null;
-const _subs = new Set<(s: any[]) => void>();
+function uiToRow(t: any, userId: string) {
+  const base: any = {
+    user_id: userId,
+    type: t.type,
+    is_active: t.active !== false,
+  };
+  if (t.type === "person") {
+    base.full_name = t.full_name || null;
+    base.oab = t.oab || null;
+    base.qualification = t.qualification || null;
+    base.aliases = t.aliases || [];
+  } else if (t.type === "process") {
+    base.process_number = t.process_number || null;
+    base.tribunal_alias = t.tribunal_alias || null;
+    base.nickname = t.nickname || null;
+  } else if (t.type === "radar") {
+    base.tribunal_aliases = t.tribunal_aliases || [];
+    base.class_codes = t.class_codes || [];
+    base.keywords = t.keywords || [];
+    base.against_state_only = !!t.against_state_only;
+  }
+  return base;
+}
 
-function load(): any[] {
-  if (_state) return _state;
-  if (typeof window === "undefined") return (_state = SEED.slice());
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) { _state = JSON.parse(raw); return _state!; }
-  } catch {}
-  _state = SEED.slice();
-  save();
-  return _state;
-}
-function save() {
-  if (typeof window === "undefined" || !_state) return;
-  try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(_state)); } catch {}
-  _subs.forEach((fn) => fn(_state!));
-}
-function subscribe(fn) { _subs.add(fn); return () => { _subs.delete(fn); }; }
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-async function apiGet() { await sleep(120); return load().slice(); }
-async function apiCreate(t) {
-  await sleep(180);
-  const item = { ...t, id: "t" + Math.random().toString(36).slice(2, 8), createdAt: Date.now(), active: true, stats30d: 0, sparkline: [0,0,0,0,0,0,0] };
-  _state = [item, ...load()];
-  save();
-  return item;
-}
-async function apiUpdate(id, patch) {
-  await sleep(150);
-  _state = load().map((t) => (t.id === id ? { ...t, ...patch } : t));
-  save();
-  return _state!.find((t) => t.id === id);
-}
-async function apiRemove(id) {
-  await sleep(150);
-  _state = load().filter((t) => t.id !== id);
-  save();
-  return true;
-}
 async function apiTest(payload) {
-  await sleep(700);
+  await new Promise((r) => setTimeout(r, 400));
   const mov = Mock.movimentacoes || [];
   const sevenDaysAgo = NOW - 7 * 86400e3;
   let pool = mov.filter((m) => new Date(m.publicadoEm).getTime() >= sevenDaysAgo);
@@ -172,32 +157,93 @@ async function apiTest(payload) {
 }
 
 export function useTargets() {
-  const [items, setItems] = useState<any[]>(() => load());
-  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
+    if (!user) {
+      setItems([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("monitoring_targets")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.error("[useTargets] load", error);
+      setItems([]);
+    } else {
+      setItems((data || []).map(rowToUi));
+    }
+    setLoading(false);
+  }, [user?.id]);
 
   useEffect(() => {
-    const off = subscribe((s) => setItems(s.slice()));
-    setLoading(true);
-    apiGet().then((r) => { setItems(r); setLoading(false); });
-    return () => { off(); };
+    refresh();
+  }, [refresh]);
+
+  const create = useCallback(async (payload) => {
+    if (!user) throw new Error("Não autenticado");
+    const row = uiToRow(payload, user.id);
+    const { data, error } = await supabase
+      .from("monitoring_targets")
+      .insert(row)
+      .select()
+      .single();
+    if (error) throw error;
+    const ui = rowToUi(data);
+    setItems((s) => [ui, ...s]);
+    return ui;
+  }, [user?.id]);
+
+  const update = useCallback(async (id, patch) => {
+    if (!user) throw new Error("Não autenticado");
+    const { data: cur } = await supabase.from("monitoring_targets").select("*").eq("id", id).single();
+    if (!cur) throw new Error("Alvo não encontrado");
+    const merged = { ...rowToUi(cur), ...patch };
+    const row = uiToRow(merged, user.id);
+    if ("active" in patch) row.is_active = patch.active;
+    const { data, error } = await supabase
+      .from("monitoring_targets")
+      .update(row)
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) throw error;
+    const ui = rowToUi(data);
+    setItems((s) => s.map((t) => (t.id === id ? ui : t)));
+    return ui;
+  }, [user?.id]);
+
+  const remove = useCallback(async (id) => {
+    const { error } = await supabase.from("monitoring_targets").delete().eq("id", id);
+    if (error) throw error;
+    setItems((s) => s.filter((t) => t.id !== id));
+    return true;
   }, []);
 
-  const create = useCallback(async (payload) => apiCreate(payload), []);
-  const update = useCallback(async (id, patch) => apiUpdate(id, patch), []);
-  const remove = useCallback(async (id) => apiRemove(id), []);
   const toggle = useCallback(async (id) => {
-    const cur = load().find((t) => t.id === id);
-    return apiUpdate(id, { active: !cur?.active });
-  }, []);
-  const duplicate = useCallback(async (id) => {
-    const cur = load().find((t) => t.id === id);
+    const cur = items.find((t) => t.id === id);
     if (!cur) return null;
-    const { id: _id, createdAt: _c, stats30d: _s, sparkline: _sp, ...rest } = cur;
-    return apiCreate({ ...rest,
+    return update(id, { active: !cur.active });
+  }, [items, update]);
+
+  const duplicate = useCallback(async (id) => {
+    const cur = items.find((t) => t.id === id);
+    if (!cur) return null;
+    const { id: _i, createdAt: _c, stats30d: _s, sparkline: _sp, ...rest } = cur;
+    return create({
+      ...rest,
+      active: true,
       nickname: rest.nickname ? rest.nickname + " (cópia)" : undefined,
-      full_name: rest.full_name ? rest.full_name + " (cópia)" : undefined });
-  }, []);
-  const get = useCallback((id) => load().find((t) => t.id === id) || null, []);
+      full_name: rest.full_name ? rest.full_name + " (cópia)" : undefined,
+    });
+  }, [items, create]);
+
+  const get = useCallback((id) => items.find((t) => t.id === id) || null, [items]);
 
   const counters = useMemo(() => ({
     total: items.length,
@@ -208,7 +254,7 @@ export function useTargets() {
     radarActive: items.filter((t) => t.type === "radar" && t.active).length,
   }), [items]);
 
-  return { items, loading, counters, create, update, remove, toggle, duplicate, get, testCriteria: apiTest };
+  return { items, loading, counters, create, update, remove, toggle, duplicate, get, testCriteria: apiTest, refresh };
 }
 
 export const RADAR_LIMIT = 5;

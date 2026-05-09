@@ -203,5 +203,5 @@ export const Mock = (() => {
 
   const usuario = { nome: "Dra. Helena Costa", iniciais: "HC", email: "helena.costa@costaadv.br" };
 
-  window.Mock = { tribunais, movimentacoes, usuario };
+  return { tribunais, movimentacoes, usuario };
 })();

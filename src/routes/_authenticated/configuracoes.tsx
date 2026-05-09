@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AppShell } from "../components/AppShell";
-import { Configuracoes } from "../pages/Configuracoes";
+import { AppShell } from "../../components/AppShell";
+import { Configuracoes } from "../../pages/Configuracoes";
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
   component: () => (

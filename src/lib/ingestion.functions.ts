@@ -313,7 +313,7 @@ export const replayDeadLetter = createServerFn({ method: "POST" })
   .inputValidator(z.object({ jobIds: z.array(z.string().uuid()).optional() }))
   .handler(async ({ data, context }) => {
     await ensureAdmin(context.userId);
-    const q = supabaseAdmin
+    let q = supabaseAdmin
       .from("ingestion_jobs")
       .update({
         status: "queued",
@@ -323,10 +323,10 @@ export const replayDeadLetter = createServerFn({ method: "POST" })
         last_error_kind: null,
       })
       .eq("status", "dead_letter");
-    if (data.jobIds?.length) q.in("id", data.jobIds);
-    const { error, count } = await q.select("*", { count: "exact" });
+    if (data.jobIds?.length) q = q.in("id", data.jobIds);
+    const { error, data: rows } = await q.select("id");
     if (error) throw error;
-    return { requeued: count ?? 0 };
+    return { requeued: rows?.length ?? 0 };
   });
 
 export const listDeadLetter = createServerFn({ method: "GET" })

@@ -480,8 +480,3 @@ function DiscoveryPage() {
 }
 
 DiscoveryPage.displayName = "DiscoveryPage";
-    <AppShell route="alvos">
-      <Inner />
-    </AppShell>
-  ),
-});

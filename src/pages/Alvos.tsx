@@ -247,6 +247,8 @@ function validate(type, data) {
   } else if (type === "radar") {
     if (!data.tribunal_aliases?.length) e.tribunal_aliases = "Selecione ao menos um tribunal";
     if (!data.class_codes?.length) e.class_codes = "Selecione ao menos uma classe";
+  } else if (type === "lawyer") {
+    return validateLawyer(data);
   }
   return e;
 }

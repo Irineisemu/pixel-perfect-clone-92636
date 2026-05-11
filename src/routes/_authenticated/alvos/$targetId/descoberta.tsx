@@ -480,11 +480,6 @@ function DiscoveryPage() {
 }
 
 DiscoveryPage.displayName = "DiscoveryPage";
-
-// Wrap in AppShell
-const Inner = Route.options.component!;
-Route.update({
-  component: () => (
     <AppShell route="alvos">
       <Inner />
     </AppShell>

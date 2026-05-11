@@ -264,6 +264,7 @@ export const typeMeta = {
   person:  { label: "Pessoa",   icon: "user",      emoji: "👤", chip: "bg-violet-50 text-violet-700 border-violet-200", dot: "bg-violet-500" },
   process: { label: "Processo", icon: "file-text", emoji: "📄", chip: "bg-sky-50 text-sky-700 border-sky-200", dot: "bg-sky-500" },
   radar:   { label: "Radar",    icon: "radio",     emoji: "📡", chip: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-500" },
+  lawyer:  { label: "Advogado", icon: "users",     emoji: "⚖️", chip: "bg-indigo-50 text-indigo-700 border-indigo-200", dot: "bg-indigo-500" },
 };
 
 export const TargetsAPI = {

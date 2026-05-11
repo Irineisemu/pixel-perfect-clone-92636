@@ -1,5 +1,7 @@
 // @ts-nocheck
 import { useState, useMemo, useEffect, useRef } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { Icon } from "../components/Icon";
 import { Utils } from "../lib/jr-utils";
 import { Mock } from "../data/mock";
@@ -7,6 +9,8 @@ import {
   useTargets, validateCNJNumber, validateCPF, maskCPF, maskCNJ, maskOAB,
   detectTribunalAlias, RADAR_LIMIT, CLASS_CODES, QUALIFICATIONS, typeMeta,
 } from "../lib/useTargets";
+import { LawyerTargetForm, validateLawyer } from "../components/LawyerTargetForm";
+import { createLawyerTarget } from "../lib/lawyer.functions";
 
 function Sparkline({ values, className = "h-5 w-16" }) {
   if (!values || values.length === 0) return null;
@@ -243,14 +247,17 @@ function validate(type, data) {
   } else if (type === "radar") {
     if (!data.tribunal_aliases?.length) e.tribunal_aliases = "Selecione ao menos um tribunal";
     if (!data.class_codes?.length) e.class_codes = "Selecione ao menos uma classe";
+  } else if (type === "lawyer") {
+    return validateLawyer(data);
   }
   return e;
 }
 
-function ModalitiesPicker({ selected, onSelect, radarLimitReached }) {
+function ModalitiesPicker({ selected, onSelect, radarLimitReached, lawyerLimitReached }) {
   const items = [
     { id: "person",  emoji: "👤", title: "Monitorar uma pessoa", sub: "Cadastre um cliente, parte adversa ou pessoa de interesse — capture qualquer processo onde apareça." },
     { id: "process", emoji: "📄", title: "Monitorar um processo específico", sub: "Já tenho o número CNJ. Acompanhe cada movimento desse feito específico." },
+    { id: "lawyer",  emoji: "⚖️", title: "Monitorar um advogado (OAB)", sub: "Descubra automaticamente todos os processos do TJRJ em que o advogado figura como representante.", disabled: lawyerLimitReached, disabledMsg: "Limite de 3 advogados atingido" },
     { id: "radar",   emoji: "📡", title: "Criar um radar de captação", sub: "Quero descobrir novos casos por critério — tribunais, classes, palavras-chave.", disabled: radarLimitReached, disabledMsg: "Limite de 5 radares atingido" },
   ];
   return (
@@ -341,12 +348,12 @@ function TestPanel({ state, onRun }) {
   );
 }
 
-function CreateDrawer({ open, mode, initial, onClose, onSaved, radarLimitReached, testCriteria }) {
+function CreateDrawer({ open, mode, initial, onClose, onSaved, radarLimitReached, lawyerLimitReached, testCriteria }) {
   const tribunais = Mock.tribunais;
   const isEdit = mode === "edit";
   const [step, setStep] = useState(isEdit ? 2 : 1);
   const [type, setType] = useState(initial?.type || null);
-  const [drafts, setDrafts] = useState({ person: {}, process: {}, radar: {} });
+  const [drafts, setDrafts] = useState({ person: {}, process: {}, radar: {}, lawyer: { oab_numbers: [], include_inactive: false } });
   const [errors, setErrors] = useState<any>({});
   const [saving, setSaving] = useState(false);
   const [test, setTest] = useState<any>({ open: false, loading: false, result: null, error: null });
@@ -355,11 +362,11 @@ function CreateDrawer({ open, mode, initial, onClose, onSaved, radarLimitReached
     if (!open) return;
     if (isEdit && initial) {
       setType(initial.type);
-      setDrafts({ person: {}, process: {}, radar: {}, [initial.type]: { ...initial } } as any);
+      setDrafts({ person: {}, process: {}, radar: {}, lawyer: { oab_numbers: [], include_inactive: false }, [initial.type]: { ...initial } } as any);
       setStep(2);
     } else {
       setType(null);
-      setDrafts({ person: {}, process: {}, radar: {} });
+      setDrafts({ person: {}, process: {}, radar: {}, lawyer: { oab_numbers: [], include_inactive: false } });
       setErrors({});
       setStep(1);
     }
@@ -389,7 +396,7 @@ function CreateDrawer({ open, mode, initial, onClose, onSaved, radarLimitReached
     }
   };
 
-  const radarBlocked = !isEdit && type === "radar" && radarLimitReached;
+  const radarBlocked = !isEdit && ((type === "radar" && radarLimitReached) || (type === "lawyer" && lawyerLimitReached));
   if (!open) return null;
   const meta = type ? typeMeta[type] : null;
 
@@ -423,12 +430,13 @@ function CreateDrawer({ open, mode, initial, onClose, onSaved, radarLimitReached
 
         <div className="flex-1 overflow-y-auto px-5 py-5">
           {step === 1 ? (
-            <ModalitiesPicker selected={type} onSelect={setType} radarLimitReached={radarLimitReached} />
+            <ModalitiesPicker selected={type} onSelect={setType} radarLimitReached={radarLimitReached} lawyerLimitReached={lawyerLimitReached} />
           ) : (
             <>
               {type === "person"  && <PersonForm  data={data} setData={setData} errors={errors} />}
               {type === "process" && <ProcessForm data={data} setData={setData} errors={errors} tribunais={tribunais} />}
               {type === "radar"   && <RadarForm   data={data} setData={setData} errors={errors} tribunais={tribunais} />}
+              {type === "lawyer"  && <LawyerTargetForm data={data} setData={setData} errors={errors} />}
               {(type === "person" || type === "radar") && (
                 <TestPanel state={test} onRun={onTest} />
               )}
@@ -584,11 +592,15 @@ function ConfirmDialog({ title, body, confirmLabel, onCancel, onConfirm }) {
   );
 }
 
+const LAWYER_LIMIT = 3;
+
 export function Alvos() {
   const { items, counters, create, update, remove, toggle, duplicate, testCriteria } = useTargets();
   const [filter, setFilter] = useState("todos");
   const [drawer, setDrawer] = useState<any>({ open: false, mode: "create", initial: null });
   const [confirm, setConfirm] = useState<any>(null);
+  const navigate = useNavigate();
+  const createLawyer = useServerFn(createLawyerTarget);
 
   const filtered = useMemo(() => {
     if (filter === "todos") return items;
@@ -596,8 +608,43 @@ export function Alvos() {
   }, [items, filter]);
 
   const radarLimitReached = counters.radar >= RADAR_LIMIT;
+  const lawyerCount = (counters as any).lawyer ?? items.filter((t: any) => t.type === "lawyer").length;
+  const lawyerLimitReached = lawyerCount >= LAWYER_LIMIT;
 
   const onSaved = async (payload, editId) => {
+    if (payload.type === "lawyer" && !editId) {
+      try {
+        const res: any = await createLawyer({
+          data: {
+            lawyer_name: payload.lawyer_name,
+            oab_numbers: payload.oab_numbers || [],
+            include_inactive: !!payload.include_inactive,
+          },
+        });
+        if (res?.error === "lawyer_target_limit_reached") {
+          window.dispatchEvent(new CustomEvent("toast", { detail: { kind: "err", msg: `Limite de ${res.limit} advogados atingido` } }));
+          return;
+        }
+        if (res?.error === "oab_already_monitored") {
+          window.dispatchEvent(new CustomEvent("toast", { detail: { kind: "err", msg: "Uma das OABs já está sendo monitorada" } }));
+          return;
+        }
+        if (res?.error === "invalid_oabs") {
+          window.dispatchEvent(new CustomEvent("toast", { detail: { kind: "err", msg: `OAB inválida: ${res.invalid.join(", ")}` } }));
+          return;
+        }
+        if (res?.ok && res.target?.id) {
+          setDrawer({ open: false, mode: "create", initial: null });
+          window.dispatchEvent(new CustomEvent("toast", { detail: { kind: "ok", msg: "Advogado criado · iniciando descoberta" } }));
+          navigate({ to: "/alvos/$targetId/descoberta", params: { targetId: res.target.id } });
+          return;
+        }
+        window.dispatchEvent(new CustomEvent("toast", { detail: { kind: "err", msg: "Falha ao criar alvo" } }));
+      } catch (e: any) {
+        window.dispatchEvent(new CustomEvent("toast", { detail: { kind: "err", msg: String(e?.message || e) } }));
+      }
+      return;
+    }
     if (editId) await update(editId, payload);
     else await create(payload);
     setDrawer({ open: false, mode: "create", initial: null });
@@ -688,6 +735,7 @@ export function Alvos() {
         mode={drawer.mode}
         initial={drawer.initial}
         radarLimitReached={radarLimitReached}
+        lawyerLimitReached={lawyerLimitReached}
         onClose={() => setDrawer({ open: false, mode: "create", initial: null })}
         onSaved={onSaved}
         testCriteria={testCriteria}

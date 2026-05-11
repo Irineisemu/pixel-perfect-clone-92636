@@ -18,6 +18,7 @@ import { Route as AuthenticatedAlvosRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedAdminIngestionRouteImport } from './routes/_authenticated/admin/ingestion'
 import { Route as ApiPublicIngestionTickRouteImport } from './routes/api/public/ingestion/tick'
 import { Route as ApiPublicDiscoveryRefreshRouteImport } from './routes/api/public/discovery/refresh'
+import { Route as AuthenticatedAlvosTargetIdDescobertaRouteImport } from './routes/_authenticated/alvos/$targetId/descoberta'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -66,24 +67,32 @@ const ApiPublicDiscoveryRefreshRoute =
     path: '/api/public/discovery/refresh',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedAlvosTargetIdDescobertaRoute =
+  AuthenticatedAlvosTargetIdDescobertaRouteImport.update({
+    id: '/$targetId/descoberta',
+    path: '/$targetId/descoberta',
+    getParentRoute: () => AuthenticatedAlvosRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
-  '/alvos': typeof AuthenticatedAlvosRoute
+  '/alvos': typeof AuthenticatedAlvosRouteWithChildren
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
+  '/alvos/$targetId/descoberta': typeof AuthenticatedAlvosTargetIdDescobertaRoute
   '/api/public/discovery/refresh': typeof ApiPublicDiscoveryRefreshRoute
   '/api/public/ingestion/tick': typeof ApiPublicIngestionTickRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
-  '/alvos': typeof AuthenticatedAlvosRoute
+  '/alvos': typeof AuthenticatedAlvosRouteWithChildren
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/': typeof AuthenticatedIndexRoute
   '/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
+  '/alvos/$targetId/descoberta': typeof AuthenticatedAlvosTargetIdDescobertaRoute
   '/api/public/discovery/refresh': typeof ApiPublicDiscoveryRefreshRoute
   '/api/public/ingestion/tick': typeof ApiPublicIngestionTickRoute
 }
@@ -92,10 +101,11 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
-  '/_authenticated/alvos': typeof AuthenticatedAlvosRoute
+  '/_authenticated/alvos': typeof AuthenticatedAlvosRouteWithChildren
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
+  '/_authenticated/alvos/$targetId/descoberta': typeof AuthenticatedAlvosTargetIdDescobertaRoute
   '/api/public/discovery/refresh': typeof ApiPublicDiscoveryRefreshRoute
   '/api/public/ingestion/tick': typeof ApiPublicIngestionTickRoute
 }
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/alvos'
     | '/configuracoes'
     | '/admin/ingestion'
+    | '/alvos/$targetId/descoberta'
     | '/api/public/discovery/refresh'
     | '/api/public/ingestion/tick'
   fileRoutesByTo: FileRoutesByTo
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/'
     | '/admin/ingestion'
+    | '/alvos/$targetId/descoberta'
     | '/api/public/discovery/refresh'
     | '/api/public/ingestion/tick'
   id:
@@ -129,6 +141,7 @@ export interface FileRouteTypes {
     | '/_authenticated/configuracoes'
     | '/_authenticated/'
     | '/_authenticated/admin/ingestion'
+    | '/_authenticated/alvos/$targetId/descoberta'
     | '/api/public/discovery/refresh'
     | '/api/public/ingestion/tick'
   fileRoutesById: FileRoutesById
@@ -206,18 +219,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicDiscoveryRefreshRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/alvos/$targetId/descoberta': {
+      id: '/_authenticated/alvos/$targetId/descoberta'
+      path: '/$targetId/descoberta'
+      fullPath: '/alvos/$targetId/descoberta'
+      preLoaderRoute: typeof AuthenticatedAlvosTargetIdDescobertaRouteImport
+      parentRoute: typeof AuthenticatedAlvosRoute
+    }
   }
 }
 
+interface AuthenticatedAlvosRouteChildren {
+  AuthenticatedAlvosTargetIdDescobertaRoute: typeof AuthenticatedAlvosTargetIdDescobertaRoute
+}
+
+const AuthenticatedAlvosRouteChildren: AuthenticatedAlvosRouteChildren = {
+  AuthenticatedAlvosTargetIdDescobertaRoute:
+    AuthenticatedAlvosTargetIdDescobertaRoute,
+}
+
+const AuthenticatedAlvosRouteWithChildren =
+  AuthenticatedAlvosRoute._addFileChildren(AuthenticatedAlvosRouteChildren)
+
 interface AuthenticatedRouteChildren {
-  AuthenticatedAlvosRoute: typeof AuthenticatedAlvosRoute
+  AuthenticatedAlvosRoute: typeof AuthenticatedAlvosRouteWithChildren
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedAdminIngestionRoute: typeof AuthenticatedAdminIngestionRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedAlvosRoute: AuthenticatedAlvosRoute,
+  AuthenticatedAlvosRoute: AuthenticatedAlvosRouteWithChildren,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedAdminIngestionRoute: AuthenticatedAdminIngestionRoute,

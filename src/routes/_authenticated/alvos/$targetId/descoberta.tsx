@@ -1,8 +1,8 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { AppShell } from "../../../components/AppShell";
-import { Icon } from "../../../components/Icon";
+import { AppShell } from "@/components/AppShell";
+import { Icon } from "@/components/Icon";
 import { supabase } from "@/integrations/supabase/client";
 import {
   getDiscoveryStatus,
@@ -11,7 +11,11 @@ import {
 import { formatOABDisplay } from "@/types/targets";
 
 export const Route = createFileRoute("/_authenticated/alvos/$targetId/descoberta")({
-  component: DiscoveryPage,
+  component: () => (
+    <AppShell route="alvos">
+      <DiscoveryPage />
+    </AppShell>
+  ),
 });
 
 type RunStatus = "running" | "completed" | "failed" | "partial";

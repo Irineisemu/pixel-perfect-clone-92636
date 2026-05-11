@@ -251,10 +251,11 @@ function validate(type, data) {
   return e;
 }
 
-function ModalitiesPicker({ selected, onSelect, radarLimitReached }) {
+function ModalitiesPicker({ selected, onSelect, radarLimitReached, lawyerLimitReached }) {
   const items = [
     { id: "person",  emoji: "👤", title: "Monitorar uma pessoa", sub: "Cadastre um cliente, parte adversa ou pessoa de interesse — capture qualquer processo onde apareça." },
     { id: "process", emoji: "📄", title: "Monitorar um processo específico", sub: "Já tenho o número CNJ. Acompanhe cada movimento desse feito específico." },
+    { id: "lawyer",  emoji: "⚖️", title: "Monitorar um advogado (OAB)", sub: "Descubra automaticamente todos os processos do TJRJ em que o advogado figura como representante.", disabled: lawyerLimitReached, disabledMsg: "Limite de 3 advogados atingido" },
     { id: "radar",   emoji: "📡", title: "Criar um radar de captação", sub: "Quero descobrir novos casos por critério — tribunais, classes, palavras-chave.", disabled: radarLimitReached, disabledMsg: "Limite de 5 radares atingido" },
   ];
   return (

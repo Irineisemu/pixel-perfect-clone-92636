@@ -15,6 +15,8 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedAlvosRouteImport } from './routes/_authenticated/alvos'
+import { Route as AuthenticatedAdminIngestionRouteImport } from './routes/_authenticated/admin/ingestion'
+import { Route as ApiPublicIngestionTickRouteImport } from './routes/api/public/ingestion/tick'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -46,6 +48,17 @@ const AuthenticatedAlvosRoute = AuthenticatedAlvosRouteImport.update({
   path: '/alvos',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAdminIngestionRoute =
+  AuthenticatedAdminIngestionRouteImport.update({
+    id: '/admin/ingestion',
+    path: '/admin/ingestion',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const ApiPublicIngestionTickRoute = ApiPublicIngestionTickRouteImport.update({
+  id: '/api/public/ingestion/tick',
+  path: '/api/public/ingestion/tick',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -53,6 +66,8 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/alvos': typeof AuthenticatedAlvosRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
+  '/api/public/ingestion/tick': typeof ApiPublicIngestionTickRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -60,6 +75,8 @@ export interface FileRoutesByTo {
   '/alvos': typeof AuthenticatedAlvosRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/': typeof AuthenticatedIndexRoute
+  '/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
+  '/api/public/ingestion/tick': typeof ApiPublicIngestionTickRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -69,12 +86,28 @@ export interface FileRoutesById {
   '/_authenticated/alvos': typeof AuthenticatedAlvosRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
+  '/api/public/ingestion/tick': typeof ApiPublicIngestionTickRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/signup' | '/alvos' | '/configuracoes'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/alvos'
+    | '/configuracoes'
+    | '/admin/ingestion'
+    | '/api/public/ingestion/tick'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/signup' | '/alvos' | '/configuracoes' | '/'
+  to:
+    | '/login'
+    | '/signup'
+    | '/alvos'
+    | '/configuracoes'
+    | '/'
+    | '/admin/ingestion'
+    | '/api/public/ingestion/tick'
   id:
     | '__root__'
     | '/_authenticated'
@@ -83,12 +116,15 @@ export interface FileRouteTypes {
     | '/_authenticated/alvos'
     | '/_authenticated/configuracoes'
     | '/_authenticated/'
+    | '/_authenticated/admin/ingestion'
+    | '/api/public/ingestion/tick'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
+  ApiPublicIngestionTickRoute: typeof ApiPublicIngestionTickRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -135,6 +171,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAlvosRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/ingestion': {
+      id: '/_authenticated/admin/ingestion'
+      path: '/admin/ingestion'
+      fullPath: '/admin/ingestion'
+      preLoaderRoute: typeof AuthenticatedAdminIngestionRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/api/public/ingestion/tick': {
+      id: '/api/public/ingestion/tick'
+      path: '/api/public/ingestion/tick'
+      fullPath: '/api/public/ingestion/tick'
+      preLoaderRoute: typeof ApiPublicIngestionTickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -142,12 +192,14 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAlvosRoute: typeof AuthenticatedAlvosRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedAdminIngestionRoute: typeof AuthenticatedAdminIngestionRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAlvosRoute: AuthenticatedAlvosRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedAdminIngestionRoute: AuthenticatedAdminIngestionRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -158,6 +210,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
+  ApiPublicIngestionTickRoute: ApiPublicIngestionTickRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

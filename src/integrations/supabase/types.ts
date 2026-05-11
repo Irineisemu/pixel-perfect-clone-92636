@@ -41,6 +41,123 @@ export type Database = {
         }
         Relationships: []
       }
+      circuit_breakers: {
+        Row: {
+          adapter: string
+          failure_count: number
+          failure_window_started_at: string | null
+          half_open_probe_at: string | null
+          last_error: string | null
+          last_outcome: string | null
+          opened_at: string | null
+          state: Database["public"]["Enums"]["circuit_breaker_state"]
+          updated_at: string
+        }
+        Insert: {
+          adapter: string
+          failure_count?: number
+          failure_window_started_at?: string | null
+          half_open_probe_at?: string | null
+          last_error?: string | null
+          last_outcome?: string | null
+          opened_at?: string | null
+          state?: Database["public"]["Enums"]["circuit_breaker_state"]
+          updated_at?: string
+        }
+        Update: {
+          adapter?: string
+          failure_count?: number
+          failure_window_started_at?: string | null
+          half_open_probe_at?: string | null
+          last_error?: string | null
+          last_outcome?: string | null
+          opened_at?: string | null
+          state?: Database["public"]["Enums"]["circuit_breaker_state"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      datajud_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          expires_at: string
+          payload: Json
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          expires_at: string
+          payload: Json
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          expires_at?: string
+          payload?: Json
+        }
+        Relationships: []
+      }
+      ingestion_jobs: {
+        Row: {
+          attempts: number
+          correlation_id: string
+          created_at: string
+          id: string
+          last_error: string | null
+          last_error_kind: string | null
+          locked_by: string | null
+          locked_until: string | null
+          max_attempts: number
+          payload: Json
+          priority: number
+          process_number: string
+          scheduled_for: string
+          status: Database["public"]["Enums"]["ingestion_job_status"]
+          target_ids: string[]
+          tribunal: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          correlation_id?: string
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_error_kind?: string | null
+          locked_by?: string | null
+          locked_until?: string | null
+          max_attempts?: number
+          payload?: Json
+          priority?: number
+          process_number: string
+          scheduled_for?: string
+          status?: Database["public"]["Enums"]["ingestion_job_status"]
+          target_ids?: string[]
+          tribunal: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          correlation_id?: string
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_error_kind?: string | null
+          locked_by?: string | null
+          locked_until?: string | null
+          max_attempts?: number
+          payload?: Json
+          priority?: number
+          process_number?: string
+          scheduled_for?: string
+          status?: Database["public"]["Enums"]["ingestion_job_status"]
+          target_ids?: string[]
+          tribunal?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       monitoring_targets: {
         Row: {
           against_state_only: boolean | null
@@ -250,12 +367,51 @@ export type Database = {
           },
         ]
       }
+      process_updates: {
+        Row: {
+          canonical: Json
+          created_at: string
+          id: string
+          movements_diff: Json
+          movements_hash: string
+          process_id: string | null
+          process_number: string
+          source: Database["public"]["Enums"]["ingestion_source"]
+          tribunal: string
+        }
+        Insert: {
+          canonical: Json
+          created_at?: string
+          id?: string
+          movements_diff?: Json
+          movements_hash: string
+          process_id?: string | null
+          process_number: string
+          source: Database["public"]["Enums"]["ingestion_source"]
+          tribunal: string
+        }
+        Update: {
+          canonical?: Json
+          created_at?: string
+          id?: string
+          movements_diff?: Json
+          movements_hash?: string
+          process_id?: string | null
+          process_number?: string
+          source?: Database["public"]["Enums"]["ingestion_source"]
+          tribunal?: string
+        }
+        Relationships: []
+      }
       processes: {
         Row: {
           class_code: number | null
           created_at: string
           id: string
           last_known_movements_hash: string | null
+          last_source_used:
+            | Database["public"]["Enums"]["ingestion_source"]
+            | null
           last_synced_at: string | null
           parties_json: Json | null
           process_number: string
@@ -267,6 +423,9 @@ export type Database = {
           created_at?: string
           id?: string
           last_known_movements_hash?: string | null
+          last_source_used?:
+            | Database["public"]["Enums"]["ingestion_source"]
+            | null
           last_synced_at?: string | null
           parties_json?: Json | null
           process_number: string
@@ -278,6 +437,9 @@ export type Database = {
           created_at?: string
           id?: string
           last_known_movements_hash?: string | null
+          last_source_used?:
+            | Database["public"]["Enums"]["ingestion_source"]
+            | null
           last_synced_at?: string | null
           parties_json?: Json | null
           process_number?: string
@@ -327,6 +489,66 @@ export type Database = {
           phone_enc?: string | null
           tz?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      rate_limit_buckets: {
+        Row: {
+          bucket_key: string
+          capacity: number
+          refill_per_sec: number
+          tokens: number
+          updated_at: string
+        }
+        Insert: {
+          bucket_key: string
+          capacity: number
+          refill_per_sec: number
+          tokens: number
+          updated_at?: string
+        }
+        Update: {
+          bucket_key?: string
+          capacity?: number
+          refill_per_sec?: number
+          tokens?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      raw_payloads: {
+        Row: {
+          correlation_id: string | null
+          fetched_at: string
+          http_status: number | null
+          id: string
+          latency_ms: number | null
+          payload: Json
+          process_number: string
+          source: Database["public"]["Enums"]["ingestion_source"]
+          tribunal: string
+        }
+        Insert: {
+          correlation_id?: string | null
+          fetched_at?: string
+          http_status?: number | null
+          id?: string
+          latency_ms?: number | null
+          payload: Json
+          process_number: string
+          source: Database["public"]["Enums"]["ingestion_source"]
+          tribunal: string
+        }
+        Update: {
+          correlation_id?: string | null
+          fetched_at?: string
+          http_status?: number | null
+          id?: string
+          latency_ms?: number | null
+          payload?: Json
+          process_number?: string
+          source?: Database["public"]["Enums"]["ingestion_source"]
+          tribunal?: string
         }
         Relationships: []
       }
@@ -390,14 +612,93 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      consume_rate_limit: {
+        Args: {
+          _capacity: number
+          _key: string
+          _refill_per_sec: number
+          _tokens?: number
+        }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      pick_ingestion_jobs: {
+        Args: {
+          _limit?: number
+          _lock_seconds?: number
+          _statuses: Database["public"]["Enums"]["ingestion_job_status"][]
+          _worker: string
+        }
+        Returns: {
+          attempts: number
+          correlation_id: string
+          created_at: string
+          id: string
+          last_error: string | null
+          last_error_kind: string | null
+          locked_by: string | null
+          locked_until: string | null
+          max_attempts: number
+          payload: Json
+          priority: number
+          process_number: string
+          scheduled_for: string
+          status: Database["public"]["Enums"]["ingestion_job_status"]
+          target_ids: string[]
+          tribunal: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "ingestion_jobs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
     }
     Enums: {
+      app_role: "admin" | "operator" | "user"
+      circuit_breaker_state: "closed" | "open" | "half_open"
+      ingestion_job_status:
+        | "queued"
+        | "processing"
+        | "needs_scraping"
+        | "done"
+        | "failed"
+        | "dead_letter"
+      ingestion_source: "datajud" | "tjsp_esaj" | "manual"
       movement_urgency: "critical" | "high" | "medium" | "info"
       notification_channel: "email" | "whatsapp"
       notification_frequency: "instant" | "daily" | "weekly"
@@ -539,6 +840,17 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "operator", "user"],
+      circuit_breaker_state: ["closed", "open", "half_open"],
+      ingestion_job_status: [
+        "queued",
+        "processing",
+        "needs_scraping",
+        "done",
+        "failed",
+        "dead_letter",
+      ],
+      ingestion_source: ["datajud", "tjsp_esaj", "manual"],
       movement_urgency: ["critical", "high", "medium", "info"],
       notification_channel: ["email", "whatsapp"],
       notification_frequency: ["instant", "daily", "weekly"],

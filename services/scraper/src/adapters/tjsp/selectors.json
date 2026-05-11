@@ -1,0 +1,16 @@
+{
+  "form": {
+    "input": "#numeroDigitoAnoUnificado",
+    "originSelect": "#foroNumeroUnificado",
+    "submit": "#botaoConsultarProcessos"
+  },
+  "process": {
+    "classe": "#classeProcesso",
+    "assunto": "#assuntoProcesso",
+    "movimentacoesTable": "#tabelaTodasMovimentacoes",
+    "partesTable": "#tableTodasPartes"
+  },
+  "blocked": {
+    "titlePatterns": ["captcha", "cloudflare", "acesso negado", "blocked", "indisponivel"]
+  }
+}

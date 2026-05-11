@@ -262,8 +262,8 @@ async function emitProcessUpdate(
     process_number: canonical.processNumber,
     tribunal: canonical.tribunalAlias,
     source: canonical.source,
-    canonical: canonical as unknown as object,
-    movements_diff: movementsDiff as unknown as object,
+    canonical: JSON.parse(JSON.stringify(canonical)),
+    movements_diff: JSON.parse(JSON.stringify(movementsDiff)),
     movements_hash: canonical.movementsHash,
   });
 }

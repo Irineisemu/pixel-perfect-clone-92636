@@ -430,12 +430,13 @@ function CreateDrawer({ open, mode, initial, onClose, onSaved, radarLimitReached
 
         <div className="flex-1 overflow-y-auto px-5 py-5">
           {step === 1 ? (
-            <ModalitiesPicker selected={type} onSelect={setType} radarLimitReached={radarLimitReached} />
+            <ModalitiesPicker selected={type} onSelect={setType} radarLimitReached={radarLimitReached} lawyerLimitReached={lawyerLimitReached} />
           ) : (
             <>
               {type === "person"  && <PersonForm  data={data} setData={setData} errors={errors} />}
               {type === "process" && <ProcessForm data={data} setData={setData} errors={errors} tribunais={tribunais} />}
               {type === "radar"   && <RadarForm   data={data} setData={setData} errors={errors} tribunais={tribunais} />}
+              {type === "lawyer"  && <LawyerTargetForm data={data} setData={setData} errors={errors} />}
               {(type === "person" || type === "radar") && (
                 <TestPanel state={test} onRun={onTest} />
               )}

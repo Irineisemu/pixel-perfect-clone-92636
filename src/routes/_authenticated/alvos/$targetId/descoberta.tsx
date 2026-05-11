@@ -92,7 +92,7 @@ function formatElapsed(startIso: string, endIso?: string | null): string {
 
 function DiscoveryPage() {
   const { targetId } = Route.useParams();
-  const router = useRouter();
+  
   const fetchStatus = useServerFn(getDiscoveryStatus);
   const rediscover = useServerFn(triggerRediscovery);
 

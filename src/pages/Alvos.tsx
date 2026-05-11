@@ -396,7 +396,7 @@ function CreateDrawer({ open, mode, initial, onClose, onSaved, radarLimitReached
     }
   };
 
-  const radarBlocked = !isEdit && type === "radar" && radarLimitReached;
+  const radarBlocked = !isEdit && ((type === "radar" && radarLimitReached) || (type === "lawyer" && lawyerLimitReached));
   if (!open) return null;
   const meta = type ? typeMeta[type] : null;
 

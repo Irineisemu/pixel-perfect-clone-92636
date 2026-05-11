@@ -517,8 +517,8 @@ async function upsertProcessAndLink(
       process_number: processNumber,
       tribunal: tribunalAlias,
       source: "datajud",
-      canonical: source as object,
-      movements_diff: movements as object,
+      canonical: JSON.parse(JSON.stringify(source)),
+      movements_diff: JSON.parse(JSON.stringify(movements)),
       movements_hash: movementsHash,
       is_initial_discovery: isInitial,
     });

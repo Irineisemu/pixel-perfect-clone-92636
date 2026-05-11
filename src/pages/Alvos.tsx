@@ -592,11 +592,15 @@ function ConfirmDialog({ title, body, confirmLabel, onCancel, onConfirm }) {
   );
 }
 
+const LAWYER_LIMIT = 3;
+
 export function Alvos() {
   const { items, counters, create, update, remove, toggle, duplicate, testCriteria } = useTargets();
   const [filter, setFilter] = useState("todos");
   const [drawer, setDrawer] = useState<any>({ open: false, mode: "create", initial: null });
   const [confirm, setConfirm] = useState<any>(null);
+  const navigate = useNavigate();
+  const createLawyer = useServerFn(createLawyerTarget);
 
   const filtered = useMemo(() => {
     if (filter === "todos") return items;
@@ -604,8 +608,43 @@ export function Alvos() {
   }, [items, filter]);
 
   const radarLimitReached = counters.radar >= RADAR_LIMIT;
+  const lawyerCount = (counters as any).lawyer ?? items.filter((t: any) => t.type === "lawyer").length;
+  const lawyerLimitReached = lawyerCount >= LAWYER_LIMIT;
 
   const onSaved = async (payload, editId) => {
+    if (payload.type === "lawyer" && !editId) {
+      try {
+        const res: any = await createLawyer({
+          data: {
+            lawyer_name: payload.lawyer_name,
+            oab_numbers: payload.oab_numbers || [],
+            include_inactive: !!payload.include_inactive,
+          },
+        });
+        if (res?.error === "lawyer_target_limit_reached") {
+          window.dispatchEvent(new CustomEvent("toast", { detail: { kind: "err", msg: `Limite de ${res.limit} advogados atingido` } }));
+          return;
+        }
+        if (res?.error === "oab_already_monitored") {
+          window.dispatchEvent(new CustomEvent("toast", { detail: { kind: "err", msg: "Uma das OABs já está sendo monitorada" } }));
+          return;
+        }
+        if (res?.error === "invalid_oabs") {
+          window.dispatchEvent(new CustomEvent("toast", { detail: { kind: "err", msg: `OAB inválida: ${res.invalid.join(", ")}` } }));
+          return;
+        }
+        if (res?.ok && res.target?.id) {
+          setDrawer({ open: false, mode: "create", initial: null });
+          window.dispatchEvent(new CustomEvent("toast", { detail: { kind: "ok", msg: "Advogado criado · iniciando descoberta" } }));
+          navigate({ to: "/alvos/$targetId/descoberta", params: { targetId: res.target.id } });
+          return;
+        }
+        window.dispatchEvent(new CustomEvent("toast", { detail: { kind: "err", msg: "Falha ao criar alvo" } }));
+      } catch (e: any) {
+        window.dispatchEvent(new CustomEvent("toast", { detail: { kind: "err", msg: String(e?.message || e) } }));
+      }
+      return;
+    }
     if (editId) await update(editId, payload);
     else await create(payload);
     setDrawer({ open: false, mode: "create", initial: null });

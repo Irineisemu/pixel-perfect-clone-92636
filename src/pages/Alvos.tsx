@@ -1,5 +1,7 @@
 // @ts-nocheck
 import { useState, useMemo, useEffect, useRef } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { Icon } from "../components/Icon";
 import { Utils } from "../lib/jr-utils";
 import { Mock } from "../data/mock";
@@ -7,6 +9,8 @@ import {
   useTargets, validateCNJNumber, validateCPF, maskCPF, maskCNJ, maskOAB,
   detectTribunalAlias, RADAR_LIMIT, CLASS_CODES, QUALIFICATIONS, typeMeta,
 } from "../lib/useTargets";
+import { LawyerTargetForm, validateLawyer } from "../components/LawyerTargetForm";
+import { createLawyerTarget } from "../lib/lawyer.functions";
 
 function Sparkline({ values, className = "h-5 w-16" }) {
   if (!values || values.length === 0) return null;

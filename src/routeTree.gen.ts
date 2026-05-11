@@ -17,6 +17,7 @@ import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authen
 import { Route as AuthenticatedAlvosRouteImport } from './routes/_authenticated/alvos'
 import { Route as AuthenticatedAdminIngestionRouteImport } from './routes/_authenticated/admin/ingestion'
 import { Route as ApiPublicIngestionTickRouteImport } from './routes/api/public/ingestion/tick'
+import { Route as ApiPublicDiscoveryRefreshRouteImport } from './routes/api/public/discovery/refresh'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -59,6 +60,12 @@ const ApiPublicIngestionTickRoute = ApiPublicIngestionTickRouteImport.update({
   path: '/api/public/ingestion/tick',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicDiscoveryRefreshRoute =
+  ApiPublicDiscoveryRefreshRouteImport.update({
+    id: '/api/public/discovery/refresh',
+    path: '/api/public/discovery/refresh',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/alvos': typeof AuthenticatedAlvosRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
+  '/api/public/discovery/refresh': typeof ApiPublicDiscoveryRefreshRoute
   '/api/public/ingestion/tick': typeof ApiPublicIngestionTickRoute
 }
 export interface FileRoutesByTo {
@@ -76,6 +84,7 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/': typeof AuthenticatedIndexRoute
   '/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
+  '/api/public/discovery/refresh': typeof ApiPublicDiscoveryRefreshRoute
   '/api/public/ingestion/tick': typeof ApiPublicIngestionTickRoute
 }
 export interface FileRoutesById {
@@ -87,6 +96,7 @@ export interface FileRoutesById {
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
+  '/api/public/discovery/refresh': typeof ApiPublicDiscoveryRefreshRoute
   '/api/public/ingestion/tick': typeof ApiPublicIngestionTickRoute
 }
 export interface FileRouteTypes {
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/alvos'
     | '/configuracoes'
     | '/admin/ingestion'
+    | '/api/public/discovery/refresh'
     | '/api/public/ingestion/tick'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/'
     | '/admin/ingestion'
+    | '/api/public/discovery/refresh'
     | '/api/public/ingestion/tick'
   id:
     | '__root__'
@@ -117,6 +129,7 @@ export interface FileRouteTypes {
     | '/_authenticated/configuracoes'
     | '/_authenticated/'
     | '/_authenticated/admin/ingestion'
+    | '/api/public/discovery/refresh'
     | '/api/public/ingestion/tick'
   fileRoutesById: FileRoutesById
 }
@@ -124,6 +137,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
+  ApiPublicDiscoveryRefreshRoute: typeof ApiPublicDiscoveryRefreshRoute
   ApiPublicIngestionTickRoute: typeof ApiPublicIngestionTickRoute
 }
 
@@ -185,6 +199,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicIngestionTickRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/discovery/refresh': {
+      id: '/api/public/discovery/refresh'
+      path: '/api/public/discovery/refresh'
+      fullPath: '/api/public/discovery/refresh'
+      preLoaderRoute: typeof ApiPublicDiscoveryRefreshRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -210,6 +231,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
+  ApiPublicDiscoveryRefreshRoute: ApiPublicDiscoveryRefreshRoute,
   ApiPublicIngestionTickRoute: ApiPublicIngestionTickRoute,
 }
 export const routeTree = rootRouteImport

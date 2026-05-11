@@ -138,8 +138,36 @@ export const processDataJudJobs = createServerFn({ method: "POST" })
       attempts: number;
       max_attempts: number;
       correlation_id: string;
+      kind?: string;
+      payload?: any;
     }>) {
       const start = Date.now();
+      // Dispatch lawyer_discovery jobs to lawyer module
+      if (job.kind === "lawyer_discovery") {
+        try {
+          const { runLawyerDiscoveryJob } = await import("@/lib/lawyer.functions");
+          await runLawyerDiscoveryJob({
+            id: job.id,
+            payload: job.payload ?? {},
+            attempts: job.attempts,
+            max_attempts: job.max_attempts,
+          });
+          results.push({ id: job.id, outcome: "lawyer_done" });
+        } catch (err) {
+          logJson("warn", { event: "lawyer_job_failed", jobId: job.id, error: String(err) });
+          await supabaseAdmin
+            .from("ingestion_jobs")
+            .update({
+              status: job.attempts >= job.max_attempts ? "dead_letter" : "queued",
+              locked_until: null,
+              last_error: String((err as Error).message ?? err).slice(0, 500),
+              last_error_kind: "lawyer_discovery_error",
+            })
+            .eq("id", job.id);
+          results.push({ id: job.id, outcome: "lawyer_failed" });
+        }
+        continue;
+      }
       try {
         const route = await router.route({
           processNumber: job.process_number,

@@ -98,12 +98,63 @@ export type Database = {
         }
         Relationships: []
       }
+      discovery_runs: {
+        Row: {
+          by_oab: Json
+          by_tribunal: Json
+          errors: Json | null
+          finished_at: string | null
+          id: string
+          started_at: string
+          status: string
+          target_id: string
+          total_found: number
+          triggered_by: string
+          user_id: string
+        }
+        Insert: {
+          by_oab?: Json
+          by_tribunal?: Json
+          errors?: Json | null
+          finished_at?: string | null
+          id?: string
+          started_at?: string
+          status?: string
+          target_id: string
+          total_found?: number
+          triggered_by: string
+          user_id: string
+        }
+        Update: {
+          by_oab?: Json
+          by_tribunal?: Json
+          errors?: Json | null
+          finished_at?: string | null
+          id?: string
+          started_at?: string
+          status?: string
+          target_id?: string
+          total_found?: number
+          triggered_by?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discovery_runs_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "monitoring_targets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ingestion_jobs: {
         Row: {
           attempts: number
           correlation_id: string
           created_at: string
           id: string
+          kind: string
           last_error: string | null
           last_error_kind: string | null
           locked_by: string | null
@@ -123,6 +174,7 @@ export type Database = {
           correlation_id?: string
           created_at?: string
           id?: string
+          kind?: string
           last_error?: string | null
           last_error_kind?: string | null
           locked_by?: string | null
@@ -142,6 +194,7 @@ export type Database = {
           correlation_id?: string
           created_at?: string
           id?: string
+          kind?: string
           last_error?: string | null
           last_error_kind?: string | null
           locked_by?: string | null
@@ -162,20 +215,27 @@ export type Database = {
         Row: {
           against_state_only: boolean | null
           aliases: string[] | null
+          auto_discovered: boolean
           class_codes: string[] | null
           cpf_enc: string | null
           cpf_hash: string | null
           created_at: string
+          discovery_status: string | null
           full_name: string | null
           id: string
+          include_inactive: boolean
           is_active: boolean
           keywords: string[] | null
+          last_discovery_at: string | null
+          lawyer_name: string | null
           nickname: string | null
           oab: string | null
+          oab_numbers: string[] | null
           process_number: string | null
           qualification: string | null
           tribunal_alias: string | null
           tribunal_aliases: string[] | null
+          tribunal_scope: string[]
           type: Database["public"]["Enums"]["target_type"]
           updated_at: string
           user_id: string
@@ -183,20 +243,27 @@ export type Database = {
         Insert: {
           against_state_only?: boolean | null
           aliases?: string[] | null
+          auto_discovered?: boolean
           class_codes?: string[] | null
           cpf_enc?: string | null
           cpf_hash?: string | null
           created_at?: string
+          discovery_status?: string | null
           full_name?: string | null
           id?: string
+          include_inactive?: boolean
           is_active?: boolean
           keywords?: string[] | null
+          last_discovery_at?: string | null
+          lawyer_name?: string | null
           nickname?: string | null
           oab?: string | null
+          oab_numbers?: string[] | null
           process_number?: string | null
           qualification?: string | null
           tribunal_alias?: string | null
           tribunal_aliases?: string[] | null
+          tribunal_scope?: string[]
           type: Database["public"]["Enums"]["target_type"]
           updated_at?: string
           user_id: string
@@ -204,20 +271,27 @@ export type Database = {
         Update: {
           against_state_only?: boolean | null
           aliases?: string[] | null
+          auto_discovered?: boolean
           class_codes?: string[] | null
           cpf_enc?: string | null
           cpf_hash?: string | null
           created_at?: string
+          discovery_status?: string | null
           full_name?: string | null
           id?: string
+          include_inactive?: boolean
           is_active?: boolean
           keywords?: string[] | null
+          last_discovery_at?: string | null
+          lawyer_name?: string | null
           nickname?: string | null
           oab?: string | null
+          oab_numbers?: string[] | null
           process_number?: string | null
           qualification?: string | null
           tribunal_alias?: string | null
           tribunal_aliases?: string[] | null
+          tribunal_scope?: string[]
           type?: Database["public"]["Enums"]["target_type"]
           updated_at?: string
           user_id?: string
@@ -372,33 +446,39 @@ export type Database = {
           canonical: Json
           created_at: string
           id: string
+          is_initial_discovery: boolean
           movements_diff: Json
           movements_hash: string
           process_id: string | null
           process_number: string
           source: Database["public"]["Enums"]["ingestion_source"]
+          target_id: string | null
           tribunal: string
         }
         Insert: {
           canonical: Json
           created_at?: string
           id?: string
+          is_initial_discovery?: boolean
           movements_diff?: Json
           movements_hash: string
           process_id?: string | null
           process_number: string
           source: Database["public"]["Enums"]["ingestion_source"]
+          target_id?: string | null
           tribunal: string
         }
         Update: {
           canonical?: Json
           created_at?: string
           id?: string
+          is_initial_discovery?: boolean
           movements_diff?: Json
           movements_hash?: string
           process_id?: string | null
           process_number?: string
           source?: Database["public"]["Enums"]["ingestion_source"]
+          target_id?: string | null
           tribunal?: string
         }
         Relationships: []
@@ -554,19 +634,31 @@ export type Database = {
       }
       target_process_links: {
         Row: {
+          first_linked_at: string
           matched_at: string
+          matched_value: string | null
+          matched_via: string | null
           process_id: string
           target_id: string
+          unlinked_at: string | null
         }
         Insert: {
+          first_linked_at?: string
           matched_at?: string
+          matched_value?: string | null
+          matched_via?: string | null
           process_id: string
           target_id: string
+          unlinked_at?: string | null
         }
         Update: {
+          first_linked_at?: string
           matched_at?: string
+          matched_value?: string | null
+          matched_via?: string | null
           process_id?: string
           target_id?: string
+          unlinked_at?: string | null
         }
         Relationships: [
           {
@@ -666,6 +758,7 @@ export type Database = {
           correlation_id: string
           created_at: string
           id: string
+          kind: string
           last_error: string | null
           last_error_kind: string | null
           locked_by: string | null
@@ -704,7 +797,7 @@ export type Database = {
       notification_frequency: "instant" | "daily" | "weekly"
       notification_status: "queued" | "sent" | "failed" | "dead_letter"
       party_polo: "ativo" | "passivo"
-      target_type: "person" | "process" | "radar"
+      target_type: "person" | "process" | "radar" | "lawyer"
       tribunal_sphere:
         | "estadual"
         | "federal"
@@ -856,7 +949,7 @@ export const Constants = {
       notification_frequency: ["instant", "daily", "weekly"],
       notification_status: ["queued", "sent", "failed", "dead_letter"],
       party_polo: ["ativo", "passivo"],
-      target_type: ["person", "process", "radar"],
+      target_type: ["person", "process", "radar", "lawyer"],
       tribunal_sphere: [
         "estadual",
         "federal",

@@ -735,6 +735,7 @@ export function Alvos() {
         mode={drawer.mode}
         initial={drawer.initial}
         radarLimitReached={radarLimitReached}
+        lawyerLimitReached={lawyerLimitReached}
         onClose={() => setDrawer({ open: false, mode: "create", initial: null })}
         onSaved={onSaved}
         testCriteria={testCriteria}

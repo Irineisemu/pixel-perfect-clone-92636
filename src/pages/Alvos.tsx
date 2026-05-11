@@ -348,12 +348,12 @@ function TestPanel({ state, onRun }) {
   );
 }
 
-function CreateDrawer({ open, mode, initial, onClose, onSaved, radarLimitReached, testCriteria }) {
+function CreateDrawer({ open, mode, initial, onClose, onSaved, radarLimitReached, lawyerLimitReached, testCriteria }) {
   const tribunais = Mock.tribunais;
   const isEdit = mode === "edit";
   const [step, setStep] = useState(isEdit ? 2 : 1);
   const [type, setType] = useState(initial?.type || null);
-  const [drafts, setDrafts] = useState({ person: {}, process: {}, radar: {} });
+  const [drafts, setDrafts] = useState({ person: {}, process: {}, radar: {}, lawyer: { oab_numbers: [], include_inactive: false } });
   const [errors, setErrors] = useState<any>({});
   const [saving, setSaving] = useState(false);
   const [test, setTest] = useState<any>({ open: false, loading: false, result: null, error: null });
@@ -362,11 +362,11 @@ function CreateDrawer({ open, mode, initial, onClose, onSaved, radarLimitReached
     if (!open) return;
     if (isEdit && initial) {
       setType(initial.type);
-      setDrafts({ person: {}, process: {}, radar: {}, [initial.type]: { ...initial } } as any);
+      setDrafts({ person: {}, process: {}, radar: {}, lawyer: { oab_numbers: [], include_inactive: false }, [initial.type]: { ...initial } } as any);
       setStep(2);
     } else {
       setType(null);
-      setDrafts({ person: {}, process: {}, radar: {} });
+      setDrafts({ person: {}, process: {}, radar: {}, lawyer: { oab_numbers: [], include_inactive: false } });
       setErrors({});
       setStep(1);
     }

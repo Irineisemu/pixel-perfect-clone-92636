@@ -8,6 +8,7 @@ import { useAuth } from "../lib/auth";
 import { Header } from "./Header";
 import { KpiRow } from "./Kpis";
 import { Feed } from "./Feed";
+import { DashboardProcesses } from "./DashboardProcesses";
 import { TribunalStatus } from "./TribunalStatus";
 import { Drawer } from "./Drawer";
 import { CmdK } from "./CmdK";
@@ -104,17 +105,7 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
 
           <div className="mt-6 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
             <section className="min-w-0">
-              <Feed items={movements.map((m) => ({
-                id: m.id,
-                numero: "—",
-                resumo: m.text || "",
-                tribunal: "—", tribunalNome: "",
-                tipo: m.text || "Movimento",
-                parte: "", parteQualificacao: "",
-                publicadoEm: m.occurred_at,
-                urgencia: m.urgency === "critical" ? "critico" : m.urgency === "high" ? "alto" : m.urgency === "medium" ? "medio" : "info",
-                contraEstado: false,
-              }))} loading={loading} hasMore={false} onLoadMore={() => {}} onSelect={setSelected} />
+              <DashboardProcesses />
             </section>
 
             <aside className="lg:sticky lg:top-[72px] lg:self-start space-y-4">

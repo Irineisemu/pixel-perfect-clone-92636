@@ -1,66 +1,72 @@
-## Diagnóstico
+## Pre-flight (já validado)
 
-A descoberta NÃO está parada em `pending` por falta de integração — a pipeline completa já existe e foi executada:
+- `DATAJUD_API_KEY` ✅ está nos Secrets (visível em `<secrets>`).
+- `target_process_links` ✅ já tem `matched_via`, `matched_value`, `first_linked_at`, `unlinked_at` e `UNIQUE(target_id, process_id)` (constraint `target_process_links_unique`).
+- RLS ✅ já existe em `processes` (`processes_via_links`) e `target_process_links` (`tpl_select`) com leitura via ownership do target. Nenhuma migration necessária.
 
-```
-createLawyerTarget → startDiscoveryRun → ingestion_jobs(kind=lawyer_discovery)
-   → /api/public/ingestion/tick (pg_cron) → processDataJudJobs
-   → runLawyerDiscoveryJob → searchByOab (DataJud)
-```
+## Observação importante (divergência do briefing)
 
-Verifiquei o banco: o job da OAB `RJ183970` rodou (`status=done`), criou um `discovery_run` que terminou como **`failed`** com este erro do DataJud:
+O projeto **já tem** o pipeline de descoberta funcionando, e não via Edge Function Supabase, mas via:
 
-```
-client 400: query_shard_exception — failed to create query:
-[nested] failed to find nested object under path [partes.representantes]
-```
+- `createLawyerTarget` (server fn) → cria target + `discovery_run` + enfileira `ingestion_jobs`
+- `triggerRediscovery` (server fn) → equivale ao "retry manual"
+- Worker em `/api/public/ingestion/tick` que consome `ingestion_jobs` e roda `runLawyerDiscoveryJob`
+- Adapter `src/ingestion/adapters/datajud/lawyer-search.ts` com fallback nested→flat (corrigido recentemente)
 
-**Causa raiz:** O índice `api_publica_tjrj` NÃO tem mapping `nested` para `partes.representantes`. A query nested retorna HTTP 400. Em `src/ingestion/adapters/datajud/lawyer-search.ts`, o `postQuery` faz `throw new LawyerSearchError("client", 400)` em qualquer 4xx — então o fallback para a variante `flat` em `searchByOab` nunca é alcançado, porque a função explode antes do `extractPage`.
+**Criar uma Edge Function paralela duplicaria infra e quebraria o que está funcionando**. Vou aproveitar o que existe e focar nos gaps reais: o painel `/` não mostra processos vinculados, e não há botão visível para o usuário disparar `triggerRediscovery`.
 
-O spec (Bloco 1, função `processOAB`) descreve fallback baseado em `hits.length===0`, mas a realidade é que o TJRJ rejeita a query com 400. Precisa de fallback baseado em **erro 400 com `query_shard_exception`** também.
+Se você quiser **mesmo** trocar o pipeline por uma Edge Function Deno (porque o worker via `tick` depende de cron externo), me diga e eu replano. Por padrão, sigo com o existente.
 
-Tudo o mais que o spec pede (server functions de discovery e status, polling na UI, persistência idempotente, mascaramento de logs, hard cap, rate-limit, ownership, sem notificações na descoberta inicial) **já está implementado** em `src/lib/lawyer.functions.ts`, `src/ingestion/adapters/datajud/lawyer-search.ts` e `src/routes/_authenticated/alvos/$targetId/descoberta.tsx`. Reescrever tudo do zero como pede o `<deliverable_structure>` seria duplicação destrutiva.
+## Plano (escopo cirúrgico, só UI + uma server fn de leitura)
 
-`DATAJUD_API_KEY` está configurada (verifiquei nos secrets).
+### 1. Server function `getDashboard` (nova)
 
-## Plano cirúrgico
+Arquivo: `src/lib/dashboard.functions.ts`
 
-### 1. `src/ingestion/adapters/datajud/lawyer-search.ts` — fallback robusto
-- Em `searchByOab`, envolver a tentativa nested em `try/catch`. Se cair em `LawyerSearchError` com `kind==="client"` e `httpStatus===400` (sintoma típico de mapping ausente), em vez de propagar, fazer fallback automático para a variante `flat`.
-- Manter o fallback existente baseado em `hits.length===0` (cobre tribunais que respondem 200 vazio em vez de 400).
-- Cachear a variante vencedora como já é feito (`preferVariant`).
+- Protegida por `requireSupabaseAuth`, RLS da própria conexão do usuário.
+- Retorna:
+  - `stats`: `{ totalProcesses, totalLawyers }`
+  - `lawyers`: lista de targets `lawyer` ativos com `discovery_status`, `last_discovery_at`, `oab_numbers`
+  - `processes`: até 50 processos vinculados (join `target_process_links` → `processes`) com tribunal, classe, assuntos, OAB de match, target dono
+  - `hasRunningDiscovery`: boolean (algum lawyer com status `pending`/`running`)
 
-### 2. `src/lib/lawyer.functions.ts` — retry de runs `failed` por mapping
-- Na primeira ocorrência de `client: client 400` em `runLawyerDiscoveryJob`, marcar `last_error_kind="datajud_mapping_400"` no job para diagnóstico (campo já existe).
-- Sem outras mudanças no worker — a lógica de upsert/link/hash/progress está correta e respeita todos os constraints do spec.
+### 2. Refatorar `AppShell` rota `/` (`src/routes/_authenticated/index.tsx` + `src/components/AppShell.tsx`)
 
-### 3. Reprocessar o run que ficou `failed`
-- Após o fix, executar manualmente (via UI no botão "Tentar novamente" ou via `triggerRediscovery`) para a OAB `RJ183970` e validar que processos aparecem.
+Hoje `AppShell` carrega `movements` mock-style e mostra Feed de movimentos. Para a entrega:
 
-### 4. Validação
-SQL pós-fix:
-```sql
--- run mais recente deve ficar 'completed' ou 'partial' com total_found > 0
-SELECT status, total_found, by_oab, errors
-FROM discovery_runs
-WHERE target_id = '448bef0f-0135-4401-8e93-7181ad008d13'
-ORDER BY started_at DESC LIMIT 1;
+- No modo `route="inicio"`, substituir o bloco do `Feed` por um novo componente `<DashboardProcesses>` que consome `getDashboard` via `useServerFn`.
+- Manter o resto (header, KPIs adaptados, sidebar de tribunais).
+- KPIs alimentados por `stats` + contagens existentes.
 
--- vínculos criados
-SELECT COUNT(*) FROM target_process_links
-WHERE target_id = '448bef0f-0135-4401-8e93-7181ad008d13'
-  AND unlinked_at IS NULL;
+### 3. Componente `DashboardProcesses` (novo)
 
--- processos persistidos
-SELECT process_number, last_synced_at FROM processes
-WHERE id IN (
-  SELECT process_id FROM target_process_links
-  WHERE target_id = '448bef0f-0135-4401-8e93-7181ad008d13'
-) LIMIT 5;
-```
+Arquivo: `src/components/DashboardProcesses.tsx`
 
-## Por que NÃO seguir o `<deliverable_structure>` ao pé da letra
+- Lista de cards de advogados com:
+  - Nome, OABs formatadas (`RJ 183.970`)
+  - Status visual: ⏳ pending / 🔄 running / ✓ completed / ⚠ partial / ✗ failed
+  - Botão **"Buscar processos"** quando status ∈ {`null`, `pending`, `failed`, `partial`} (ou re-roda em `completed` se sem links). Chama `triggerRediscovery` (já existe).
+- Lista de processos vinculados (cards: número, classe, assuntos, tribunal, OAB que matchou).
+- Empty states diferenciados (sem advogados / sem processos / descoberta rodando).
+- Auto-refresh (`setInterval` 5s) enquanto `hasRunningDiscovery=true`; para quando termina.
+- Toast de erro/sucesso ao disparar retry.
 
-O spec assume estado zero ("hoje ficam parados com pending porque o código de descoberta ainda não está integrado"). A realidade é que a integração já foi feita em entregas anteriores desta thread (job-queue + tick endpoint + worker + UI de progresso), e a única coisa quebrada é a árvore de fallback de queries DataJud para o TJRJ específico. Recriar `discoverLawyerProcesses`, `getDiscoveryStatus`, `DiscoveryProgress.tsx` etc. duplicaria nomes, conflitaria com o que está em produção e regrediria a arquitetura assíncrona baseada em jobs (que é mais robusta que `queueMicrotask`).
+### 4. Validação manual
 
-Posso seguir o `<deliverable_structure>` literalmente se você quiser, mas recomendo o plano cirúrgico acima.
+- Logar, ir para `/`.
+- Cadastrar um lawyer (já dispara descoberta automaticamente via `createLawyerTarget`).
+- Ver card "🔄 Buscando processos" + página atualizando sozinha.
+- Quando concluir, processos aparecem listados.
+- Para targets antigos em `pending`/`failed`, clicar "Buscar processos" → status vira `running` → processos aparecem.
+
+## Detalhes técnicos
+
+- Usar `supabase` (browser client, RLS) dentro de `getDashboard`? Não — usar `requireSupabaseAuth` + `context.supabase` (cliente autenticado server-side com bearer do usuário, RLS aplica). Padrão já presente no projeto.
+- Cron real do worker (`/api/public/ingestion/tick`): assumido ativo. Se não estiver, a descoberta fica parada em `pending` mesmo após dispatch — fora do escopo desta entrega, mas o botão de retry e o status visual deixam isso evidente.
+- Sem mudanças em schema, RLS, edge functions ou no adapter DataJud.
+
+## Arquivos tocados
+
+- **novo**: `src/lib/dashboard.functions.ts`
+- **novo**: `src/components/DashboardProcesses.tsx`
+- **edit**: `src/components/AppShell.tsx` (substituir Feed por DashboardProcesses no modo `inicio`)

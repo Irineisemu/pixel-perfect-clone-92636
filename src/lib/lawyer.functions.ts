@@ -104,7 +104,14 @@ export const createLawyerTarget = createServerFn({ method: "POST" })
       .single();
     if (insErr || !target) {
       logJson("error", { event: "lawyer_target_insert_failed", error: String(insErr) });
-      throw new Error("failed_to_create_target");
+      throw new Response(
+        JSON.stringify({
+          code: "database_error",
+          message: "Erro ao salvar advogado.",
+          db_error: insErr?.message ?? "unknown",
+        }),
+        { status: 500, headers: { "Content-Type": "application/json" } },
+      );
     }
 
     // Cria discovery_run + enfileira job

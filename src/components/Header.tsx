@@ -88,7 +88,7 @@ function UserMenu({ usuario, onNav }) {
         <Icon name="chevron-down" className="h-3.5 w-3.5 text-zinc-500 hidden sm:block" />
       </button>
       {open && (
-        <div className="absolute right-0 mt-1 w-60 rounded-lg border border-zinc-200 bg-white shadow-lg p-1 text-[13px]">
+        <div className="absolute right-0 mt-1 w-60 rounded-lg border border-zinc-200 bg-white shadow-lg p-1 text-[13px] z-50">
           <div className="px-3 py-2">
             <div className="font-medium text-zinc-900 truncate">{usuario.nome}</div>
             <div className="text-zinc-500 truncate text-xs">{usuario.email}</div>

@@ -46,6 +46,7 @@ export const createLawyerTarget = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => CreateLawyerSchema.parse(input))
   .handler(async ({ data, context }) => {
     const userId = context.userId;
+    console.log("[createLawyerTarget] userId=", userId);
 
     // Normaliza + dedupe OABs
     const normalized = Array.from(
@@ -103,7 +104,14 @@ export const createLawyerTarget = createServerFn({ method: "POST" })
       .single();
     if (insErr || !target) {
       logJson("error", { event: "lawyer_target_insert_failed", error: String(insErr) });
-      throw new Error("failed_to_create_target");
+      throw new Response(
+        JSON.stringify({
+          code: "database_error",
+          message: "Erro ao salvar advogado.",
+          db_error: insErr?.message ?? "unknown",
+        }),
+        { status: 500, headers: { "Content-Type": "application/json" } },
+      );
     }
 
     // Cria discovery_run + enfileira job

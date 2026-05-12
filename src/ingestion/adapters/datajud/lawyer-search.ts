@@ -48,7 +48,7 @@ function sleep(ms: number) {
 function nestedQuery(numero: string, uf: string, searchAfter?: any[] | null) {
   return {
     size: PAGE_SIZE,
-    sort: [{ "@timestamp": { order: "asc" } }, { _id: { order: "asc" } }],
+    sort: [{ "@timestamp": { order: "asc" } }, { "numeroProcesso.keyword": { order: "asc" } }],
     query: {
       nested: {
         path: "partes.representantes",
@@ -69,7 +69,7 @@ function nestedQuery(numero: string, uf: string, searchAfter?: any[] | null) {
 function flatQuery(numero: string, uf: string, searchAfter?: any[] | null) {
   return {
     size: PAGE_SIZE,
-    sort: [{ "@timestamp": { order: "asc" } }, { _id: { order: "asc" } }],
+    sort: [{ "@timestamp": { order: "asc" } }, { "numeroProcesso.keyword": { order: "asc" } }],
     query: {
       bool: {
         must: [

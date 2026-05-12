@@ -378,21 +378,25 @@ function CreateDrawer({ open, mode, initial, onClose, onSaved, radarLimitReached
   const setData = (patch) => setDrafts((d) => ({ ...d, [type]: { ...d[type], ...patch } }));
 
   const onSave = async () => {
-    // Flush de OAB pendente no input antes de validar (evita race com onBlur)
+    let resolvedOabs: string[] | null = null;
+    // Flush de OAB pendente no input antes de validar (evita race com onBlur/setState)
     if (type === "lawyer" && lawyerFormRef.current) {
-      const ok = lawyerFormRef.current.flushPending();
-      if (!ok) {
+      const r = lawyerFormRef.current.flushPending();
+      if (!r.ok) {
         setErrors({ oab_numbers: "Confirme ou corrija a OAB digitada antes de salvar." });
         return;
       }
+      resolvedOabs = r.oabs;
     }
-    // Lê o draft mais recente após o flush
     const current = type ? drafts[type] : {};
-    const e = validate(type, current);
+    const merged = type === "lawyer" && resolvedOabs
+      ? { ...current, oab_numbers: resolvedOabs }
+      : current;
+    const e = validate(type, merged);
     setErrors(e);
     if (Object.keys(e).length) return;
     setSaving(true);
-    const payload = { ...current, type };
+    const payload = { ...merged, type };
     try { await onSaved(payload, isEdit ? initial.id : null); }
     finally { setSaving(false); }
   };

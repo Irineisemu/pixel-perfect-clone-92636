@@ -16,8 +16,8 @@ interface OABInputProps {
 }
 
 export interface OABInputHandle {
-  /** Confirma o texto pendente no input. Retorna true se OK (ou vazio), false se inválido. */
-  flushDraft: () => boolean;
+  /** Confirma o texto pendente. Retorna { ok, tags } com a lista resolvida (já propagada via onChange). */
+  flushDraft: () => { ok: boolean; tags: string[] };
   hasPendingDraft: () => boolean;
 }
 
@@ -54,10 +54,10 @@ export const OABInput = forwardRef<OABInputHandle, OABInputProps>(function OABIn
     return { ok: true, next: [...currentTags, norm] };
   };
 
-  const commitFrom = (raw: string): boolean => {
+  const commitFrom = (raw: string): { ok: boolean; tags: string[] } => {
     if (!raw.trim()) {
       setDraft("");
-      return true;
+      return { ok: true, tags: tags.slice() };
     }
     const parts = raw.split(/[\s,;\n]+/).filter(Boolean);
     let working = tags.slice();
@@ -72,7 +72,7 @@ export const OABInput = forwardRef<OABInputHandle, OABInputProps>(function OABIn
     }
     if (working.length !== tags.length) onChange(working);
     if (allOk) setDraft("");
-    return allOk;
+    return { ok: allOk, tags: working };
   };
 
   useImperativeHandle(

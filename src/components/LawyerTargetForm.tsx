@@ -15,8 +15,8 @@ interface Props {
 }
 
 export interface LawyerTargetFormHandle {
-  /** Confirma qualquer OAB digitada mas não tagueada. Retorna true se OK. */
-  flushPending: () => boolean;
+  /** Confirma OAB digitada e retorna lista resolvida (já propagada via setData). */
+  flushPending: () => { ok: boolean; oabs: string[] };
 }
 
 const Field = ({
@@ -65,9 +65,12 @@ export const LawyerTargetForm = forwardRef<LawyerTargetFormHandle, Props>(
     useImperativeHandle(
       ref,
       () => ({
-        flushPending: () => oabRef.current?.flushDraft() ?? true,
+        flushPending: () => {
+          const r = oabRef.current?.flushDraft();
+          return r ?? { ok: true, oabs: data.oab_numbers || [] };
+        },
       }),
-      [],
+      [data.oab_numbers],
     );
 
     return (

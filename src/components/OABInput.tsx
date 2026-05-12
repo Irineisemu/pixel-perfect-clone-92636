@@ -1,4 +1,4 @@
-import { useState, KeyboardEvent } from "react";
+import { useState, KeyboardEvent, forwardRef, useImperativeHandle } from "react";
 import { Icon } from "./Icon";
 import {
   isValidOAB,
@@ -15,58 +15,79 @@ interface OABInputProps {
   error?: string;
 }
 
+export interface OABInputHandle {
+  /** Confirma o texto pendente. Retorna { ok, tags } com a lista resolvida (já propagada via onChange). */
+  flushDraft: () => { ok: boolean; tags: string[] };
+  hasPendingDraft: () => boolean;
+}
+
 /**
  * Tag-based OAB input.
  * Validates each entry against ^[A-Z]{2}\d{3,7}$ after normalization.
  * Accepts comma, space, Enter or paste-with-multiple as separators.
  */
-export function OABInput({
-  value,
-  onChange,
-  max = 10,
-  ariaLabel = "Adicionar OAB",
-  error,
-}: OABInputProps) {
+export const OABInput = forwardRef<OABInputHandle, OABInputProps>(function OABInput(
+  { value, onChange, max = 10, ariaLabel = "Adicionar OAB", error },
+  ref,
+) {
   const [draft, setDraft] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
 
   const tags = value || [];
 
-  const tryAdd = (raw: string): boolean => {
+  const tryAddInto = (raw: string, currentTags: string[]): { ok: boolean; next: string[] } => {
     const norm = normalizeOAB(raw);
-    if (!norm) return false;
+    if (!norm) return { ok: true, next: currentTags };
     if (!OAB_REGEX.test(norm)) {
       setLocalError(`OAB inválida: "${raw}". Use o formato UF + número (ex.: SP145220).`);
-      return false;
+      return { ok: false, next: currentTags };
     }
-    if (tags.includes(norm)) {
+    if (currentTags.includes(norm)) {
       setLocalError(`OAB ${formatOABDisplay(norm)} já adicionada.`);
-      return false;
+      return { ok: false, next: currentTags };
     }
-    if (tags.length >= max) {
+    if (currentTags.length >= max) {
       setLocalError(`Máximo de ${max} OABs por advogado.`);
-      return false;
+      return { ok: false, next: currentTags };
     }
-    onChange([...tags, norm]);
     setLocalError(null);
-    return true;
+    return { ok: true, next: [...currentTags, norm] };
   };
 
-  const commit = () => {
-    if (!draft.trim()) return;
-    // Suporta múltiplos colados separados por vírgula/espaço/quebra
-    const parts = draft.split(/[\s,;\n]+/).filter(Boolean);
+  const commitFrom = (raw: string): { ok: boolean; tags: string[] } => {
+    if (!raw.trim()) {
+      setDraft("");
+      return { ok: true, tags: tags.slice() };
+    }
+    const parts = raw.split(/[\s,;\n]+/).filter(Boolean);
+    let working = tags.slice();
     let allOk = true;
     for (const p of parts) {
-      if (!tryAdd(p)) allOk = false;
+      const r = tryAddInto(p, working);
+      if (!r.ok) {
+        allOk = false;
+        break;
+      }
+      working = r.next;
     }
+    if (working.length !== tags.length) onChange(working);
     if (allOk) setDraft("");
+    return { ok: allOk, tags: working };
   };
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      flushDraft: () => commitFrom(draft),
+      hasPendingDraft: () => draft.trim().length > 0,
+    }),
+    [draft, tags, max],
+  );
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
-      commit();
+      commitFrom(draft);
     } else if (e.key === "Backspace" && !draft && tags.length) {
       onChange(tags.slice(0, -1));
       setLocalError(null);
@@ -111,7 +132,7 @@ export function OABInput({
             setLocalError(null);
           }}
           onKeyDown={onKeyDown}
-          onBlur={commit}
+          onBlur={() => commitFrom(draft)}
           aria-label={ariaLabel}
           placeholder={tags.length ? "" : "Ex.: SP145220, RJ087410"}
           className="flex-1 min-w-[140px] h-7 px-1 bg-transparent outline-none text-[13px] uppercase placeholder:text-zinc-400 placeholder:normal-case"
@@ -130,6 +151,6 @@ export function OABInput({
       </div>
     </div>
   );
-}
+});
 
 export { isValidOAB, normalizeOAB, formatOABDisplay };

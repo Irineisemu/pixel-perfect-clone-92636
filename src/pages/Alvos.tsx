@@ -9,7 +9,7 @@ import {
   useTargets, validateCNJNumber, validateCPF, maskCPF, maskCNJ, maskOAB,
   detectTribunalAlias, RADAR_LIMIT, CLASS_CODES, QUALIFICATIONS, typeMeta,
 } from "../lib/useTargets";
-import { LawyerTargetForm, validateLawyer } from "../components/LawyerTargetForm";
+import { LawyerTargetForm, LawyerTargetFormHandle, validateLawyer } from "../components/LawyerTargetForm";
 import { createLawyerTarget } from "../lib/lawyer.functions";
 
 function Sparkline({ values, className = "h-5 w-16" }) {
@@ -357,6 +357,7 @@ function CreateDrawer({ open, mode, initial, onClose, onSaved, radarLimitReached
   const [errors, setErrors] = useState<any>({});
   const [saving, setSaving] = useState(false);
   const [test, setTest] = useState<any>({ open: false, loading: false, result: null, error: null });
+  const lawyerFormRef = useRef<LawyerTargetFormHandle | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -377,11 +378,21 @@ function CreateDrawer({ open, mode, initial, onClose, onSaved, radarLimitReached
   const setData = (patch) => setDrafts((d) => ({ ...d, [type]: { ...d[type], ...patch } }));
 
   const onSave = async () => {
-    const e = validate(type, data);
+    // Flush de OAB pendente no input antes de validar (evita race com onBlur)
+    if (type === "lawyer" && lawyerFormRef.current) {
+      const ok = lawyerFormRef.current.flushPending();
+      if (!ok) {
+        setErrors({ oab_numbers: "Confirme ou corrija a OAB digitada antes de salvar." });
+        return;
+      }
+    }
+    // Lê o draft mais recente após o flush
+    const current = type ? drafts[type] : {};
+    const e = validate(type, current);
     setErrors(e);
     if (Object.keys(e).length) return;
     setSaving(true);
-    const payload = { ...data, type };
+    const payload = { ...current, type };
     try { await onSaved(payload, isEdit ? initial.id : null); }
     finally { setSaving(false); }
   };
@@ -436,7 +447,7 @@ function CreateDrawer({ open, mode, initial, onClose, onSaved, radarLimitReached
               {type === "person"  && <PersonForm  data={data} setData={setData} errors={errors} />}
               {type === "process" && <ProcessForm data={data} setData={setData} errors={errors} tribunais={tribunais} />}
               {type === "radar"   && <RadarForm   data={data} setData={setData} errors={errors} tribunais={tribunais} />}
-              {type === "lawyer"  && <LawyerTargetForm data={data} setData={setData} errors={errors} />}
+              {type === "lawyer"  && <LawyerTargetForm ref={lawyerFormRef} data={data} setData={setData} errors={errors} />}
               {(type === "person" || type === "radar") && (
                 <TestPanel state={test} onRun={onTest} />
               )}

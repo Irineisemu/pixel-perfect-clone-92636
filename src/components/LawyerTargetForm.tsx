@@ -67,7 +67,8 @@ export const LawyerTargetForm = forwardRef<LawyerTargetFormHandle, Props>(
       () => ({
         flushPending: () => {
           const r = oabRef.current?.flushDraft();
-          return r ?? { ok: true, oabs: data.oab_numbers || [] };
+          if (!r) return { ok: true, oabs: data.oab_numbers || [] };
+          return { ok: r.ok, oabs: r.tags };
         },
       }),
       [data.oab_numbers],

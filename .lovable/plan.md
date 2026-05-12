@@ -1,51 +1,66 @@
-
 ## Diagnóstico
 
-A server function `createLawyerTarget` (em `src/lib/lawyer.functions.ts`) usa `.middleware([requireSupabaseAuth])`. O middleware (`src/integrations/supabase/auth-middleware.ts`) só lê o header `Authorization: Bearer <token>` da request — se faltar, lança 401.
+A descoberta NÃO está parada em `pending` por falta de integração — a pipeline completa já existe e foi executada:
 
-No frontend, `useServerFn` faz um `fetch` simples para `/_serverFn/<hash>` e **não anexa header nenhum**. A sessão do Supabase fica no `localStorage` (não em cookie), então o servidor nunca vê o token. Resultado: **toda chamada protegida cai em 401**, não só a do lawyer (mesma falha existe em `getDiscoveryStatus`, `triggerRediscovery`, `getIngestionHealth` etc — só não aparecia ainda porque o usuário não tinha exercitado esses caminhos).
+```
+createLawyerTarget → startDiscoveryRun → ingestion_jobs(kind=lawyer_discovery)
+   → /api/public/ingestion/tick (pg_cron) → processDataJudJobs
+   → runLawyerDiscoveryJob → searchByOab (DataJud)
+```
 
-Não falta cookie SSR — o middleware atual é baseado em Bearer. A solução mais cirúrgica é manter o contrato (Bearer token) e adicionar um **client middleware global** que pega `session.access_token` do Supabase e injeta no header antes de cada `_serverFn` sair do navegador.
+Verifiquei o banco: o job da OAB `RJ183970` rodou (`status=done`), criou um `discovery_run` que terminou como **`failed`** com este erro do DataJud:
 
-## Arquivos auditados
+```
+client 400: query_shard_exception — failed to create query:
+[nested] failed to find nested object under path [partes.representantes]
+```
 
-- `src/integrations/supabase/auth-middleware.ts` — middleware server-side, espera `Authorization: Bearer …`.
-- `src/integrations/supabase/client.ts` — browser client com `persistSession: true` em localStorage. ✅
-- `src/integrations/supabase/client.server.ts` — admin (service role). ✅
-- `src/lib/lawyer.functions.ts` — `createLawyerTarget`, `getDiscoveryStatus`, `triggerRediscovery` todos protegidos por `requireSupabaseAuth`.
-- `src/lib/ingestion.functions.ts` — várias funções idem.
-- `src/start.ts` — `createStart` configurado só com `requestMiddleware` server-side; sem `functionMiddleware`.
-- `src/router.tsx`, `src/routes/__root.tsx`, `src/routes/_authenticated.tsx` — sem hook que injete token no fetcher.
-- `src/lib/auth.tsx` — provider mantém sessão no client.
+**Causa raiz:** O índice `api_publica_tjrj` NÃO tem mapping `nested` para `partes.representantes`. A query nested retorna HTTP 400. Em `src/ingestion/adapters/datajud/lawyer-search.ts`, o `postQuery` faz `throw new LawyerSearchError("client", 400)` em qualquer 4xx — então o fallback para a variante `flat` em `searchByOab` nunca é alcançado, porque a função explode antes do `extractPage`.
 
-Conclusão: ninguém anexa Bearer ao `_serverFn`. Esse é o bug.
+O spec (Bloco 1, função `processOAB`) descreve fallback baseado em `hits.length===0`, mas a realidade é que o TJRJ rejeita a query com 400. Precisa de fallback baseado em **erro 400 com `query_shard_exception`** também.
 
-## Plano
+Tudo o mais que o spec pede (server functions de discovery e status, polling na UI, persistência idempotente, mascaramento de logs, hard cap, rate-limit, ownership, sem notificações na descoberta inicial) **já está implementado** em `src/lib/lawyer.functions.ts`, `src/ingestion/adapters/datajud/lawyer-search.ts` e `src/routes/_authenticated/alvos/$targetId/descoberta.tsx`. Reescrever tudo do zero como pede o `<deliverable_structure>` seria duplicação destrutiva.
 
-1. **Criar `src/lib/server-fn-client-middleware.ts`** com um middleware `clientFunctionMiddleware`:
-   - Tipo `function` (`createMiddleware({ type: 'function' })`).
-   - Implementa `.client(async ({ next })`: chama `supabase.auth.getSession()` e, se houver sessão, faz `next({ sendContext: {}, headers: { Authorization: \`Bearer ${session.access_token}\` } })`. Se não houver sessão, chama `next()` sem header (a função protegida vai 401, mas funções públicas continuam OK).
-   - Não tem `.server()` — só roda no browser.
+`DATAJUD_API_KEY` está configurada (verifiquei nos secrets).
 
-2. **Registrar o middleware globalmente em `src/start.ts`** via `createStart(() => ({ requestMiddleware: [errorMiddleware], functionMiddleware: [clientFunctionMiddleware] }))`. Assim toda `createServerFn` herda automaticamente, sem precisar tocar em cada arquivo `.functions.ts`.
+## Plano cirúrgico
 
-3. **Melhorar erros de `createLawyerTarget`** (qualidade): o handler hoje faz `throw new Error("failed_to_create_target")` no caso de insert falhar — substituir por `throw new Response(JSON.stringify({ code, message, db_error }), { status: 500, headers: ... })` para que o front consiga parsear `code`/`message`. Mesmo tratamento para `not_found` em `getDiscoveryStatus`/`triggerRediscovery`.
+### 1. `src/ingestion/adapters/datajud/lawyer-search.ts` — fallback robusto
+- Em `searchByOab`, envolver a tentativa nested em `try/catch`. Se cair em `LawyerSearchError` com `kind==="client"` e `httpStatus===400` (sintoma típico de mapping ausente), em vez de propagar, fazer fallback automático para a variante `flat`.
+- Manter o fallback existente baseado em `hits.length===0` (cobre tribunais que respondem 200 vazio em vez de 400).
+- Cachear a variante vencedora como já é feito (`preferVariant`).
 
-4. **Logs temporários**: adicionar `console.log("[createLawyerTarget] userId=", userId)` no início do handler e `console.log("[clientFnMw] hasSession=", !!session)` no client middleware para confirmar via console + server-function-logs.
+### 2. `src/lib/lawyer.functions.ts` — retry de runs `failed` por mapping
+- Na primeira ocorrência de `client: client 400` em `runLawyerDiscoveryJob`, marcar `last_error_kind="datajud_mapping_400"` no job para diagnóstico (campo já existe).
+- Sem outras mudanças no worker — a lógica de upsert/link/hash/progress está correta e respeita todos os constraints do spec.
 
-5. **Tratamento no `LawyerTargetForm` / `Alvos.tsx`**: o `catch` do `onSave` tenta extrair `err.response?.code`. Garantir que faz `if (err instanceof Response) errorBody = await err.json()` antes de mapear códigos. (Pequena edição no handler do botão Salvar em `Alvos.tsx`.)
+### 3. Reprocessar o run que ficou `failed`
+- Após o fix, executar manualmente (via UI no botão "Tentar novamente" ou via `triggerRediscovery`) para a OAB `RJ183970` e validar que processos aparecem.
 
-## Verificação pós-implementação
+### 4. Validação
+SQL pós-fix:
+```sql
+-- run mais recente deve ficar 'completed' ou 'partial' com total_found > 0
+SELECT status, total_found, by_oab, errors
+FROM discovery_runs
+WHERE target_id = '448bef0f-0135-4401-8e93-7181ad008d13'
+ORDER BY started_at DESC LIMIT 1;
 
-1. Recarregar app, abrir DevTools → Network.
-2. Criar um lawyer com OAB `RJ183970`.
-3. Esperar request `POST /_serverFn/<hash>` → deve ter `Authorization: Bearer ey…` nos request headers.
-4. Resposta 200 + JSON `{ ok: true, target, runId, discovery_url }`.
-5. Redireciona para `/alvos/<id>/descoberta`.
-6. Conferir `server-function-logs` mostrando `[createLawyerTarget] userId=<uuid>`.
+-- vínculos criados
+SELECT COUNT(*) FROM target_process_links
+WHERE target_id = '448bef0f-0135-4401-8e93-7181ad008d13'
+  AND unlinked_at IS NULL;
 
-## Notas
+-- processos persistidos
+SELECT process_number, last_synced_at FROM processes
+WHERE id IN (
+  SELECT process_id FROM target_process_links
+  WHERE target_id = '448bef0f-0135-4401-8e93-7181ad008d13'
+) LIMIT 5;
+```
 
-- Não vamos migrar para `@supabase/ssr` / cookies: o middleware Bearer atual é o padrão deste template e funciona para todas as outras funções; basta destravar o client.
-- `functionMiddleware` global cobre **todas** as `createServerFn`, eliminando inconsistência futura.
-- Após validação, podemos remover os `console.log` de debug.
+## Por que NÃO seguir o `<deliverable_structure>` ao pé da letra
+
+O spec assume estado zero ("hoje ficam parados com pending porque o código de descoberta ainda não está integrado"). A realidade é que a integração já foi feita em entregas anteriores desta thread (job-queue + tick endpoint + worker + UI de progresso), e a única coisa quebrada é a árvore de fallback de queries DataJud para o TJRJ específico. Recriar `discoverLawyerProcesses`, `getDiscoveryStatus`, `DiscoveryProgress.tsx` etc. duplicaria nomes, conflitaria com o que está em produção e regrediria a arquitetura assíncrona baseada em jobs (que é mais robusta que `queueMicrotask`).
+
+Posso seguir o `<deliverable_structure>` literalmente se você quiser, mas recomendo o plano cirúrgico acima.

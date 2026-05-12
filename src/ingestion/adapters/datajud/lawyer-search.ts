@@ -184,10 +184,24 @@ export async function searchByOab(
     return extractPage(raw, preferVariant);
   }
 
-  // Probe: tenta nested primeiro
-  const rawNested = await postQuery(apiKey, alias, nestedQuery(numero, uf, searchAfter));
-  const page = extractPage(rawNested, "nested");
-  if (page.hits.length > 0 || (page.total ?? 0) > 0) return page;
+  // Probe: tenta nested primeiro. Alguns índices (ex.: api_publica_tjrj) não
+  // têm mapping nested para partes.representantes e respondem 400 com
+  // query_shard_exception. Tratamos isso como sinal de "tente flat".
+  try {
+    const rawNested = await postQuery(apiKey, alias, nestedQuery(numero, uf, searchAfter));
+    const page = extractPage(rawNested, "nested");
+    if (page.hits.length > 0 || (page.total ?? 0) > 0) return page;
+  } catch (err) {
+    if (
+      err instanceof LawyerSearchError &&
+      err.kind === "client" &&
+      err.httpStatus === 400
+    ) {
+      // segue para fallback flat abaixo
+    } else {
+      throw err;
+    }
+  }
 
   // Fallback: flat
   const rawFlat = await postQuery(apiKey, alias, flatQuery(numero, uf, searchAfter));

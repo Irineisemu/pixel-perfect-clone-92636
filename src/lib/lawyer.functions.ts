@@ -46,6 +46,7 @@ export const createLawyerTarget = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => CreateLawyerSchema.parse(input))
   .handler(async ({ data, context }) => {
     const userId = context.userId;
+    console.log("[createLawyerTarget] userId=", userId);
 
     // Normaliza + dedupe OABs
     const normalized = Array.from(

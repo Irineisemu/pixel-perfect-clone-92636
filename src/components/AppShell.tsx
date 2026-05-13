@@ -123,7 +123,7 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
       )}
 
       <Drawer movimento={selected} onClose={() => setSelected(null)} />
-      <CmdK open={cmdkOpen} onClose={() => setCmdkOpen(false)} onSelectMov={setSelected} />
+      <CmdK open={cmdkOpen} onClose={() => setCmdkOpen(false)} />
     </div>
   );
 }

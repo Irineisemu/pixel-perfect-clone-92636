@@ -1,7 +1,13 @@
 // @ts-nocheck
 import { useState, useEffect, useRef } from "react";
 import { Icon } from "./Icon";
-import { Mock } from "../data/mock";
+import { supabase } from "@/integrations/supabase/client";
+
+function formatProcessNumber(digits) {
+  if (!digits) return "";
+  if (digits.length !== 20) return digits;
+  return `${digits.slice(0, 7)}-${digits.slice(7, 9)}.${digits.slice(9, 13)}.${digits.slice(13, 14)}.${digits.slice(14, 16)}.${digits.slice(16, 20)}`;
+}
 
 function Group({ title, children }) {
   return (
@@ -24,9 +30,9 @@ function Item({ icon, primary, secondary, onSelect }) {
   );
 }
 
-export function CmdK({ open, onClose, onSelectMov }) {
-  const { movimentacoes, tribunais } = Mock;
+export function CmdK({ open, onClose }) {
   const [q, setQ] = useState("");
+  const [processes, setProcesses] = useState([]);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -34,17 +40,27 @@ export function CmdK({ open, onClose, onSelectMov }) {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKey);
     setTimeout(() => inputRef.current?.focus(), 50);
+    (async () => {
+      const { data } = await supabase
+        .from("processes")
+        .select("id, process_number, class_name, organ_name")
+        .order("last_synced_at", { ascending: false })
+        .limit(50);
+      setProcesses(data || []);
+    })();
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
   if (!open) return null;
   const ql = q.trim().toLowerCase();
-  const matchMov = movimentacoes.filter((m) =>
-    !ql || m.numero.includes(ql) || m.parte.toLowerCase().includes(ql) || m.tipo.toLowerCase().includes(ql)
-  ).slice(0, 6);
-  const matchTri = tribunais.filter((t) =>
-    !ql || t.sigla.toLowerCase().includes(ql) || t.nome.toLowerCase().includes(ql)
-  ).slice(0, 4);
+  const matches = processes.filter((p) => {
+    if (!ql) return true;
+    return (
+      (p.process_number || "").includes(ql.replace(/\D/g, "")) ||
+      (p.class_name || "").toLowerCase().includes(ql) ||
+      (p.organ_name || "").toLowerCase().includes(ql)
+    );
+  }).slice(0, 8);
 
   return (
     <div className="fixed inset-0 z-[60] flex items-start justify-center pt-[12vh] px-4">
@@ -53,29 +69,25 @@ export function CmdK({ open, onClose, onSelectMov }) {
         <div className="flex items-center gap-2 px-3 h-12 border-b border-zinc-200">
           <Icon name="search" className="h-4 w-4 text-zinc-400" />
           <input ref={inputRef} value={q} onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar processos, partes, tribunais…"
+            placeholder="Buscar processos por número, classe ou órgão…"
             className="flex-1 outline-none text-[14px] bg-transparent placeholder:text-zinc-400"
             aria-label="Campo de busca" />
           <kbd className="text-[10px] text-zinc-500 border border-zinc-200 rounded px-1.5 py-0.5">esc</kbd>
         </div>
         <div className="max-h-[50vh] overflow-y-auto p-2 text-[13px]">
-          {matchMov.length > 0 && (
-            <Group title="Movimentações">
-              {matchMov.map((m) => (
-                <Item key={m.id} icon="hash" primary={m.numero} secondary={`${m.tipo} — ${m.parte}`}
-                  onSelect={() => { onClose(); onSelectMov(m); }} />
+          {matches.length > 0 ? (
+            <Group title="Processos monitorados">
+              {matches.map((p) => (
+                <Item key={p.id} icon="hash"
+                  primary={formatProcessNumber(p.process_number)}
+                  secondary={[p.class_name, p.organ_name].filter(Boolean).join(" — ") || "—"}
+                  onSelect={onClose} />
               ))}
             </Group>
-          )}
-          {matchTri.length > 0 && (
-            <Group title="Tribunais">
-              {matchTri.map((t) => (
-                <Item key={t.sigla} icon="building-2" primary={t.sigla} secondary={t.nome} onSelect={onClose} />
-              ))}
-            </Group>
-          )}
-          {matchMov.length === 0 && matchTri.length === 0 && (
-            <div className="p-6 text-center text-zinc-500 text-[12.5px]">Nada encontrado para "{q}".</div>
+          ) : (
+            <div className="p-6 text-center text-zinc-500 text-[12.5px]">
+              {processes.length === 0 ? "Nenhum processo cadastrado ainda." : `Nada encontrado para "${q}".`}
+            </div>
           )}
         </div>
         <div className="flex items-center justify-between gap-2 px-3 h-9 border-t border-zinc-200 bg-zinc-50/60 text-[11px] text-zinc-500">

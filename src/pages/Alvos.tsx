@@ -4,7 +4,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Icon } from "../components/Icon";
 import { Utils } from "../lib/jr-utils";
-import { Mock } from "../data/mock";
+const TRIBUNAIS_SUPORTADOS = [
+  { sigla: "TJRJ", nome: "Tribunal de Justiça do Rio de Janeiro", status: "ativo" },
+];
 import {
   useTargets, validateCNJNumber, validateCPF, maskCPF, maskCNJ, maskOAB,
   detectTribunalAlias, RADAR_LIMIT, CLASS_CODES, QUALIFICATIONS, typeMeta,
@@ -350,7 +352,7 @@ function TestPanel({ state, onRun }) {
 }
 
 function CreateDrawer({ open, mode, initial, onClose, onSaved, radarLimitReached, lawyerLimitReached, testCriteria }) {
-  const tribunais = Mock.tribunais;
+  const tribunais = TRIBUNAIS_SUPORTADOS;
   const isEdit = mode === "edit";
   const [step, setStep] = useState(isEdit ? 2 : 1);
   const [type, setType] = useState(initial?.type || null);

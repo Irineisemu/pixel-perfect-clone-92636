@@ -107,6 +107,31 @@ Deno.serve(async (req) => {
   const { newCount, totalCount } = await upsertMovements(admin, processRow.id, movimentos, isInitialSync);
   console.log(`[sync] movements: ${totalCount} total, ${newCount} new`);
 
+  // Enriquecimento via endpoint público do portal TJRJ.
+  // OBS: a API pública só devolve metadados básicos (comarca, serventia, dataAutuacao).
+  // Partes/representantes ficam atrás de Google reCAPTCHA Enterprise — não acessíveis
+  // sem serviço de solver pago (2Captcha) ou API jurídica privada (Escavador/Codilo).
+  try {
+    const enrichment = await fetchTJRJPublicMetadata(normalizedNumber);
+    if (enrichment) {
+      await admin
+        .from("processes")
+        .update({
+          parties_json: {
+            blocked_reason: "tjrj_captcha_required",
+            message:
+              "Partes não disponíveis: o portal TJRJ exige reCAPTCHA pra exibir partes/representantes.",
+            tjrj_metadata: enrichment,
+            scraped_at: new Date().toISOString(),
+          },
+        })
+        .eq("id", processRow.id);
+      console.log(`[sync] tjrj enrichment ok: ${enrichment.nomeComarca ?? "?"}`);
+    }
+  } catch (err: any) {
+    console.error("[sync] tjrj enrichment failed:", err?.message ?? err);
+  }
+
   const lastMovementAt =
     movimentos.length > 0
       ? movimentos
@@ -329,4 +354,50 @@ function jsonResponse(status: number, body: any): Response {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+// ===== Enriquecimento via portal público TJRJ =====
+//
+// O portal www3.tjrj.jus.br expõe um endpoint público
+// `GET /consultaprocessual/api/processos/{CNJ_FORMATTED}` que devolve
+// metadados (comarca, serventia, dataAutuacao). Os DETALHES do processo
+// (partes, representantes, advogados) ficam atrás de Google reCAPTCHA
+// Enterprise (`postWithCaptcha`), o que torna o scraping inviável sem
+// um serviço de solving pago. Por isso aqui só puxamos o que está aberto.
+
+interface TJRJPublicMetadata {
+  idProcesso?: number;
+  codigoProcesso?: string;
+  codigoCnj?: string;
+  descricaoServentia?: string;
+  nomeComarca?: string;
+  assunto?: string;
+  classe?: string;
+  dataAutuacao?: number;
+  isProcessoVirtual?: boolean;
+  indicaSegrJust?: string;
+}
+
+function maskCNJ(digits: string): string {
+  if (digits.length !== 20) return digits;
+  return `${digits.slice(0, 7)}-${digits.slice(7, 9)}.${digits.slice(9, 13)}.${digits.slice(13, 14)}.${digits.slice(14, 16)}.${digits.slice(16, 20)}`;
+}
+
+async function fetchTJRJPublicMetadata(normalizedNumber: string): Promise<TJRJPublicMetadata | null> {
+  const masked = maskCNJ(normalizedNumber);
+  const url = `https://www3.tjrj.jus.br/consultaprocessual/api/processos/${encodeURIComponent(masked)}`;
+
+  const res = await fetch(url, {
+    headers: {
+      Accept: "application/json",
+      "User-Agent": "Mozilla/5.0 JusRadar/1.0",
+    },
+    signal: AbortSignal.timeout(15000),
+  });
+
+  if (!res.ok) throw new Error(`TJRJ ${res.status}`);
+
+  const data = await res.json();
+  if (!Array.isArray(data) || data.length === 0) return null;
+  return data[0] as TJRJPublicMetadata;
 }

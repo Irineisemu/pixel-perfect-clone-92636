@@ -14,6 +14,7 @@ import {
   History,
   RefreshCw,
 } from "lucide-react";
+import { Users } from "lucide-react";
 import { ProcessMovementsTree } from "@/components/ProcessMovementsTree";
 
 export interface ProcessCardProcess {
@@ -238,24 +239,85 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow }: ProcessCardPro
                 </div>
               )}
 
-              {/* Aviso partes */}
-              <div className="flex items-start gap-2 p-3 rounded-md bg-amber-50 border border-amber-200">
-                <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                <p className="text-[12px] text-amber-900">
-                  <strong>Sobre as partes:</strong> não disponíveis via DataJud TJRJ. Para conferir
-                  partes e representantes, consulte direto no{" "}
-                  <a
-                    href="https://www3.tjrj.jus.br/consultaprocessual/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline font-medium inline-flex items-center gap-0.5"
-                  >
-                    portal do TJRJ
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                  .
-                </p>
-              </div>
+              {/* Partes / metadados TJRJ */}
+              {(() => {
+                const parties = (p as any).parties as
+                  | {
+                      blocked_reason?: string;
+                      message?: string;
+                      tjrj_metadata?: {
+                        nomeComarca?: string;
+                        descricaoServentia?: string;
+                        dataAutuacao?: number;
+                        isProcessoVirtual?: boolean;
+                      };
+                      autores?: Array<{ nome: string; qualificacao?: string | null; representantes?: Array<{ nome: string; oab?: string | null }> }>;
+                      reus?: Array<{ nome: string; qualificacao?: string | null; representantes?: Array<{ nome: string; oab?: string | null }> }>;
+                      outros?: Array<{ nome: string; qualificacao?: string | null; representantes?: Array<{ nome: string; oab?: string | null }> }>;
+                    }
+                  | null
+                  | undefined;
+                const total =
+                  (parties?.autores?.length ?? 0) +
+                  (parties?.reus?.length ?? 0) +
+                  (parties?.outros?.length ?? 0);
+                if (total > 0) {
+                  return (
+                    <div>
+                      <div className="flex items-center gap-1 text-[10.5px] uppercase tracking-wide text-zinc-500 font-medium mb-1.5">
+                        <Users className="h-3 w-3" />
+                        Partes envolvidas
+                      </div>
+                      <div className="space-y-2">
+                        {parties?.autores && parties.autores.length > 0 && (
+                          <PartyGroup label="Autor(es)" items={parties.autores} tone="emerald" />
+                        )}
+                        {parties?.reus && parties.reus.length > 0 && (
+                          <PartyGroup label="Réu(s)" items={parties.reus} tone="rose" />
+                        )}
+                        {parties?.outros && parties.outros.length > 0 && (
+                          <PartyGroup label="Outros" items={parties.outros} tone="zinc" />
+                        )}
+                      </div>
+                    </div>
+                  );
+                }
+                const meta = parties?.tjrj_metadata;
+                return (
+                  <div className="space-y-2">
+                    {meta && (meta.nomeComarca || meta.descricaoServentia) && (
+                      <div className="rounded-md border border-zinc-200 bg-white p-3 text-[12px] text-zinc-700 space-y-0.5">
+                        <div className="text-[10.5px] uppercase tracking-wide text-zinc-500 font-medium mb-1">
+                          Identificação no portal TJRJ
+                        </div>
+                        {meta.nomeComarca && <div><strong>Comarca:</strong> {meta.nomeComarca}</div>}
+                        {meta.descricaoServentia && <div><strong>Serventia:</strong> {meta.descricaoServentia}</div>}
+                        {typeof meta.isProcessoVirtual === "boolean" && (
+                          <div><strong>Tipo:</strong> {meta.isProcessoVirtual ? "Eletrônico" : "Físico"}</div>
+                        )}
+                      </div>
+                    )}
+                    <div className="flex items-start gap-2 p-3 rounded-md bg-amber-50 border border-amber-200">
+                      <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-[12px] text-amber-900">
+                        <strong>Partes não disponíveis automaticamente.</strong> O portal TJRJ
+                        protege a lista de autores/réus/representantes com reCAPTCHA, e o
+                        DataJud não devolve esses dados. Consulte direto no{" "}
+                        <a
+                          href="https://www3.tjrj.jus.br/consultaprocessual/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline font-medium inline-flex items-center gap-0.5"
+                        >
+                          portal do TJRJ
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                        .
+                      </p>
+                    </div>
+                  </div>
+                );
+              })()}
             </>
           )}
         </div>
@@ -283,6 +345,50 @@ function Field({
         {label}
       </div>
       <div className="mt-0.5 text-[12.5px] text-zinc-900 font-medium">{value}</div>
+    </div>
+  );
+}
+
+function PartyGroup({
+  label,
+  items,
+  tone,
+}: {
+  label: string;
+  items: Array<{ nome: string; qualificacao?: string | null; representantes?: Array<{ nome: string; oab?: string | null }> }>;
+  tone: "emerald" | "rose" | "zinc";
+}) {
+  const toneClass =
+    tone === "emerald"
+      ? "border-emerald-200 bg-emerald-50/40"
+      : tone === "rose"
+        ? "border-rose-200 bg-rose-50/40"
+        : "border-zinc-200 bg-white";
+  return (
+    <div className={`rounded-md border ${toneClass} p-2.5`}>
+      <div className="text-[10.5px] uppercase tracking-wide text-zinc-500 font-medium mb-1">
+        {label}
+      </div>
+      <ul className="space-y-1.5">
+        {items.map((party, i) => (
+          <li key={`${party.nome}-${i}`} className="text-[12.5px] text-zinc-900">
+            <div className="font-medium">{party.nome}</div>
+            {party.qualificacao && (
+              <div className="text-[11px] text-zinc-600">{party.qualificacao}</div>
+            )}
+            {party.representantes && party.representantes.length > 0 && (
+              <ul className="mt-1 ml-3 space-y-0.5">
+                {party.representantes.map((rep, j) => (
+                  <li key={`${rep.nome}-${j}`} className="text-[11.5px] text-zinc-700">
+                    <span className="text-zinc-400">↳ Adv.</span> {rep.nome}
+                    {rep.oab && <span className="text-zinc-500"> (OAB {rep.oab})</span>}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

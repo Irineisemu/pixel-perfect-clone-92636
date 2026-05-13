@@ -324,6 +324,8 @@ function Field({
       <div className="mt-0.5 text-[12.5px] text-zinc-900 font-medium">{value}</div>
     </div>
   );
+}
+
 function PartyGroup({
   label,
   items,

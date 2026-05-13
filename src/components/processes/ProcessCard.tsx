@@ -239,10 +239,18 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow }: ProcessCardPro
                 </div>
               )}
 
-              {/* Partes (scraped via Firecrawl do portal TJRJ) */}
+              {/* Partes / metadados TJRJ */}
               {(() => {
                 const parties = (p as any).parties as
                   | {
+                      blocked_reason?: string;
+                      message?: string;
+                      tjrj_metadata?: {
+                        nomeComarca?: string;
+                        descricaoServentia?: string;
+                        dataAutuacao?: number;
+                        isProcessoVirtual?: boolean;
+                      };
                       autores?: Array<{ nome: string; qualificacao?: string | null; representantes?: Array<{ nome: string; oab?: string | null }> }>;
                       reus?: Array<{ nome: string; qualificacao?: string | null; representantes?: Array<{ nome: string; oab?: string | null }> }>;
                       outros?: Array<{ nome: string; qualificacao?: string | null; representantes?: Array<{ nome: string; oab?: string | null }> }>;
@@ -274,24 +282,39 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow }: ProcessCardPro
                     </div>
                   );
                 }
+                const meta = parties?.tjrj_metadata;
                 return (
-                  <div className="flex items-start gap-2 p-3 rounded-md bg-amber-50 border border-amber-200">
-                    <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-[12px] text-amber-900">
-                      <strong>Partes ainda não disponíveis.</strong> O scraper do portal TJRJ pode
-                      levar alguns segundos. Clique em <em>Sincronizar</em> para tentar novamente
-                      ou consulte direto no{" "}
-                      <a
-                        href="https://www3.tjrj.jus.br/consultaprocessual/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline font-medium inline-flex items-center gap-0.5"
-                      >
-                        portal do TJRJ
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                      .
-                    </p>
+                  <div className="space-y-2">
+                    {meta && (meta.nomeComarca || meta.descricaoServentia) && (
+                      <div className="rounded-md border border-zinc-200 bg-white p-3 text-[12px] text-zinc-700 space-y-0.5">
+                        <div className="text-[10.5px] uppercase tracking-wide text-zinc-500 font-medium mb-1">
+                          Identificação no portal TJRJ
+                        </div>
+                        {meta.nomeComarca && <div><strong>Comarca:</strong> {meta.nomeComarca}</div>}
+                        {meta.descricaoServentia && <div><strong>Serventia:</strong> {meta.descricaoServentia}</div>}
+                        {typeof meta.isProcessoVirtual === "boolean" && (
+                          <div><strong>Tipo:</strong> {meta.isProcessoVirtual ? "Eletrônico" : "Físico"}</div>
+                        )}
+                      </div>
+                    )}
+                    <div className="flex items-start gap-2 p-3 rounded-md bg-amber-50 border border-amber-200">
+                      <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-[12px] text-amber-900">
+                        <strong>Partes não disponíveis automaticamente.</strong> O portal TJRJ
+                        protege a lista de autores/réus/representantes com reCAPTCHA, e o
+                        DataJud não devolve esses dados. Consulte direto no{" "}
+                        <a
+                          href="https://www3.tjrj.jus.br/consultaprocessual/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline font-medium inline-flex items-center gap-0.5"
+                        >
+                          portal do TJRJ
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                        .
+                      </p>
+                    </div>
                   </div>
                 );
               })()}

@@ -27,7 +27,7 @@ export const getDashboard = createServerFn({ method: "GET" })
         matched_via,
         matched_value,
         first_linked_at,
-        target:monitoring_targets!inner(id, lawyer_name, nickname, type, source_type),
+        target:monitoring_targets!inner(id, lawyer_name, nickname, type, source_type, is_active),
         process:processes!inner(
           id, process_number, tribunal_alias,
           class_code, class_name, subject_codes, subject_names,

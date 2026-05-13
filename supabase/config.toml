@@ -1,1 +1,7 @@
 project_id = "csmpefmtdmdmaopnukmx"
+
+[functions.sync-process-by-number]
+verify_jwt = false
+
+[functions.sync-all-processes]
+verify_jwt = false

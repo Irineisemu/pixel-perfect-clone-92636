@@ -30,13 +30,16 @@ function canRetry(s: string | null) {
   return s !== "running";
 }
 
+// Cache em memória que sobrevive a remounts (troca de aba mantém o módulo vivo)
+let cachedDashboard: any = null;
+
 export function DashboardProcesses() {
   const fetchDashboard = useServerFn(getDashboard);
   const retryFn = useServerFn(triggerRediscovery);
   const syncNowFn = useServerFn(syncProcessNow);
 
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<any>(cachedDashboard);
+  const [loading, setLoading] = useState(!cachedDashboard);
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [syncingId, setSyncingId] = useState<string | null>(null);
   
@@ -61,6 +64,7 @@ export function DashboardProcesses() {
   const load = useCallback(async () => {
     try {
       const result = await fetchDashboard();
+      cachedDashboard = result;
       setData(result);
     } catch (err: any) {
       console.error("[Dashboard] load error:", err);

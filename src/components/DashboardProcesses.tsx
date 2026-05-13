@@ -64,6 +64,7 @@ export function DashboardProcesses() {
   const load = useCallback(async () => {
     try {
       const result = await fetchDashboard();
+      cachedDashboard = result;
       setData(result);
     } catch (err: any) {
       console.error("[Dashboard] load error:", err);

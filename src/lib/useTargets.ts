@@ -126,34 +126,11 @@ function uiToRow(t: any, userId: string) {
   return base;
 }
 
-async function apiTest(payload) {
-  await new Promise((r) => setTimeout(r, 400));
-  const mov = Mock.movimentacoes || [];
-  const sevenDaysAgo = NOW - 7 * 86400e3;
-  let pool = mov.filter((m) => new Date(m.publicadoEm).getTime() >= sevenDaysAgo);
-  if (payload.type === "person") {
-    const needle = (payload.full_name || "").toLowerCase();
-    const aliases = (payload.aliases || []).map((a) => a.toLowerCase());
-    pool = pool.filter((m) => {
-      const p = m.parte.toLowerCase();
-      if (needle && p.includes(needle)) return true;
-      return aliases.some((a) => a && p.includes(a));
-    });
-    if (payload.qualification === "Professor") {
-      pool = pool.filter((m) => isProfessor(m.parteQualificacao));
-    }
-  } else if (payload.type === "radar") {
-    if (payload.against_state_only) pool = pool.filter((m) => m.contraEstado);
-    if (payload.tribunal_aliases?.length) pool = pool.filter((m) => payload.tribunal_aliases.includes(m.tribunal));
-    const kws = (payload.keywords || []).map((k) => k.toLowerCase()).filter(Boolean);
-    if (kws.length) {
-      pool = pool.filter((m) => {
-        const blob = (m.parteQualificacao + " " + m.resumo + " " + m.detalhe).toLowerCase();
-        return kws.some((k) => blob.includes(k));
-      });
-    }
-  }
-  return { count: pool.length, samples: pool.slice(0, 5) };
+async function apiTest(_payload) {
+  // Test de critérios desativado: não há dados sintéticos no banco.
+  // A simulação contra DataJud deve ser feita após a criação do alvo.
+  await new Promise((r) => setTimeout(r, 200));
+  return { count: 0, samples: [] };
 }
 
 export function useTargets() {

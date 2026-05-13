@@ -14,6 +14,7 @@ import {
   History,
   RefreshCw,
 } from "lucide-react";
+import { Users } from "lucide-react";
 import { ProcessMovementsTree } from "@/components/ProcessMovementsTree";
 
 export interface ProcessCardProcess {

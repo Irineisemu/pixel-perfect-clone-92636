@@ -93,7 +93,7 @@ export function DashboardProcesses() {
     );
   }
 
-  const { lawyers, processes, hasRunningDiscovery } = data;
+  const { lawyers, processes, hasRunningDiscovery, recentNewMovements = [], stats } = data;
 
   return (
     <div className="space-y-6">

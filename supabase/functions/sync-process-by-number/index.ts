@@ -107,23 +107,29 @@ Deno.serve(async (req) => {
   const { newCount, totalCount } = await upsertMovements(admin, processRow.id, movimentos, isInitialSync);
   console.log(`[sync] movements: ${totalCount} total, ${newCount} new`);
 
-  // Scrape de partes via Firecrawl (DataJud não devolve partes do TJRJ).
-  // Roda fire-and-forget mas espera até 25s — se falhar, segue sem bloquear.
+  // Enriquecimento via endpoint público do portal TJRJ.
+  // OBS: a API pública só devolve metadados básicos (comarca, serventia, dataAutuacao).
+  // Partes/representantes ficam atrás de Google reCAPTCHA Enterprise — não acessíveis
+  // sem serviço de solver pago (2Captcha) ou API jurídica privada (Escavador/Codilo).
   try {
-    const parties = await scrapeTJRJParties(normalizedNumber);
-    if (parties && (parties.autores?.length || parties.reus?.length || parties.outros?.length)) {
+    const enrichment = await fetchTJRJPublicMetadata(normalizedNumber);
+    if (enrichment) {
       await admin
         .from("processes")
         .update({
-          parties_json: { ...parties, source: "firecrawl_tjrj", scraped_at: new Date().toISOString() },
+          parties_json: {
+            blocked_reason: "tjrj_captcha_required",
+            message:
+              "Partes não disponíveis: o portal TJRJ exige reCAPTCHA pra exibir partes/representantes.",
+            tjrj_metadata: enrichment,
+            scraped_at: new Date().toISOString(),
+          },
         })
         .eq("id", processRow.id);
-      console.log(`[sync] parties scraped: ${parties.autores?.length ?? 0} autor(es), ${parties.reus?.length ?? 0} réu(s)`);
-    } else {
-      console.log("[sync] parties: nenhuma parte extraída");
+      console.log(`[sync] tjrj enrichment ok: ${enrichment.nomeComarca ?? "?"}`);
     }
   } catch (err: any) {
-    console.error("[sync] firecrawl parties failed:", err?.message ?? err);
+    console.error("[sync] tjrj enrichment failed:", err?.message ?? err);
   }
 
   const lastMovementAt =

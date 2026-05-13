@@ -158,6 +158,66 @@ async function fetchFromDataJud(apiKey: string, normalizedNumber: string): Promi
   return data?.hits?.hits?.[0]?._source ?? null;
 }
 
+// DataJud TJRJ retorna alguns campos com U+FFFD (representado em JSON como "ï¿½")
+// no lugar de caracteres acentuados. Aplicamos um dicionário de palavras
+// conhecidas + title-case para devolver o texto legível ao usuário.
+const ACCENT_FIXES: Record<string, string> = {
+  "CMARA": "Câmara",
+  "CVEL": "Cível",
+  "FAMLIA": "Família",
+  "FAZENDRIA": "Fazendária",
+  "FAZENDRIO": "Fazendário",
+  "INFNCIA": "Infância",
+  "RFOS": "Órfãos",
+  "RFO": "Órfão",
+  "TRIBUTRIA": "Tributária",
+  "TRIBUTRIO": "Tributário",
+  "EMPRESARIAL": "Empresarial",
+  "PBLICA": "Pública",
+  "PBLICO": "Público",
+  "AUDITORIA": "Auditoria",
+  "PRESIDNCIA": "Presidência",
+  "VICEPRESIDNCIA": "Vice-Presidência",
+  "EXECUO": "Execução",
+  "EXECUES": "Execuções",
+  "REGIO": "Região",
+  "REGIES": "Regiões",
+  "DAS": "das",
+  "DOS": "dos",
+  "DA": "da",
+  "DE": "de",
+  "DO": "do",
+  "E": "e",
+};
+
+function cleanDataJudText(input: any): any {
+  if (input == null) return input;
+  if (Array.isArray(input)) return input.map(cleanDataJudText);
+  if (typeof input !== "string") return input;
+
+  // Remove a sequência mojibake "ï¿½" (3 chars) e o próprio U+FFFD
+  let s = input.replace(/ï¿½/g, "").replace(/\uFFFD/g, "");
+  // Colapsa espaços
+  s = s.replace(/\s+/g, " ").trim();
+
+  // Title-case por palavra, com dicionário de correções
+  const titled = s
+    .split(" ")
+    .map((word) => {
+      if (!word) return word;
+      // Mantém ordinais "19", "1ª", "II" etc.
+      if (/^\d+[ºªa-z]*$/i.test(word)) {
+        return word.replace(/^(\d+)([ºªa])?$/i, (_, n, suf) => `${n}${suf ? "ª" : "ª"}`);
+      }
+      const upper = word.toUpperCase();
+      if (ACCENT_FIXES[upper]) return ACCENT_FIXES[upper];
+      // Title-case padrão
+      return upper.charAt(0) + word.slice(1).toLowerCase();
+    })
+    .join(" ");
+  return titled;
+}
+
 function parseDataJudDate(raw: any): string | null {
   if (!raw) return null;
   const s = String(raw);
@@ -195,17 +255,17 @@ async function upsertProcess(admin: any, source: any): Promise<{ id: string }> {
         process_number: source.numeroProcesso,
         tribunal_alias: TJRJ_ALIAS,
         class_code: source.classe?.codigo ?? null,
-        class_name: source.classe?.nome ?? null,
+        class_name: cleanDataJudText(source.classe?.nome) ?? null,
         subject_codes: (source.assuntos || []).map((a: any) => a.codigo).filter(Boolean),
-        subject_names: (source.assuntos || []).map((a: any) => a.nome).filter(Boolean),
+        subject_names: cleanDataJudText((source.assuntos || []).map((a: any) => a.nome).filter(Boolean)),
         instance: source.grau === "G1" ? 1 : source.grau === "G2" ? 2 : 3,
         filed_at: parseDataJudDate(source.dataAjuizamento),
         organ_code: source.orgaoJulgador?.codigo ? String(source.orgaoJulgador.codigo) : null,
-        organ_name: source.orgaoJulgador?.nome ?? null,
+        organ_name: cleanDataJudText(source.orgaoJulgador?.nome) ?? null,
         municipality_ibge: source.orgaoJulgador?.codigoMunicipioIBGE ?? null,
         secrecy_level: source.nivelSigilo ?? 0,
-        system_name: source.sistema?.nome ?? null,
-        format_name: source.formato?.nome ?? null,
+        system_name: cleanDataJudText(source.sistema?.nome) ?? null,
+        format_name: cleanDataJudText(source.formato?.nome) ?? null,
         last_update_at: parseDataJudDate(source.dataHoraUltimaAtualizacao),
         last_known_movements_hash: movementsHash,
         last_synced_at: new Date().toISOString(),
@@ -239,10 +299,10 @@ async function upsertMovements(
         {
           process_id: processId,
           movement_code: m.codigo ?? null,
-          movement_name: m.nome,
+          movement_name: cleanDataJudText(m.nome),
           occurred_at: m.dataHora,
           organ_code: m.orgaoJulgador?.codigo ?? null,
-          organ_name: m.orgaoJulgador?.nome ?? null,
+          organ_name: cleanDataJudText(m.orgaoJulgador?.nome) ?? null,
           complements: m.complementosTabelados ?? null,
           raw_data: m,
           is_new: !isInitialSync,

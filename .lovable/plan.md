@@ -1,72 +1,116 @@
-## Pre-flight (já validado)
+# MVP: Monitoramento de processos por número CNJ via DataJud
 
-- `DATAJUD_API_KEY` ✅ está nos Secrets (visível em `<secrets>`).
-- `target_process_links` ✅ já tem `matched_via`, `matched_value`, `first_linked_at`, `unlinked_at` e `UNIQUE(target_id, process_id)` (constraint `target_process_links_unique`).
-- RLS ✅ já existe em `processes` (`processes_via_links`) e `target_process_links` (`tpl_select`) com leitura via ownership do target. Nenhuma migration necessária.
+## Contexto
 
-## Observação importante (divergência do briefing)
+O DataJud do TJRJ não retorna campos de partes/representantes confiavelmente, então a busca por OAB via API não funciona. Mas a busca por número CNJ funciona perfeitamente e retorna movimentações completas. Esta entrega entrega o MVP funcional usando esse fluxo, e prepara o terreno para a Fase 2 (scraping e-SAJ) reaproveitar 100% do pipeline.
 
-O projeto **já tem** o pipeline de descoberta funcionando, e não via Edge Function Supabase, mas via:
+## Arquitetura
 
-- `createLawyerTarget` (server fn) → cria target + `discovery_run` + enfileira `ingestion_jobs`
-- `triggerRediscovery` (server fn) → equivale ao "retry manual"
-- Worker em `/api/public/ingestion/tick` que consome `ingestion_jobs` e roda `runLawyerDiscoveryJob`
-- Adapter `src/ingestion/adapters/datajud/lawyer-search.ts` com fallback nested→flat (corrigido recentemente)
+```text
+Usuário digita CNJ ──▶ createProcessTargets (server fn)
+                            │
+                            ├─▶ INSERT monitoring_targets (source_type=manual_number)
+                            └─▶ fetch sync-process-by-number (fire-and-forget)
+                                          │
+                                          ▼
+                            Edge Function sync-process-by-number
+                                          │
+                       ┌──────────────────┼──────────────────┐
+                       ▼                  ▼                  ▼
+                  DataJud query    upsert processes   upsert process_movements
+                                                       (UNIQUE process+code+data)
+                                                       (is_new = !isInitialSync)
 
-**Criar uma Edge Function paralela duplicaria infra e quebraria o que está funcionando**. Vou aproveitar o que existe e focar nos gaps reais: o painel `/` não mostra processos vinculados, e não há botão visível para o usuário disparar `triggerRediscovery`.
+pg_cron (*/30 min) ──▶ sync-all-processes ──▶ chama sync-process-by-number
+                                              com isInitialSync=false (notifica)
 
-Se você quiser **mesmo** trocar o pipeline por uma Edge Function Deno (porque o worker via `tick` depende de cron externo), me diga e eu replano. Por padrão, sigo com o existente.
+Dashboard ──▶ getDashboard server fn ──▶ lê processes + process_movements (is_new)
+```
 
-## Plano (escopo cirúrgico, só UI + uma server fn de leitura)
+`source_type` em `monitoring_targets` distingue origem:
+- `manual_number` (MVP)
+- `oab_scraping` (Fase 2 — scraper e-SAJ chama a MESMA `sync-process-by-number`)
+- `oab_datajud` / `radar` (futuros)
 
-### 1. Server function `getDashboard` (nova)
+## Blocos de implementação (ordem)
 
-Arquivo: `src/lib/dashboard.functions.ts`
+### Bloco 1 — Migration de schema
+- `monitoring_targets.source_type TEXT DEFAULT 'manual_number'` (idempotente)
+- `processes`: adicionar `class_name`, `subject_names`, `instance`, `sync_status` (CHECK pending|synced|failed|not_found), `last_movement_at`, `total_movements`, `new_movements_count`
+- Nova tabela `process_movements`:
+  - colunas: process_id (FK CASCADE), movement_code, movement_name, occurred_at, organ_code, organ_name, complements jsonb, raw_data jsonb, is_new bool, notified_at, created_at
+  - `UNIQUE (process_id, movement_code, occurred_at)` para deduplicar
+  - índices: (process_id, occurred_at DESC) e parcial (is_new=true)
+  - RLS: SELECT para o dono via `target_process_links`+`monitoring_targets`; ALL para service_role
 
-- Protegida por `requireSupabaseAuth`, RLS da própria conexão do usuário.
-- Retorna:
-  - `stats`: `{ totalProcesses, totalLawyers }`
-  - `lawyers`: lista de targets `lawyer` ativos com `discovery_status`, `last_discovery_at`, `oab_numbers`
-  - `processes`: até 50 processos vinculados (join `target_process_links` → `processes`) com tribunal, classe, assuntos, OAB de match, target dono
-  - `hasRunningDiscovery`: boolean (algum lawyer com status `pending`/`running`)
+### Bloco 2 — Edge Function `sync-process-by-number`
+Em `supabase/functions/sync-process-by-number/index.ts`:
+- Input: `{ processNumber, targetId?, isInitialSync? }`
+- Normaliza para apenas dígitos; valida 15–25 chars
+- POST `https://api-publica.datajud.cnj.jus.br/api_publica_tjrj/_search` com `{size:1, query:{match:{numeroProcesso}}}` e `Authorization: APIKey ${DATAJUD_API_KEY}`
+- 404 amigável se não encontrar (marca `sync_status=not_found`)
+- Upsert `processes` (onConflict process_number) com hash dos movimentos
+- Se `targetId`: upsert `target_process_links`
+- Para cada movimento: upsert com `ignoreDuplicates:true`, `is_new = !isInitialSync`
+- Atualiza contadores e `last_movement_at` no processo
 
-### 2. Refatorar `AppShell` rota `/` (`src/routes/_authenticated/index.tsx` + `src/components/AppShell.tsx`)
+### Bloco 3 — Edge Function `sync-all-processes`
+Em `supabase/functions/sync-all-processes/index.ts`:
+- Lista todos `monitoring_targets` ativos com `process_number`
+- Chama `sync-process-by-number` com `isInitialSync=false` (rate limit 1 req/s)
+- Auth via `apikey` header (anon/publishable key) — padrão Lovable Cloud, sem CRON_SECRET custom
 
-Hoje `AppShell` carrega `movements` mock-style e mostra Feed de movimentos. Para a entrega:
+### Bloco 4 — Server function `createProcessTargets`
+Em `src/lib/process.functions.ts` (NÃO em `src/server/...`, pois bloqueado pelo client bundle):
+- Zod schema (1–20 números)
+- Para cada número: normaliza, verifica duplicata por user, INSERT em `monitoring_targets` com `source_type=manual_number`, dispara `sync-process-by-number` via fetch fire-and-forget com `isInitialSync=true`
+- Usa `requireSupabaseAuth` middleware (não service client direto, exceto para o INSERT que precisa burlar; ou usar context.supabase com RLS já que policies permitem auth.uid())
 
-- No modo `route="inicio"`, substituir o bloco do `Feed` por um novo componente `<DashboardProcesses>` que consome `getDashboard` via `useServerFn`.
-- Manter o resto (header, KPIs adaptados, sidebar de tribunais).
-- KPIs alimentados por `stats` + contagens existentes.
+### Bloco 5 — Atualizar `getDashboard` e UI do painel
+- Em `src/lib/dashboard.functions.ts`: estender query atual para trazer `class_name`, `sync_status`, `last_movement_at`, `total_movements`, `new_movements_count` + lista de `process_movements` com `is_new=true`
+- Atualizar `src/components/DashboardProcesses.tsx`:
+  - KPIs: total processos + total movimentações novas
+  - Seção "Movimentações novas" (até 20)
+  - Lista de processos com badge vermelho quando `new_movements_count > 0`, status sincronizando/em dia/não encontrado
+  - Empty state amigável apontando para Alvos → Novo
 
-### 3. Componente `DashboardProcesses` (novo)
+### Bloco 6 — Componente `ProcessNumberForm`
+Em `src/components/ProcessNumberForm.tsx`:
+- Input com chips (Enter/Tab/vírgula confirma; Backspace remove último)
+- Validação 15–25 dígitos, máx 20
+- Apelido opcional
+- Confirma input pendente no submit
+- Chama `createProcessTargets` via `useServerFn`
+- Toast de sucesso + navega para `/`
 
-Arquivo: `src/components/DashboardProcesses.tsx`
+### Bloco 7 — Integrar no fluxo de criação de alvos
+- No modal/página de Alvos, no card `process` atualizar copy para "Digite o número CNJ e o JusRadar monitora movimentações automaticamente"
+- No Passo 2 quando `selectedType === 'process'`, renderizar `ProcessNumberForm`
 
-- Lista de cards de advogados com:
-  - Nome, OABs formatadas (`RJ 183.970`)
-  - Status visual: ⏳ pending / 🔄 running / ✓ completed / ⚠ partial / ✗ failed
-  - Botão **"Buscar processos"** quando status ∈ {`null`, `pending`, `failed`, `partial`} (ou re-roda em `completed` se sem links). Chama `triggerRediscovery` (já existe).
-- Lista de processos vinculados (cards: número, classe, assuntos, tribunal, OAB que matchou).
-- Empty states diferenciados (sem advogados / sem processos / descoberta rodando).
-- Auto-refresh (`setInterval` 5s) enquanto `hasRunningDiscovery=true`; para quando termina.
-- Toast de erro/sucesso ao disparar retry.
+### Bloco 8 — pg_cron (a cada 30 min)
+SQL no painel do banco agendando `net.http_post` para `/functions/v1/sync-all-processes` com header `apikey: <SUPABASE_PUBLISHABLE_KEY>`.
 
-### 4. Validação manual
+## Detalhes técnicos importantes
 
-- Logar, ir para `/`.
-- Cadastrar um lawyer (já dispara descoberta automaticamente via `createLawyerTarget`).
-- Ver card "🔄 Buscando processos" + página atualizando sozinha.
-- Quando concluir, processos aparecem listados.
-- Para targets antigos em `pending`/`failed`, clicar "Buscar processos" → status vira `running` → processos aparecem.
+- **Edge Functions vs server fn**: a especificação do usuário pede Edge Functions explicitamente para `sync-process-by-number` (chamada por cron e fire-and-forget pós-cadastro). Mantemos como Edge Functions — é o caminho correto para esses dois casos.
+- **`source_type`**: já garante que Fase 2 (scraper e-SAJ) chame a mesma `sync-process-by-number` sem nenhum refactor.
+- **`isInitialSync`**: `true` no cadastro (não polui notificações com histórico), `false` no cron (gera badge "nova").
+- **Dedup de movimentações**: garantida pela UNIQUE constraint + `ignoreDuplicates`.
+- **Auth do cron**: usar `apikey` header com a publishable key (padrão Lovable Cloud), não criar `CRON_SECRET` novo.
+- **Server function file path**: TanStack Start bloqueia `src/server/`. Usar `src/lib/process.functions.ts`.
 
-## Detalhes técnicos
+## Arquivos criados/alterados
 
-- Usar `supabase` (browser client, RLS) dentro de `getDashboard`? Não — usar `requireSupabaseAuth` + `context.supabase` (cliente autenticado server-side com bearer do usuário, RLS aplica). Padrão já presente no projeto.
-- Cron real do worker (`/api/public/ingestion/tick`): assumido ativo. Se não estiver, a descoberta fica parada em `pending` mesmo após dispatch — fora do escopo desta entrega, mas o botão de retry e o status visual deixam isso evidente.
-- Sem mudanças em schema, RLS, edge functions ou no adapter DataJud.
+Criados:
+- `supabase/migrations/<ts>_add_source_type_and_movements.sql`
+- `supabase/functions/sync-process-by-number/index.ts`
+- `supabase/functions/sync-all-processes/index.ts`
+- `src/lib/process.functions.ts`
+- `src/components/ProcessNumberForm.tsx`
 
-## Arquivos tocados
+Alterados:
+- `src/lib/dashboard.functions.ts` (estender query)
+- `src/components/DashboardProcesses.tsx` (badges + seção movimentos novos)
+- Página/modal de Alvos (integrar `ProcessNumberForm` no tipo `process`)
 
-- **novo**: `src/lib/dashboard.functions.ts`
-- **novo**: `src/components/DashboardProcesses.tsx`
-- **edit**: `src/components/AppShell.tsx` (substituir Feed por DashboardProcesses no modo `inicio`)
+Pós-aprovação: após a migration rodar, agendar o cron via SQL adicional.

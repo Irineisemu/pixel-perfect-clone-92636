@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Mock } from "../data/mock";
+
 import { Utils, NOW, isProfessor } from "./jr-utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./auth";

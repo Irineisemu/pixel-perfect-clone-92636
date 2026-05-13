@@ -239,24 +239,62 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow }: ProcessCardPro
                 </div>
               )}
 
-              {/* Aviso partes */}
-              <div className="flex items-start gap-2 p-3 rounded-md bg-amber-50 border border-amber-200">
-                <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                <p className="text-[12px] text-amber-900">
-                  <strong>Sobre as partes:</strong> não disponíveis via DataJud TJRJ. Para conferir
-                  partes e representantes, consulte direto no{" "}
-                  <a
-                    href="https://www3.tjrj.jus.br/consultaprocessual/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline font-medium inline-flex items-center gap-0.5"
-                  >
-                    portal do TJRJ
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                  .
-                </p>
-              </div>
+              {/* Partes (scraped via Firecrawl do portal TJRJ) */}
+              {(() => {
+                const parties = (p as any).parties as
+                  | {
+                      autores?: Array<{ nome: string; qualificacao?: string | null; representantes?: Array<{ nome: string; oab?: string | null }> }>;
+                      reus?: Array<{ nome: string; qualificacao?: string | null; representantes?: Array<{ nome: string; oab?: string | null }> }>;
+                      outros?: Array<{ nome: string; qualificacao?: string | null; representantes?: Array<{ nome: string; oab?: string | null }> }>;
+                    }
+                  | null
+                  | undefined;
+                const total =
+                  (parties?.autores?.length ?? 0) +
+                  (parties?.reus?.length ?? 0) +
+                  (parties?.outros?.length ?? 0);
+                if (total > 0) {
+                  return (
+                    <div>
+                      <div className="flex items-center gap-1 text-[10.5px] uppercase tracking-wide text-zinc-500 font-medium mb-1.5">
+                        <Users className="h-3 w-3" />
+                        Partes envolvidas
+                      </div>
+                      <div className="space-y-2">
+                        {parties?.autores && parties.autores.length > 0 && (
+                          <PartyGroup label="Autor(es)" items={parties.autores} tone="emerald" />
+                        )}
+                        {parties?.reus && parties.reus.length > 0 && (
+                          <PartyGroup label="Réu(s)" items={parties.reus} tone="rose" />
+                        )}
+                        {parties?.outros && parties.outros.length > 0 && (
+                          <PartyGroup label="Outros" items={parties.outros} tone="zinc" />
+                        )}
+                      </div>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="flex items-start gap-2 p-3 rounded-md bg-amber-50 border border-amber-200">
+                    <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-[12px] text-amber-900">
+                      <strong>Partes ainda não disponíveis.</strong> O scraper do portal TJRJ pode
+                      levar alguns segundos. Clique em <em>Sincronizar</em> para tentar novamente
+                      ou consulte direto no{" "}
+                      <a
+                        href="https://www3.tjrj.jus.br/consultaprocessual/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline font-medium inline-flex items-center gap-0.5"
+                      >
+                        portal do TJRJ
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                      .
+                    </p>
+                  </div>
+                );
+              })()}
             </>
           )}
         </div>

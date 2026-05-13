@@ -352,7 +352,7 @@ function TestPanel({ state, onRun }) {
 }
 
 function CreateDrawer({ open, mode, initial, onClose, onSaved, radarLimitReached, lawyerLimitReached, testCriteria }) {
-  const tribunais = Mock.tribunais;
+  const tribunais = TRIBUNAIS_SUPORTADOS;
   const isEdit = mode === "edit";
   const [step, setStep] = useState(isEdit ? 2 : 1);
   const [type, setType] = useState(initial?.type || null);

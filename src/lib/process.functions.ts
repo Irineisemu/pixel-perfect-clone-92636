@@ -82,21 +82,41 @@ export const createProcessTargets = createServerFn({ method: "POST" })
         continue;
       }
 
-      // Disparar sync imediato (fire-and-forget)
-      fetch(`${supabaseUrl}/functions/v1/sync-process-by-number`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${serviceKey}`,
-        },
-        body: JSON.stringify({
-          processNumber: normalized,
+      // Aguardar a sync concluir para que o dashboard já mostre os dados completos
+      try {
+        const syncRes = await fetch(`${supabaseUrl}/functions/v1/sync-process-by-number`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${serviceKey}`,
+          },
+          body: JSON.stringify({
+            processNumber: normalized,
+            targetId: target.id,
+            isInitialSync: true,
+          }),
+          signal: AbortSignal.timeout(40000),
+        });
+        const syncJson: any = await syncRes.json().catch(() => ({}));
+        if (!syncRes.ok) {
+          results.push({
+            processNumber: raw,
+            status: "queued",
+            targetId: target.id,
+            message: syncJson?.message || `Sync falhou (${syncRes.status}). Use "Sincronizar agora" no dashboard.`,
+          });
+          continue;
+        }
+      } catch (err: any) {
+        console.error(`[createProcessTargets] sync failed for ${normalized}:`, err);
+        results.push({
+          processNumber: raw,
+          status: "queued",
           targetId: target.id,
-          isInitialSync: true,
-        }),
-      }).catch((err) => {
-        console.error(`[createProcessTargets] sync dispatch failed for ${normalized}:`, err);
-      });
+          message: 'Cadastrado, mas sync demorou. Use "Sincronizar agora" no dashboard.',
+        });
+        continue;
+      }
 
       results.push({ processNumber: raw, status: "queued", targetId: target.id });
     }

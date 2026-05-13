@@ -39,7 +39,7 @@ export function DashboardProcesses() {
   const [loading, setLoading] = useState(true);
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [syncingId, setSyncingId] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  
 
   const handleSyncNow = async (processId: string) => {
     setSyncingId(processId);

@@ -356,19 +356,26 @@ function jsonResponse(status: number, body: any): Response {
   });
 }
 
-// ===== Firecrawl scraping de partes do portal TJRJ =====
+// ===== Enriquecimento via portal público TJRJ =====
+//
+// O portal www3.tjrj.jus.br expõe um endpoint público
+// `GET /consultaprocessual/api/processos/{CNJ_FORMATTED}` que devolve
+// metadados (comarca, serventia, dataAutuacao). Os DETALHES do processo
+// (partes, representantes, advogados) ficam atrás de Google reCAPTCHA
+// Enterprise (`postWithCaptcha`), o que torna o scraping inviável sem
+// um serviço de solving pago. Por isso aqui só puxamos o que está aberto.
 
-interface TJRJParty {
-  nome: string;
-  qualificacao?: string | null;
-  representantes?: Array<{ nome: string; oab?: string | null }>;
-}
-
-interface TJRJParties {
-  autores: TJRJParty[];
-  reus: TJRJParty[];
-  outros: TJRJParty[];
-  source_url?: string;
+interface TJRJPublicMetadata {
+  idProcesso?: number;
+  codigoProcesso?: string;
+  codigoCnj?: string;
+  descricaoServentia?: string;
+  nomeComarca?: string;
+  assunto?: string;
+  classe?: string;
+  dataAutuacao?: number;
+  isProcessoVirtual?: boolean;
+  indicaSegrJust?: string;
 }
 
 function maskCNJ(digits: string): string {
@@ -376,111 +383,21 @@ function maskCNJ(digits: string): string {
   return `${digits.slice(0, 7)}-${digits.slice(7, 9)}.${digits.slice(9, 13)}.${digits.slice(13, 14)}.${digits.slice(14, 16)}.${digits.slice(16, 20)}`;
 }
 
-async function scrapeTJRJParties(normalizedNumber: string): Promise<TJRJParties | null> {
-  const apiKey = Deno.env.get("FIRECRAWL_API_KEY");
-  if (!apiKey) {
-    console.warn("[sync] FIRECRAWL_API_KEY ausente — pulando scrape de partes");
-    return null;
-  }
-
+async function fetchTJRJPublicMetadata(normalizedNumber: string): Promise<TJRJPublicMetadata | null> {
   const masked = maskCNJ(normalizedNumber);
-  // Portal V2 do TJRJ — página server-rendered de movimentação que inclui as partes
-  const portalUrl = `http://www4.tjrj.jus.br/consultaProcessoWebV2/consultaMov.do?v=2&numProcessoCNJ=${encodeURIComponent(masked)}&acessoIP=internet&tipoUsuario=`;
+  const url = `https://www3.tjrj.jus.br/consultaprocessual/api/processos/${encodeURIComponent(masked)}`;
 
-  const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
-    method: "POST",
+  const res = await fetch(url, {
     headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
+      Accept: "application/json",
+      "User-Agent": "Mozilla/5.0 JusRadar/1.0",
     },
-    body: JSON.stringify({
-      url: portalUrl,
-      onlyMainContent: false,
-      waitFor: 1500,
-      formats: [
-        {
-          type: "json",
-          prompt:
-            "Extract the parties (partes) of this Brazilian court process page from TJRJ. Return JSON with keys 'autores' (plaintiffs), 'reus' (defendants/réus), 'outros' (other roles like terceiros, assistentes, MP). Each party has 'nome' (name), 'qualificacao' (role/qualification like 'Autor', 'Réu', 'Advogado'), and 'representantes' (array of {nome, oab}). Skip the table headers. If a section has no parties, return an empty array. Names should be normalized (proper case, accents preserved).",
-          schema: {
-            type: "object",
-            properties: {
-              autores: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    nome: { type: "string" },
-                    qualificacao: { type: "string" },
-                    representantes: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        properties: { nome: { type: "string" }, oab: { type: "string" } },
-                      },
-                    },
-                  },
-                  required: ["nome"],
-                },
-              },
-              reus: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    nome: { type: "string" },
-                    qualificacao: { type: "string" },
-                    representantes: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        properties: { nome: { type: "string" }, oab: { type: "string" } },
-                      },
-                    },
-                  },
-                  required: ["nome"],
-                },
-              },
-              outros: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    nome: { type: "string" },
-                    qualificacao: { type: "string" },
-                    representantes: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        properties: { nome: { type: "string" }, oab: { type: "string" } },
-                      },
-                    },
-                  },
-                  required: ["nome"],
-                },
-              },
-            },
-            required: ["autores", "reus", "outros"],
-          },
-        },
-      ],
-    }),
-    signal: AbortSignal.timeout(45000),
+    signal: AbortSignal.timeout(15000),
   });
 
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`Firecrawl ${res.status}: ${text.slice(0, 200)}`);
-  }
+  if (!res.ok) throw new Error(`TJRJ ${res.status}`);
 
-  const payload = await res.json();
-  const extracted = payload?.data?.json ?? payload?.json;
-  if (!extracted) return null;
-
-  return {
-    autores: Array.isArray(extracted.autores) ? extracted.autores : [],
-    reus: Array.isArray(extracted.reus) ? extracted.reus : [],
-    outros: Array.isArray(extracted.outros) ? extracted.outros : [],
-    source_url: portalUrl,
-  };
+  const data = await res.json();
+  if (!Array.isArray(data) || data.length === 0) return null;
+  return data[0] as TJRJPublicMetadata;
 }

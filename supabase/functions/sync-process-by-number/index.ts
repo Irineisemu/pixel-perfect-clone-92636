@@ -155,7 +155,13 @@ async function fetchFromDataJud(apiKey: string, normalizedNumber: string): Promi
   if (!res.ok) throw new Error(`DataJud error: ${res.status}`);
 
   const data = await res.json();
-  return data?.hits?.hits?.[0]?._source ?? null;
+  const hit = data?.hits?.hits?.[0]?._source ?? null;
+  if (hit) {
+    console.log("[sync] orgao=", JSON.stringify(hit.orgaoJulgador));
+    console.log("[sync] partes keys=", Object.keys(hit).filter((k) => /part|polo|sujeito/i.test(k)));
+    console.log("[sync] hit keys=", Object.keys(hit));
+  }
+  return hit;
 }
 
 function parseDataJudDate(raw: any): string | null {

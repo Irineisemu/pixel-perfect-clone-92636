@@ -7,7 +7,7 @@ import { getDashboard } from "@/lib/dashboard.functions";
 import { triggerRediscovery } from "@/lib/lawyer.functions";
 import { syncProcessNow } from "@/lib/process.functions";
 import { formatOABDisplay } from "@/types/targets";
-import { ProcessMovementsTree } from "@/components/ProcessMovementsTree";
+import { ProcessCard } from "@/components/processes/ProcessCard";
 
 function statusLabel(s: string | null) {
   switch (s) {
@@ -39,7 +39,7 @@ export function DashboardProcesses() {
   const [loading, setLoading] = useState(true);
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [syncingId, setSyncingId] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  
 
   const handleSyncNow = async (processId: string) => {
     setSyncingId(processId);
@@ -241,71 +241,14 @@ export function DashboardProcesses() {
           </div>
         ) : (
           <div className="rounded-xl border border-zinc-200 bg-white divide-y divide-zinc-100">
-            {processes.map((p: any) => {
-              const hasNew = (p.newMovementsCount ?? 0) > 0;
-              const isExpanded = expandedId === p.id;
-              const isSyncing = syncingId === p.id;
-              return (
-                <div
-                  key={p.id + p.target.id}
-                  className={`p-4 ${hasNew ? "bg-rose-50/30" : ""}`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="font-mono text-[13px] text-zinc-900 truncate">
-                        {p.displayNumber || p.processNumber}
-                      </div>
-                      <div className="mt-1 text-[12px] text-zinc-600">
-                        {p.target.name}
-                        {p.className && <span className="text-zinc-500"> · {p.className}</span>}
-                      </div>
-                      <div className="mt-1 flex items-center gap-2 text-[11px] text-zinc-500">
-                        {p.totalMovements > 0 && <span>{p.totalMovements} movimentações</span>}
-                        {p.lastMovementAt && (
-                          <span>· última {new Date(p.lastMovementAt).toLocaleDateString("pt-BR")}</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                      <span className="text-[11px] uppercase tracking-wide text-zinc-500">{p.tribunal}</span>
-                      {hasNew && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium">
-                          {p.newMovementsCount} nova{p.newMovementsCount > 1 ? "s" : ""}
-                        </span>
-                      )}
-                      {!hasNew && p.syncStatus === "synced" && (
-                        <span className="text-[11px] text-emerald-700">Em dia</span>
-                      )}
-                      {p.syncStatus === "pending" && !isSyncing && (
-                        <span className="text-[11px] text-sky-700">Sincronizando…</span>
-                      )}
-                      {p.syncStatus === "not_found" && (
-                        <span className="text-[11px] text-amber-700">Não encontrado</span>
-                      )}
-                      {p.syncStatus === "failed" && (
-                        <span className="text-[11px] text-rose-700">Falha na sincronização</span>
-                      )}
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <button
-                          onClick={() => handleSyncNow(p.id)}
-                          disabled={isSyncing}
-                          className="px-2.5 py-1 rounded-md bg-zinc-900 text-white text-[11.5px] font-medium hover:bg-zinc-800 disabled:opacity-50"
-                        >
-                          {isSyncing ? "Sincronizando…" : "Sincronizar agora"}
-                        </button>
-                        <button
-                          onClick={() => setExpandedId(isExpanded ? null : p.id)}
-                          className="px-2.5 py-1 rounded-md border border-zinc-200 bg-white text-[11.5px] font-medium text-zinc-700 hover:bg-zinc-50"
-                        >
-                          {isExpanded ? "Ocultar histórico" : "Ver histórico"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  {isExpanded && <ProcessMovementsTree processId={p.id} />}
-                </div>
-              );
-            })}
+            {processes.map((p: any) => (
+              <ProcessCard
+                key={p.id + p.target.id}
+                process={p}
+                isSyncing={syncingId === p.id}
+                onSyncNow={handleSyncNow}
+              />
+            ))}
           </div>
         )}
       </section>

@@ -544,6 +544,8 @@ export type Database = {
           class_code: number | null
           class_name: string | null
           created_at: string
+          filed_at: string | null
+          format_name: string | null
           id: string
           instance: number | null
           last_known_movements_hash: string | null
@@ -552,12 +554,18 @@ export type Database = {
             | Database["public"]["Enums"]["ingestion_source"]
             | null
           last_synced_at: string | null
+          last_update_at: string | null
+          municipality_ibge: number | null
           new_movements_count: number | null
+          organ_code: string | null
+          organ_name: string | null
           parties_json: Json | null
           process_number: string
+          secrecy_level: number | null
           subject_codes: number[] | null
           subject_names: string[] | null
           sync_status: string | null
+          system_name: string | null
           total_movements: number | null
           tribunal_alias: string
         }
@@ -565,6 +573,8 @@ export type Database = {
           class_code?: number | null
           class_name?: string | null
           created_at?: string
+          filed_at?: string | null
+          format_name?: string | null
           id?: string
           instance?: number | null
           last_known_movements_hash?: string | null
@@ -573,12 +583,18 @@ export type Database = {
             | Database["public"]["Enums"]["ingestion_source"]
             | null
           last_synced_at?: string | null
+          last_update_at?: string | null
+          municipality_ibge?: number | null
           new_movements_count?: number | null
+          organ_code?: string | null
+          organ_name?: string | null
           parties_json?: Json | null
           process_number: string
+          secrecy_level?: number | null
           subject_codes?: number[] | null
           subject_names?: string[] | null
           sync_status?: string | null
+          system_name?: string | null
           total_movements?: number | null
           tribunal_alias: string
         }
@@ -586,6 +602,8 @@ export type Database = {
           class_code?: number | null
           class_name?: string | null
           created_at?: string
+          filed_at?: string | null
+          format_name?: string | null
           id?: string
           instance?: number | null
           last_known_movements_hash?: string | null
@@ -594,12 +612,18 @@ export type Database = {
             | Database["public"]["Enums"]["ingestion_source"]
             | null
           last_synced_at?: string | null
+          last_update_at?: string | null
+          municipality_ibge?: number | null
           new_movements_count?: number | null
+          organ_code?: string | null
+          organ_name?: string | null
           parties_json?: Json | null
           process_number?: string
+          secrecy_level?: number | null
           subject_codes?: number[] | null
           subject_names?: string[] | null
           sync_status?: string | null
+          system_name?: string | null
           total_movements?: number | null
           tribunal_alias?: string
         }

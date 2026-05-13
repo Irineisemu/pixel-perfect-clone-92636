@@ -233,6 +233,7 @@ export type Database = {
           oab_numbers: string[] | null
           process_number: string | null
           qualification: string | null
+          source_type: string | null
           tribunal_alias: string | null
           tribunal_aliases: string[] | null
           tribunal_scope: string[]
@@ -261,6 +262,7 @@ export type Database = {
           oab_numbers?: string[] | null
           process_number?: string | null
           qualification?: string | null
+          source_type?: string | null
           tribunal_alias?: string | null
           tribunal_aliases?: string[] | null
           tribunal_scope?: string[]
@@ -289,6 +291,7 @@ export type Database = {
           oab_numbers?: string[] | null
           process_number?: string | null
           qualification?: string | null
+          source_type?: string | null
           tribunal_alias?: string | null
           tribunal_aliases?: string[] | null
           tribunal_scope?: string[]
@@ -441,6 +444,59 @@ export type Database = {
           },
         ]
       }
+      process_movements: {
+        Row: {
+          complements: Json | null
+          created_at: string
+          id: string
+          is_new: boolean | null
+          movement_code: number | null
+          movement_name: string
+          notified_at: string | null
+          occurred_at: string
+          organ_code: string | null
+          organ_name: string | null
+          process_id: string
+          raw_data: Json | null
+        }
+        Insert: {
+          complements?: Json | null
+          created_at?: string
+          id?: string
+          is_new?: boolean | null
+          movement_code?: number | null
+          movement_name: string
+          notified_at?: string | null
+          occurred_at: string
+          organ_code?: string | null
+          organ_name?: string | null
+          process_id: string
+          raw_data?: Json | null
+        }
+        Update: {
+          complements?: Json | null
+          created_at?: string
+          id?: string
+          is_new?: boolean | null
+          movement_code?: number | null
+          movement_name?: string
+          notified_at?: string | null
+          occurred_at?: string
+          organ_code?: string | null
+          organ_name?: string | null
+          process_id?: string
+          raw_data?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_movements_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_updates: {
         Row: {
           canonical: Json
@@ -486,44 +542,65 @@ export type Database = {
       processes: {
         Row: {
           class_code: number | null
+          class_name: string | null
           created_at: string
           id: string
+          instance: number | null
           last_known_movements_hash: string | null
+          last_movement_at: string | null
           last_source_used:
             | Database["public"]["Enums"]["ingestion_source"]
             | null
           last_synced_at: string | null
+          new_movements_count: number | null
           parties_json: Json | null
           process_number: string
           subject_codes: number[] | null
+          subject_names: string[] | null
+          sync_status: string | null
+          total_movements: number | null
           tribunal_alias: string
         }
         Insert: {
           class_code?: number | null
+          class_name?: string | null
           created_at?: string
           id?: string
+          instance?: number | null
           last_known_movements_hash?: string | null
+          last_movement_at?: string | null
           last_source_used?:
             | Database["public"]["Enums"]["ingestion_source"]
             | null
           last_synced_at?: string | null
+          new_movements_count?: number | null
           parties_json?: Json | null
           process_number: string
           subject_codes?: number[] | null
+          subject_names?: string[] | null
+          sync_status?: string | null
+          total_movements?: number | null
           tribunal_alias: string
         }
         Update: {
           class_code?: number | null
+          class_name?: string | null
           created_at?: string
           id?: string
+          instance?: number | null
           last_known_movements_hash?: string | null
+          last_movement_at?: string | null
           last_source_used?:
             | Database["public"]["Enums"]["ingestion_source"]
             | null
           last_synced_at?: string | null
+          new_movements_count?: number | null
           parties_json?: Json | null
           process_number?: string
           subject_codes?: number[] | null
+          subject_names?: string[] | null
+          sync_status?: string | null
+          total_movements?: number | null
           tribunal_alias?: string
         }
         Relationships: [

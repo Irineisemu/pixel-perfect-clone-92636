@@ -11,6 +11,7 @@ import {
 } from "../lib/useTargets";
 import { LawyerTargetForm, LawyerTargetFormHandle, validateLawyer } from "../components/LawyerTargetForm";
 import { createLawyerTarget } from "../lib/lawyer.functions";
+import { ProcessNumberForm } from "../components/ProcessNumberForm";
 
 function Sparkline({ values, className = "h-5 w-16" }) {
   if (!values || values.length === 0) return null;
@@ -256,7 +257,7 @@ function validate(type, data) {
 function ModalitiesPicker({ selected, onSelect, radarLimitReached, lawyerLimitReached }) {
   const items = [
     { id: "person",  emoji: "👤", title: "Monitorar uma pessoa", sub: "Cadastre um cliente, parte adversa ou pessoa de interesse — capture qualquer processo onde apareça." },
-    { id: "process", emoji: "📄", title: "Monitorar um processo específico", sub: "Já tenho o número CNJ. Acompanhe cada movimento desse feito específico." },
+    { id: "process", emoji: "📄", title: "Monitorar um processo específico", sub: "Digite o número CNJ e o JusRadar busca dados e movimentações no DataJud, monitorando atualizações automaticamente." },
     { id: "lawyer",  emoji: "⚖️", title: "Monitorar um advogado (OAB)", sub: "Descubra automaticamente todos os processos do TJRJ em que o advogado figura como representante.", disabled: lawyerLimitReached, disabledMsg: "Limite de 3 advogados atingido" },
     { id: "radar",   emoji: "📡", title: "Criar um radar de captação", sub: "Quero descobrir novos casos por critério — tribunais, classes, palavras-chave.", disabled: radarLimitReached, disabledMsg: "Limite de 5 radares atingido" },
   ];
@@ -446,6 +447,8 @@ function CreateDrawer({ open, mode, initial, onClose, onSaved, radarLimitReached
         <div className="flex-1 overflow-y-auto px-5 py-5">
           {step === 1 ? (
             <ModalitiesPicker selected={type} onSelect={setType} radarLimitReached={radarLimitReached} lawyerLimitReached={lawyerLimitReached} />
+          ) : type === "process" && !isEdit ? (
+            <ProcessNumberForm onBack={() => setStep(1)} onClose={onClose} />
           ) : (
             <>
               {type === "person"  && <PersonForm  data={data} setData={setData} errors={errors} />}
@@ -478,7 +481,7 @@ function CreateDrawer({ open, mode, initial, onClose, onSaved, radarLimitReached
                 Continuar <Icon name="arrow-right" className="h-3.5 w-3.5" />
               </button>
             </div>
-          ) : (
+          ) : type === "process" && !isEdit ? null : (
             <div className="flex items-center gap-2">
               <button onClick={onClose} className="h-9 px-3 rounded-md text-[13px] text-zinc-700 hover:bg-zinc-100">Cancelar</button>
               <button onClick={onSave} disabled={saving}

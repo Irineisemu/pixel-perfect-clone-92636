@@ -158,6 +158,27 @@ async function fetchFromDataJud(apiKey: string, normalizedNumber: string): Promi
   return data?.hits?.hits?.[0]?._source ?? null;
 }
 
+function parseDataJudDate(raw: any): string | null {
+  if (!raw) return null;
+  const s = String(raw);
+  // ISO já formatado
+  if (s.includes("-") || s.includes("T")) {
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d.toISOString();
+  }
+  // YYYYMMDDHHMMSS
+  if (s.length >= 8 && /^\d+$/.test(s)) {
+    const year = s.slice(0, 4);
+    const month = s.slice(4, 6);
+    const day = s.slice(6, 8);
+    const hour = s.length >= 10 ? s.slice(8, 10) : "00";
+    const min = s.length >= 12 ? s.slice(10, 12) : "00";
+    const sec = s.length >= 14 ? s.slice(12, 14) : "00";
+    return `${year}-${month}-${day}T${hour}:${min}:${sec}.000Z`;
+  }
+  return null;
+}
+
 async function upsertProcess(admin: any, source: any): Promise<{ id: string }> {
   const movimentos = source.movimentos || [];
   const movementsHash = await calculateHash(
@@ -178,6 +199,14 @@ async function upsertProcess(admin: any, source: any): Promise<{ id: string }> {
         subject_codes: (source.assuntos || []).map((a: any) => a.codigo).filter(Boolean),
         subject_names: (source.assuntos || []).map((a: any) => a.nome).filter(Boolean),
         instance: source.grau === "G1" ? 1 : source.grau === "G2" ? 2 : 3,
+        filed_at: parseDataJudDate(source.dataAjuizamento),
+        organ_code: source.orgaoJulgador?.codigo ? String(source.orgaoJulgador.codigo) : null,
+        organ_name: source.orgaoJulgador?.nome ?? null,
+        municipality_ibge: source.orgaoJulgador?.codigoMunicipioIBGE ?? null,
+        secrecy_level: source.nivelSigilo ?? 0,
+        system_name: source.sistema?.nome ?? null,
+        format_name: source.formato?.nome ?? null,
+        last_update_at: parseDataJudDate(source.dataHoraUltimaAtualizacao),
         last_known_movements_hash: movementsHash,
         last_synced_at: new Date().toISOString(),
         last_source_used: "datajud",

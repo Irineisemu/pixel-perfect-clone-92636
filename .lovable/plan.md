@@ -1,116 +1,56 @@
-# MVP: Monitoramento de processos por número CNJ via DataJud
+# Resumo expansível do processo no dashboard
 
-## Contexto
+Expor no card de cada processo todos os dados que o DataJud já entrega (classe, assuntos, órgão julgador, data de ajuizamento, último movimento, sigilo, sistema, formato), com aviso explícito quando partes não estão disponíveis. Tudo lido do banco — sem chamadas extras ao DataJud.
 
-O DataJud do TJRJ não retorna campos de partes/representantes confiavelmente, então a busca por OAB via API não funciona. Mas a busca por número CNJ funciona perfeitamente e retorna movimentações completas. Esta entrega entrega o MVP funcional usando esse fluxo, e prepara o terreno para a Fase 2 (scraping e-SAJ) reaproveitar 100% do pipeline.
+## Escopo
 
-## Arquitetura
+**Dentro:** card expandível na lista do dashboard (`/`), resumo com classe/assuntos/vara/datas/último movimento/metadados, aviso sobre partes com link pro portal TJRJ, resync dos processos já cadastrados.
 
-```text
-Usuário digita CNJ ──▶ createProcessTargets (server fn)
-                            │
-                            ├─▶ INSERT monitoring_targets (source_type=manual_number)
-                            └─▶ fetch sync-process-by-number (fire-and-forget)
-                                          │
-                                          ▼
-                            Edge Function sync-process-by-number
-                                          │
-                       ┌──────────────────┼──────────────────┐
-                       ▼                  ▼                  ▼
-                  DataJud query    upsert processes   upsert process_movements
-                                                       (UNIQUE process+code+data)
-                                                       (is_new = !isInitialSync)
+**Fora:** página dedicada `/processos/:id`, timeline completa, botão "sincronizar agora" individual, mudanças em outras telas.
 
-pg_cron (*/30 min) ──▶ sync-all-processes ──▶ chama sync-process-by-number
-                                              com isInitialSync=false (notifica)
+## Blocos de execução
 
-Dashboard ──▶ getDashboard server fn ──▶ lê processes + process_movements (is_new)
-```
+### 1. Migration — novos campos em `processes`
+Arquivo `supabase/migrations/<timestamp>_ensure_process_summary_fields.sql`, idempotente com `IF NOT EXISTS`:
+- `filed_at TIMESTAMPTZ` (dataAjuizamento)
+- `organ_code TEXT`, `organ_name TEXT`
+- `municipality_ibge BIGINT`
+- `secrecy_level INT DEFAULT 0`
+- `system_name TEXT`, `format_name TEXT`
+- `last_update_at TIMESTAMPTZ` (dataHoraUltimaAtualizacao)
+- Índice em `filed_at DESC NULLS LAST`
+- `UPDATE processes SET sync_status='pending' WHERE filed_at IS NULL` para forçar resync (sem filtro por `tribunal` — coluna existente é `tribunal_alias`)
 
-`source_type` em `monitoring_targets` distingue origem:
-- `manual_number` (MVP)
-- `oab_scraping` (Fase 2 — scraper e-SAJ chama a MESMA `sync-process-by-number`)
-- `oab_datajud` / `radar` (futuros)
+### 2. Edge Function — `sync-process-by-number`
+Substituir apenas `upsertProcess` para persistir os novos campos. Conversão de `dataAjuizamento` (YYYYMMDDHHMMSS) → ISO. Manter `tribunal_alias` (não criar coluna `tribunal`). Resto do arquivo intacto.
 
-## Blocos de implementação (ordem)
+### 3. Server function — `src/lib/dashboard.functions.ts`
+- Adicionar novos campos ao `select` de `processes`
+- Buscar última movimentação por processo numa segunda query (`process_movements` ordenada por `occurred_at desc`, agrupar no JS pegando a primeira por `process_id`)
+- Mapear cada processo com: `subjects[]` (zip de codes/names), `instanceLabel`, `secrecyLabel`, `lastMovement`, `filedAt`, `organName`, etc.
+- Manter `requireSupabaseAuth` + `context.supabase` (padrão atual do arquivo) — não trocar por service client
 
-### Bloco 1 — Migration de schema
-- `monitoring_targets.source_type TEXT DEFAULT 'manual_number'` (idempotente)
-- `processes`: adicionar `class_name`, `subject_names`, `instance`, `sync_status` (CHECK pending|synced|failed|not_found), `last_movement_at`, `total_movements`, `new_movements_count`
-- Nova tabela `process_movements`:
-  - colunas: process_id (FK CASCADE), movement_code, movement_name, occurred_at, organ_code, organ_name, complements jsonb, raw_data jsonb, is_new bool, notified_at, created_at
-  - `UNIQUE (process_id, movement_code, occurred_at)` para deduplicar
-  - índices: (process_id, occurred_at DESC) e parcial (is_new=true)
-  - RLS: SELECT para o dono via `target_process_links`+`monitoring_targets`; ALL para service_role
+### 4. Componente `src/components/processes/ProcessCard.tsx`
+Card autônomo com:
+- Header sempre visível: número, classe, órgão, badges (tribunal, instância, formato, sigilo), badge de novas/em-dia/sincronizando/não-encontrado/falha
+- Botão "Ver resumo completo" / "Recolher resumo" controlando estado local `expanded`
+- Seção expandida: grid de campos (ajuizado em, último movimento, total, última verificação), bloco destacado do movimento mais recente, lista de assuntos como chips, sistema/órgão completo, aviso amarelo sobre partes com link pro portal TJRJ
+- Caso `not_found`: alerta amarelo no lugar do resumo
+- Helpers `formatDateBR`, `formatFullDateBR`, `formatRelativeBR` no próprio arquivo
+- **Estilo:** usar tokens semânticos do design system (`bg-card`, `text-muted-foreground`, `border`, `bg-accent`, `text-destructive`, etc.) e componentes `Card`/`Badge`/`Button` do shadcn em vez de classes Tailwind cruas tipo `bg-white`/`text-gray-600` do snippet de referência
 
-### Bloco 2 — Edge Function `sync-process-by-number`
-Em `supabase/functions/sync-process-by-number/index.ts`:
-- Input: `{ processNumber, targetId?, isInitialSync? }`
-- Normaliza para apenas dígitos; valida 15–25 chars
-- POST `https://api-publica.datajud.cnj.jus.br/api_publica_tjrj/_search` com `{size:1, query:{match:{numeroProcesso}}}` e `Authorization: APIKey ${DATAJUD_API_KEY}`
-- 404 amigável se não encontrar (marca `sync_status=not_found`)
-- Upsert `processes` (onConflict process_number) com hash dos movimentos
-- Se `targetId`: upsert `target_process_links`
-- Para cada movimento: upsert com `ignoreDuplicates:true`, `is_new = !isInitialSync`
-- Atualiza contadores e `last_movement_at` no processo
+### 5. Integração no dashboard
+Substituir o render atual de processos em `src/components/DashboardProcesses.tsx` (não há `src/routes/index.tsx` direto — o dashboard renderiza via esse componente) pelo `<ProcessCard process={p} />`. Remover o bloco antigo de "Sincronizar agora" + `ProcessMovementsTree` inline? **Confirmar:** spec diz que botão de sync individual está fora de escopo, mas ele já existe hoje. Vou **manter** o botão "Sincronizar agora" e o tree de histórico que foram adicionados na iteração anterior, e apenas envolver o resumo do processo no novo `ProcessCard` — isso preserva funcionalidade já entregue ao usuário.
 
-### Bloco 3 — Edge Function `sync-all-processes`
-Em `supabase/functions/sync-all-processes/index.ts`:
-- Lista todos `monitoring_targets` ativos com `process_number`
-- Chama `sync-process-by-number` com `isInitialSync=false` (rate limit 1 req/s)
-- Auth via `apikey` header (anon/publishable key) — padrão Lovable Cloud, sem CRON_SECRET custom
+### 6. Resync
+Após deploy da Edge Function, disparar `sync-all-processes` uma vez para popular os novos campos nos processos existentes (a migration já marcou todos como `pending`).
 
-### Bloco 4 — Server function `createProcessTargets`
-Em `src/lib/process.functions.ts` (NÃO em `src/server/...`, pois bloqueado pelo client bundle):
-- Zod schema (1–20 números)
-- Para cada número: normaliza, verifica duplicata por user, INSERT em `monitoring_targets` com `source_type=manual_number`, dispara `sync-process-by-number` via fetch fire-and-forget com `isInitialSync=true`
-- Usa `requireSupabaseAuth` middleware (não service client direto, exceto para o INSERT que precisa burlar; ou usar context.supabase com RLS já que policies permitem auth.uid())
+## Detalhes técnicos
 
-### Bloco 5 — Atualizar `getDashboard` e UI do painel
-- Em `src/lib/dashboard.functions.ts`: estender query atual para trazer `class_name`, `sync_status`, `last_movement_at`, `total_movements`, `new_movements_count` + lista de `process_movements` com `is_new=true`
-- Atualizar `src/components/DashboardProcesses.tsx`:
-  - KPIs: total processos + total movimentações novas
-  - Seção "Movimentações novas" (até 20)
-  - Lista de processos com badge vermelho quando `new_movements_count > 0`, status sincronizando/em dia/não encontrado
-  - Empty state amigável apontando para Alvos → Novo
+- **Schema atual:** coluna é `tribunal_alias` (não `tribunal`). Ajustar todas as referências do snippet original.
+- **Server function existente:** `getDashboard` em `src/lib/dashboard.functions.ts` usa `requireSupabaseAuth` middleware com `context.supabase` (RLS), não service client. Preservar esse padrão.
+- **Order by aninhado:** `.order('process(last_movement_at)', ...)` pode não funcionar em todas as versões do PostgREST; manter ordenação atual por `first_linked_at` se falhar, ou ordenar em JS após mapeamento.
+- **Componente isolado:** `ProcessCard` autônomo, mas as ações já existentes (Sincronizar agora, Ver histórico paginado) ficam fora dele e continuam no `DashboardProcesses` ao redor — para não regredir a feature anterior.
 
-### Bloco 6 — Componente `ProcessNumberForm`
-Em `src/components/ProcessNumberForm.tsx`:
-- Input com chips (Enter/Tab/vírgula confirma; Backspace remove último)
-- Validação 15–25 dígitos, máx 20
-- Apelido opcional
-- Confirma input pendente no submit
-- Chama `createProcessTargets` via `useServerFn`
-- Toast de sucesso + navega para `/`
-
-### Bloco 7 — Integrar no fluxo de criação de alvos
-- No modal/página de Alvos, no card `process` atualizar copy para "Digite o número CNJ e o JusRadar monitora movimentações automaticamente"
-- No Passo 2 quando `selectedType === 'process'`, renderizar `ProcessNumberForm`
-
-### Bloco 8 — pg_cron (a cada 30 min)
-SQL no painel do banco agendando `net.http_post` para `/functions/v1/sync-all-processes` com header `apikey: <SUPABASE_PUBLISHABLE_KEY>`.
-
-## Detalhes técnicos importantes
-
-- **Edge Functions vs server fn**: a especificação do usuário pede Edge Functions explicitamente para `sync-process-by-number` (chamada por cron e fire-and-forget pós-cadastro). Mantemos como Edge Functions — é o caminho correto para esses dois casos.
-- **`source_type`**: já garante que Fase 2 (scraper e-SAJ) chame a mesma `sync-process-by-number` sem nenhum refactor.
-- **`isInitialSync`**: `true` no cadastro (não polui notificações com histórico), `false` no cron (gera badge "nova").
-- **Dedup de movimentações**: garantida pela UNIQUE constraint + `ignoreDuplicates`.
-- **Auth do cron**: usar `apikey` header com a publishable key (padrão Lovable Cloud), não criar `CRON_SECRET` novo.
-- **Server function file path**: TanStack Start bloqueia `src/server/`. Usar `src/lib/process.functions.ts`.
-
-## Arquivos criados/alterados
-
-Criados:
-- `supabase/migrations/<ts>_add_source_type_and_movements.sql`
-- `supabase/functions/sync-process-by-number/index.ts`
-- `supabase/functions/sync-all-processes/index.ts`
-- `src/lib/process.functions.ts`
-- `src/components/ProcessNumberForm.tsx`
-
-Alterados:
-- `src/lib/dashboard.functions.ts` (estender query)
-- `src/components/DashboardProcesses.tsx` (badges + seção movimentos novos)
-- Página/modal de Alvos (integrar `ProcessNumberForm` no tipo `process`)
-
-Pós-aprovação: após a migration rodar, agendar o cron via SQL adicional.
+## Pergunta de confirmação
+O snippet do Bloco 5 sugere remover toda a renderização inline antiga, o que apagaria o botão "Sincronizar agora" e o `ProcessMovementsTree` adicionados na iteração passada. Confirma manter esses dois (sync manual + árvore de histórico) acoplados ao novo `ProcessCard`, ou remove tudo e fica só com o card de resumo + cron?

@@ -1,0 +1,317 @@
+// @ts-nocheck
+import { useState, type ReactNode } from "react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Calendar,
+  Building2,
+  FileText,
+  AlertCircle,
+  ExternalLink,
+  Hash,
+  Clock,
+  Tag,
+  History,
+  RefreshCw,
+} from "lucide-react";
+import { ProcessMovementsTree } from "@/components/ProcessMovementsTree";
+
+export interface ProcessCardProcess {
+  id: string;
+  processNumber: string;
+  displayNumber: string;
+  tribunal: string;
+  classCode: number | null;
+  className: string | null;
+  subjects: Array<{ code: number; name: string | null }>;
+  instance: number | null;
+  instanceLabel: string | null;
+  organCode: string | null;
+  organName: string | null;
+  filedAt: string | null;
+  lastMovementAt: string | null;
+  lastUpdateAt: string | null;
+  lastSyncedAt: string | null;
+  lastMovement: { name: string; occurredAt: string; organName: string | null } | null;
+  secrecyLevel: number;
+  secrecyLabel: string;
+  systemName: string | null;
+  formatName: string | null;
+  totalMovements: number;
+  newMovementsCount: number;
+  syncStatus: string;
+  target: { name: string };
+}
+
+interface ProcessCardProps {
+  process: ProcessCardProcess;
+  isSyncing: boolean;
+  onSyncNow: (id: string) => void;
+}
+
+export function ProcessCard({ process: p, isSyncing, onSyncNow }: ProcessCardProps) {
+  const [showSummary, setShowSummary] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+
+  const hasNew = (p.newMovementsCount ?? 0) > 0;
+  const notFound = p.syncStatus === "not_found";
+  const failed = p.syncStatus === "failed";
+  const pending = p.syncStatus === "pending";
+
+  return (
+    <div className={`p-4 ${hasNew ? "bg-rose-50/30" : ""}`}>
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="font-mono text-[13px] text-zinc-900 truncate">
+            {p.displayNumber || p.processNumber}
+          </div>
+          <div className="mt-1 text-[12px] text-zinc-700">
+            {p.target.name}
+          </div>
+          {p.className && (
+            <div className="mt-1 flex items-center gap-1.5 text-[12px] text-zinc-700">
+              <FileText className="h-3 w-3 text-zinc-400" />
+              <span className="truncate">{p.className}</span>
+            </div>
+          )}
+          {p.organName && (
+            <div className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-zinc-600">
+              <Building2 className="h-3 w-3 text-zinc-400" />
+              <span className="truncate">{p.organName}</span>
+            </div>
+          )}
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10.5px]">
+            <span className="px-1.5 py-0.5 rounded border border-zinc-200 bg-zinc-50 text-zinc-700 font-medium">
+              {p.tribunal}
+            </span>
+            {p.instanceLabel && (
+              <span className="px-1.5 py-0.5 rounded border border-zinc-200 bg-zinc-50 text-zinc-700">
+                {p.instanceLabel}
+              </span>
+            )}
+            {p.formatName && (
+              <span className="px-1.5 py-0.5 rounded border border-zinc-200 bg-zinc-50 text-zinc-600">
+                {p.formatName}
+              </span>
+            )}
+            {p.secrecyLevel > 0 && (
+              <span className="px-1.5 py-0.5 rounded border border-amber-200 bg-amber-50 text-amber-800">
+                ⚠ {p.secrecyLabel}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+          {hasNew && (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium">
+              {p.newMovementsCount} nova{p.newMovementsCount > 1 ? "s" : ""}
+            </span>
+          )}
+          {!hasNew && p.syncStatus === "synced" && (
+            <span className="text-[11px] text-emerald-700">✓ Em dia</span>
+          )}
+          {pending && !isSyncing && <span className="text-[11px] text-sky-700">Sincronizando…</span>}
+          {notFound && <span className="text-[11px] text-amber-700">Não encontrado</span>}
+          {failed && <span className="text-[11px] text-rose-700">Falha na sync</span>}
+
+          <div className="flex items-center gap-1.5 mt-1">
+            <button
+              onClick={() => onSyncNow(p.id)}
+              disabled={isSyncing}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-zinc-900 text-white text-[11.5px] font-medium hover:bg-zinc-800 disabled:opacity-50"
+            >
+              <RefreshCw className={`h-3 w-3 ${isSyncing ? "animate-spin" : ""}`} />
+              {isSyncing ? "Sincronizando…" : "Sincronizar"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Action row: ver resumo / ver histórico */}
+      <div className="mt-3 pt-3 border-t border-zinc-100 flex items-center gap-4 text-[12px]">
+        <button
+          onClick={() => setShowSummary((v) => !v)}
+          aria-expanded={showSummary}
+          className="inline-flex items-center gap-1 text-zinc-700 hover:text-zinc-900"
+        >
+          {showSummary ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+          {showSummary ? "Recolher resumo" : "Ver resumo completo"}
+        </button>
+        <button
+          onClick={() => setShowHistory((v) => !v)}
+          aria-expanded={showHistory}
+          className="inline-flex items-center gap-1 text-zinc-700 hover:text-zinc-900"
+        >
+          <History className="h-3.5 w-3.5" />
+          {showHistory ? "Ocultar histórico" : "Ver histórico"}
+        </button>
+      </div>
+
+      {/* Resumo expandido */}
+      {showSummary && (
+        <div className="mt-3 rounded-lg border border-zinc-200 bg-zinc-50/60 p-4 space-y-4">
+          {notFound ? (
+            <div className="flex items-start gap-2 p-3 rounded-md bg-amber-50 border border-amber-200">
+              <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+              <p className="text-[12.5px] text-amber-900">
+                <strong>Processo não encontrado no DataJud.</strong> Confira se o número está
+                correto. Alguns processos podem estar em segredo de justiça ou ainda não terem sido
+                sincronizados pelo TJRJ ao CNJ.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Datas e contagens */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {p.filedAt && (
+                  <Field icon={<Calendar className="h-3 w-3" />} label="Ajuizado em" value={formatDateBR(p.filedAt)} />
+                )}
+                {p.lastMovementAt && (
+                  <Field
+                    icon={<Clock className="h-3 w-3" />}
+                    label="Último movimento"
+                    value={formatDateBR(p.lastMovementAt)}
+                  />
+                )}
+                <Field
+                  icon={<Hash className="h-3 w-3" />}
+                  label="Total de movimentos"
+                  value={String(p.totalMovements)}
+                />
+                {p.lastSyncedAt && (
+                  <Field
+                    icon={<RefreshCw className="h-3 w-3" />}
+                    label="Última verificação"
+                    value={formatRelativeBR(p.lastSyncedAt)}
+                  />
+                )}
+              </div>
+
+              {/* Movimento mais recente — destaque */}
+              {p.lastMovement && (
+                <div className="rounded-md border border-zinc-200 bg-white p-3">
+                  <div className="text-[10.5px] uppercase tracking-wide text-zinc-500 font-medium">
+                    Movimento mais recente
+                  </div>
+                  <div className="mt-1 text-[13px] font-medium text-zinc-900">
+                    {p.lastMovement.name}
+                  </div>
+                  <div className="mt-0.5 text-[11.5px] text-zinc-600 flex flex-wrap items-center gap-1">
+                    <span>{formatFullDateBR(p.lastMovement.occurredAt)}</span>
+                    {p.lastMovement.organName && (
+                      <>
+                        <span>·</span>
+                        <span>{p.lastMovement.organName}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Assuntos */}
+              {p.subjects.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-1 text-[10.5px] uppercase tracking-wide text-zinc-500 font-medium mb-1.5">
+                    <Tag className="h-3 w-3" />
+                    Assunto{p.subjects.length > 1 ? "s" : ""}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {p.subjects.map((s, i) => (
+                      <span
+                        key={`${s.code}-${i}`}
+                        className="inline-flex items-center px-2 py-0.5 rounded-full border border-zinc-200 bg-white text-[11px] text-zinc-700"
+                      >
+                        {s.name || `Código ${s.code}`}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Sistema/Órgão */}
+              {(p.systemName || p.organCode) && (
+                <div className="grid grid-cols-2 gap-3">
+                  {p.systemName && <Field label="Sistema" value={p.systemName} />}
+                  {p.organCode && <Field label="Cód. órgão julgador" value={p.organCode} />}
+                </div>
+              )}
+
+              {/* Aviso partes */}
+              <div className="flex items-start gap-2 p-3 rounded-md bg-amber-50 border border-amber-200">
+                <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <p className="text-[12px] text-amber-900">
+                  <strong>Sobre as partes:</strong> não disponíveis via DataJud TJRJ. Para conferir
+                  partes e representantes, consulte direto no{" "}
+                  <a
+                    href="https://www3.tjrj.jus.br/consultaprocessual/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline font-medium inline-flex items-center gap-0.5"
+                  >
+                    portal do TJRJ
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                  .
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Histórico paginado */}
+      {showHistory && <ProcessMovementsTree processId={p.id} />}
+    </div>
+  );
+}
+
+function Field({
+  icon,
+  label,
+  value,
+}: {
+  icon?: ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div>
+      <div className="flex items-center gap-1 text-[10.5px] uppercase tracking-wide text-zinc-500 font-medium">
+        {icon}
+        {label}
+      </div>
+      <div className="mt-0.5 text-[12.5px] text-zinc-900 font-medium">{value}</div>
+    </div>
+  );
+}
+
+function formatDateBR(iso: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function formatFullDateBR(iso: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+}
+
+function formatRelativeBR(iso: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "—";
+  const diffMs = Date.now() - d.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+  if (diffMin < 1) return "agora";
+  if (diffMin < 60) return `há ${diffMin}min`;
+  if (diffHour < 24) return `há ${diffHour}h`;
+  if (diffDay < 7) return `há ${diffDay}d`;
+  return formatDateBR(iso);
+}

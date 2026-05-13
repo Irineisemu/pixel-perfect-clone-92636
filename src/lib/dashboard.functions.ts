@@ -103,6 +103,7 @@ export const getDashboard = createServerFn({ method: "GET" })
         lastMovement: lm
           ? { name: lm.movement_name, occurredAt: lm.occurred_at, organName: lm.organ_name }
           : null,
+        parties: p.parties_json ?? null,
         matchedVia: r.matched_via,
         matchedValue: r.matched_value,
         linkedAt: r.first_linked_at,

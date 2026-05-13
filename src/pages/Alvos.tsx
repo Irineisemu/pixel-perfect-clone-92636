@@ -4,7 +4,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Icon } from "../components/Icon";
 import { Utils } from "../lib/jr-utils";
-import { Mock } from "../data/mock";
+const TRIBUNAIS_SUPORTADOS = [
+  { sigla: "TJRJ", nome: "Tribunal de Justiça do Rio de Janeiro", status: "ativo" },
+];
 import {
   useTargets, validateCNJNumber, validateCPF, maskCPF, maskCNJ, maskOAB,
   detectTribunalAlias, RADAR_LIMIT, CLASS_CODES, QUALIFICATIONS, typeMeta,

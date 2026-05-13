@@ -324,6 +324,48 @@ function Field({
       <div className="mt-0.5 text-[12.5px] text-zinc-900 font-medium">{value}</div>
     </div>
   );
+function PartyGroup({
+  label,
+  items,
+  tone,
+}: {
+  label: string;
+  items: Array<{ nome: string; qualificacao?: string | null; representantes?: Array<{ nome: string; oab?: string | null }> }>;
+  tone: "emerald" | "rose" | "zinc";
+}) {
+  const toneClass =
+    tone === "emerald"
+      ? "border-emerald-200 bg-emerald-50/40"
+      : tone === "rose"
+        ? "border-rose-200 bg-rose-50/40"
+        : "border-zinc-200 bg-white";
+  return (
+    <div className={`rounded-md border ${toneClass} p-2.5`}>
+      <div className="text-[10.5px] uppercase tracking-wide text-zinc-500 font-medium mb-1">
+        {label}
+      </div>
+      <ul className="space-y-1.5">
+        {items.map((party, i) => (
+          <li key={`${party.nome}-${i}`} className="text-[12.5px] text-zinc-900">
+            <div className="font-medium">{party.nome}</div>
+            {party.qualificacao && (
+              <div className="text-[11px] text-zinc-600">{party.qualificacao}</div>
+            )}
+            {party.representantes && party.representantes.length > 0 && (
+              <ul className="mt-1 ml-3 space-y-0.5">
+                {party.representantes.map((rep, j) => (
+                  <li key={`${rep.nome}-${j}`} className="text-[11.5px] text-zinc-700">
+                    <span className="text-zinc-400">↳ Adv.</span> {rep.nome}
+                    {rep.oab && <span className="text-zinc-500"> (OAB {rep.oab})</span>}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 function formatDateBR(iso: string | null): string {

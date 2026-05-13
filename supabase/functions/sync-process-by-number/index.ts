@@ -299,10 +299,10 @@ async function upsertMovements(
         {
           process_id: processId,
           movement_code: m.codigo ?? null,
-          movement_name: m.nome,
+          movement_name: cleanDataJudText(m.nome),
           occurred_at: m.dataHora,
           organ_code: m.orgaoJulgador?.codigo ?? null,
-          organ_name: m.orgaoJulgador?.nome ?? null,
+          organ_name: cleanDataJudText(m.orgaoJulgador?.nome) ?? null,
           complements: m.complementosTabelados ?? null,
           raw_data: m,
           is_new: !isInitialSync,

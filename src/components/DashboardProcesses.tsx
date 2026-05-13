@@ -79,6 +79,21 @@ export function DashboardProcesses() {
     return () => clearInterval(it);
   }, [data?.hasRunningDiscovery, load]);
 
+  // Atualiza em background quando o usuário volta para a aba do navegador
+  // ou foca a janela — sem mostrar o skeleton de carregamento.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    const onFocus = () => load();
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [load]);
+
   const handleRetry = async (targetId: string) => {
     setRetryingId(targetId);
     try {

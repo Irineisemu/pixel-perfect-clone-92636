@@ -158,6 +158,66 @@ async function fetchFromDataJud(apiKey: string, normalizedNumber: string): Promi
   return data?.hits?.hits?.[0]?._source ?? null;
 }
 
+// DataJud TJRJ retorna alguns campos com U+FFFD (representado em JSON como "ï¿½")
+// no lugar de caracteres acentuados. Aplicamos um dicionário de palavras
+// conhecidas + title-case para devolver o texto legível ao usuário.
+const ACCENT_FIXES: Record<string, string> = {
+  "CMARA": "Câmara",
+  "CVEL": "Cível",
+  "FAMLIA": "Família",
+  "FAZENDRIA": "Fazendária",
+  "FAZENDRIO": "Fazendário",
+  "INFNCIA": "Infância",
+  "RFOS": "Órfãos",
+  "RFO": "Órfão",
+  "TRIBUTRIA": "Tributária",
+  "TRIBUTRIO": "Tributário",
+  "EMPRESARIAL": "Empresarial",
+  "PBLICA": "Pública",
+  "PBLICO": "Público",
+  "AUDITORIA": "Auditoria",
+  "PRESIDNCIA": "Presidência",
+  "VICEPRESIDNCIA": "Vice-Presidência",
+  "EXECUO": "Execução",
+  "EXECUES": "Execuções",
+  "REGIO": "Região",
+  "REGIES": "Regiões",
+  "DAS": "das",
+  "DOS": "dos",
+  "DA": "da",
+  "DE": "de",
+  "DO": "do",
+  "E": "e",
+};
+
+function cleanDataJudText(input: any): any {
+  if (input == null) return input;
+  if (Array.isArray(input)) return input.map(cleanDataJudText);
+  if (typeof input !== "string") return input;
+
+  // Remove a sequência mojibake "ï¿½" (3 chars) e o próprio U+FFFD
+  let s = input.replace(/ï¿½/g, "").replace(/\uFFFD/g, "");
+  // Colapsa espaços
+  s = s.replace(/\s+/g, " ").trim();
+
+  // Title-case por palavra, com dicionário de correções
+  const titled = s
+    .split(" ")
+    .map((word) => {
+      if (!word) return word;
+      // Mantém ordinais "19", "1ª", "II" etc.
+      if (/^\d+[ºªa-z]*$/i.test(word)) {
+        return word.replace(/^(\d+)([ºªa])?$/i, (_, n, suf) => `${n}${suf ? "ª" : "ª"}`);
+      }
+      const upper = word.toUpperCase();
+      if (ACCENT_FIXES[upper]) return ACCENT_FIXES[upper];
+      // Title-case padrão
+      return upper.charAt(0) + word.slice(1).toLowerCase();
+    })
+    .join(" ");
+  return titled;
+}
+
 function parseDataJudDate(raw: any): string | null {
   if (!raw) return null;
   const s = String(raw);

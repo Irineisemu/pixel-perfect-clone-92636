@@ -5,7 +5,9 @@ import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { getDashboard } from "@/lib/dashboard.functions";
 import { triggerRediscovery } from "@/lib/lawyer.functions";
+import { syncProcessNow } from "@/lib/process.functions";
 import { formatOABDisplay } from "@/types/targets";
+import { ProcessMovementsTree } from "@/components/ProcessMovementsTree";
 
 function statusLabel(s: string | null) {
   switch (s) {

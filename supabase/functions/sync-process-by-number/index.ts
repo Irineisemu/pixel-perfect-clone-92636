@@ -107,6 +107,25 @@ Deno.serve(async (req) => {
   const { newCount, totalCount } = await upsertMovements(admin, processRow.id, movimentos, isInitialSync);
   console.log(`[sync] movements: ${totalCount} total, ${newCount} new`);
 
+  // Scrape de partes via Firecrawl (DataJud não devolve partes do TJRJ).
+  // Roda fire-and-forget mas espera até 25s — se falhar, segue sem bloquear.
+  try {
+    const parties = await scrapeTJRJParties(normalizedNumber);
+    if (parties && (parties.autores?.length || parties.reus?.length || parties.outros?.length)) {
+      await admin
+        .from("processes")
+        .update({
+          parties_json: { ...parties, source: "firecrawl_tjrj", scraped_at: new Date().toISOString() },
+        })
+        .eq("id", processRow.id);
+      console.log(`[sync] parties scraped: ${parties.autores?.length ?? 0} autor(es), ${parties.reus?.length ?? 0} réu(s)`);
+    } else {
+      console.log("[sync] parties: nenhuma parte extraída");
+    }
+  } catch (err: any) {
+    console.error("[sync] firecrawl parties failed:", err?.message ?? err);
+  }
+
   const lastMovementAt =
     movimentos.length > 0
       ? movimentos

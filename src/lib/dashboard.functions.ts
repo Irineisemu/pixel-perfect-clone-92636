@@ -42,6 +42,7 @@ export const getDashboard = createServerFn({ method: "GET" })
         `,
       )
       .is("unlinked_at", null)
+      .eq("target.is_active", true)
       .order("first_linked_at", { ascending: false })
       .limit(100);
 

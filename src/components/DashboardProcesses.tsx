@@ -33,10 +33,30 @@ function canRetry(s: string | null) {
 export function DashboardProcesses() {
   const fetchDashboard = useServerFn(getDashboard);
   const retryFn = useServerFn(triggerRediscovery);
+  const syncNowFn = useServerFn(syncProcessNow);
 
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const handleSyncNow = async (processId: string) => {
+    setSyncingId(processId);
+    try {
+      const res: any = await syncNowFn({ data: { processId } });
+      if (res?.ok) {
+        toast.success("Sincronização concluída.");
+        await load();
+      } else {
+        toast.error(`Falha: ${res?.error ?? "desconhecida"}`);
+      }
+    } catch (err: any) {
+      toast.error(`Erro: ${err?.message ?? err}`);
+    } finally {
+      setSyncingId(null);
+    }
+  };
 
   const load = useCallback(async () => {
     try {

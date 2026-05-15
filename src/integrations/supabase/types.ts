@@ -868,6 +868,27 @@ export type Database = {
         }
         Relationships: []
       }
+      worker_heartbeats: {
+        Row: {
+          last_seen_at: string
+          last_success_at: string | null
+          metadata: Json
+          worker_id: string
+        }
+        Insert: {
+          last_seen_at?: string
+          last_success_at?: string | null
+          metadata?: Json
+          worker_id: string
+        }
+        Update: {
+          last_seen_at?: string
+          last_success_at?: string | null
+          metadata?: Json
+          worker_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -13,6 +13,8 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedJobsRouteImport } from './routes/_authenticated/jobs'
+import { Route as AuthenticatedCredenciaisRouteImport } from './routes/_authenticated/credenciais'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedAlvosRouteImport } from './routes/_authenticated/alvos'
 import { Route as ApiPublicDebugDatajudRouteImport } from './routes/api/public/debug-datajud'
@@ -40,6 +42,17 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedJobsRoute = AuthenticatedJobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedCredenciaisRoute =
+  AuthenticatedCredenciaisRouteImport.update({
+    id: '/credenciais',
+    path: '/credenciais',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedConfiguracoesRoute =
   AuthenticatedConfiguracoesRouteImport.update({
     id: '/configuracoes',
@@ -86,6 +99,8 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/alvos': typeof AuthenticatedAlvosRouteWithChildren
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/credenciais': typeof AuthenticatedCredenciaisRoute
+  '/jobs': typeof AuthenticatedJobsRoute
   '/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
   '/api/public/debug-datajud': typeof ApiPublicDebugDatajudRoute
   '/alvos/$targetId/descoberta': typeof AuthenticatedAlvosTargetIdDescobertaRoute
@@ -97,6 +112,8 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/alvos': typeof AuthenticatedAlvosRouteWithChildren
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/credenciais': typeof AuthenticatedCredenciaisRoute
+  '/jobs': typeof AuthenticatedJobsRoute
   '/': typeof AuthenticatedIndexRoute
   '/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
   '/api/public/debug-datajud': typeof ApiPublicDebugDatajudRoute
@@ -111,6 +128,8 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_authenticated/alvos': typeof AuthenticatedAlvosRouteWithChildren
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/_authenticated/credenciais': typeof AuthenticatedCredenciaisRoute
+  '/_authenticated/jobs': typeof AuthenticatedJobsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
   '/api/public/debug-datajud': typeof ApiPublicDebugDatajudRoute
@@ -126,6 +145,8 @@ export interface FileRouteTypes {
     | '/signup'
     | '/alvos'
     | '/configuracoes'
+    | '/credenciais'
+    | '/jobs'
     | '/admin/ingestion'
     | '/api/public/debug-datajud'
     | '/alvos/$targetId/descoberta'
@@ -137,6 +158,8 @@ export interface FileRouteTypes {
     | '/signup'
     | '/alvos'
     | '/configuracoes'
+    | '/credenciais'
+    | '/jobs'
     | '/'
     | '/admin/ingestion'
     | '/api/public/debug-datajud'
@@ -150,6 +173,8 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_authenticated/alvos'
     | '/_authenticated/configuracoes'
+    | '/_authenticated/credenciais'
+    | '/_authenticated/jobs'
     | '/_authenticated/'
     | '/_authenticated/admin/ingestion'
     | '/api/public/debug-datajud'
@@ -195,6 +220,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/jobs': {
+      id: '/_authenticated/jobs'
+      path: '/jobs'
+      fullPath: '/jobs'
+      preLoaderRoute: typeof AuthenticatedJobsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/credenciais': {
+      id: '/_authenticated/credenciais'
+      path: '/credenciais'
+      fullPath: '/credenciais'
+      preLoaderRoute: typeof AuthenticatedCredenciaisRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/configuracoes': {
@@ -264,6 +303,8 @@ const AuthenticatedAlvosRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedAlvosRoute: typeof AuthenticatedAlvosRouteWithChildren
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
+  AuthenticatedCredenciaisRoute: typeof AuthenticatedCredenciaisRoute
+  AuthenticatedJobsRoute: typeof AuthenticatedJobsRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedAdminIngestionRoute: typeof AuthenticatedAdminIngestionRoute
 }
@@ -271,6 +312,8 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAlvosRoute: AuthenticatedAlvosRouteWithChildren,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
+  AuthenticatedCredenciaisRoute: AuthenticatedCredenciaisRoute,
+  AuthenticatedJobsRoute: AuthenticatedJobsRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedAdminIngestionRoute: AuthenticatedAdminIngestionRoute,
 }
@@ -290,3 +333,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

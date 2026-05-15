@@ -1,0 +1,31 @@
+{
+  "consultaPublica2g": {
+    "url": "https://pje.tjrj.jus.br/2g/ConsultaPublica/listView.seam",
+    "input": "#fPP\\:numeroProcesso\\:NumeroProcesso",
+    "submit": "#fPP\\:searchProcessos",
+    "resultRow": "table.rich-table tr.rich-table-row",
+    "detailLink": "a[id*='listProcessosTable']"
+  },
+  "consultaPublica1g": {
+    "url": "https://pje.tjrj.jus.br/consultaprocessual/",
+    "input": "#fPP\\:numProcesso-inputNumeroProcesso",
+    "submit": "#fPP\\:searchProcessos"
+  },
+  "process": {
+    "classe": "td:has(label:has-text('Classe'))",
+    "assunto": "td:has(label:has-text('Assunto'))",
+    "partesTable": "table[id*='processoPartes']",
+    "movimentacoesTable": "table[id*='processoEventos']"
+  },
+  "login": {
+    "url": "https://pje.tjrj.jus.br/1g/login.seam",
+    "tabOAB": "a[href*='oab']",
+    "user": "#username",
+    "password": "#password",
+    "submit": "input[type='submit']",
+    "errorBox": ".rich-messages, .alert-danger"
+  },
+  "blocked": {
+    "titlePatterns": ["captcha", "cloudflare", "acesso negado", "blocked", "indisponivel", "erro"]
+  }
+}

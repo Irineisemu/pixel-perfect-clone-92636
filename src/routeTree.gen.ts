@@ -17,6 +17,7 @@ import { Route as AuthenticatedJobsRouteImport } from './routes/_authenticated/j
 import { Route as AuthenticatedCredenciaisRouteImport } from './routes/_authenticated/credenciais'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedAlvosRouteImport } from './routes/_authenticated/alvos'
+import { Route as ApiPublicDebugKeysRouteImport } from './routes/api/public/debug-keys'
 import { Route as ApiPublicDebugDatajudRouteImport } from './routes/api/public/debug-datajud'
 import { Route as AuthenticatedAdminIngestionRouteImport } from './routes/_authenticated/admin/ingestion'
 import { Route as ApiPublicIngestionTickRouteImport } from './routes/api/public/ingestion/tick'
@@ -64,6 +65,11 @@ const AuthenticatedAlvosRoute = AuthenticatedAlvosRouteImport.update({
   path: '/alvos',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ApiPublicDebugKeysRoute = ApiPublicDebugKeysRouteImport.update({
+  id: '/api/public/debug-keys',
+  path: '/api/public/debug-keys',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicDebugDatajudRoute = ApiPublicDebugDatajudRouteImport.update({
   id: '/api/public/debug-datajud',
   path: '/api/public/debug-datajud',
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/jobs': typeof AuthenticatedJobsRoute
   '/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
   '/api/public/debug-datajud': typeof ApiPublicDebugDatajudRoute
+  '/api/public/debug-keys': typeof ApiPublicDebugKeysRoute
   '/alvos/$targetId/descoberta': typeof AuthenticatedAlvosTargetIdDescobertaRoute
   '/api/public/discovery/refresh': typeof ApiPublicDiscoveryRefreshRoute
   '/api/public/ingestion/tick': typeof ApiPublicIngestionTickRoute
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
   '/api/public/debug-datajud': typeof ApiPublicDebugDatajudRoute
+  '/api/public/debug-keys': typeof ApiPublicDebugKeysRoute
   '/alvos/$targetId/descoberta': typeof AuthenticatedAlvosTargetIdDescobertaRoute
   '/api/public/discovery/refresh': typeof ApiPublicDiscoveryRefreshRoute
   '/api/public/ingestion/tick': typeof ApiPublicIngestionTickRoute
@@ -133,6 +141,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
   '/api/public/debug-datajud': typeof ApiPublicDebugDatajudRoute
+  '/api/public/debug-keys': typeof ApiPublicDebugKeysRoute
   '/_authenticated/alvos/$targetId/descoberta': typeof AuthenticatedAlvosTargetIdDescobertaRoute
   '/api/public/discovery/refresh': typeof ApiPublicDiscoveryRefreshRoute
   '/api/public/ingestion/tick': typeof ApiPublicIngestionTickRoute
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/admin/ingestion'
     | '/api/public/debug-datajud'
+    | '/api/public/debug-keys'
     | '/alvos/$targetId/descoberta'
     | '/api/public/discovery/refresh'
     | '/api/public/ingestion/tick'
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin/ingestion'
     | '/api/public/debug-datajud'
+    | '/api/public/debug-keys'
     | '/alvos/$targetId/descoberta'
     | '/api/public/discovery/refresh'
     | '/api/public/ingestion/tick'
@@ -178,6 +189,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/admin/ingestion'
     | '/api/public/debug-datajud'
+    | '/api/public/debug-keys'
     | '/_authenticated/alvos/$targetId/descoberta'
     | '/api/public/discovery/refresh'
     | '/api/public/ingestion/tick'
@@ -188,6 +200,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
   ApiPublicDebugDatajudRoute: typeof ApiPublicDebugDatajudRoute
+  ApiPublicDebugKeysRoute: typeof ApiPublicDebugKeysRoute
   ApiPublicDiscoveryRefreshRoute: typeof ApiPublicDiscoveryRefreshRoute
   ApiPublicIngestionTickRoute: typeof ApiPublicIngestionTickRoute
 }
@@ -249,6 +262,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/alvos'
       preLoaderRoute: typeof AuthenticatedAlvosRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/api/public/debug-keys': {
+      id: '/api/public/debug-keys'
+      path: '/api/public/debug-keys'
+      fullPath: '/api/public/debug-keys'
+      preLoaderRoute: typeof ApiPublicDebugKeysRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/debug-datajud': {
       id: '/api/public/debug-datajud'
@@ -327,9 +347,20 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
   ApiPublicDebugDatajudRoute: ApiPublicDebugDatajudRoute,
+  ApiPublicDebugKeysRoute: ApiPublicDebugKeysRoute,
   ApiPublicDiscoveryRefreshRoute: ApiPublicDiscoveryRefreshRoute,
   ApiPublicIngestionTickRoute: ApiPublicIngestionTickRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

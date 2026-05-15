@@ -12,7 +12,7 @@ const CreateProcessSchema = z.object({
 
 type CreateResult = {
   processNumber: string;
-  status: "queued" | "invalid" | "duplicate";
+  status: "queued" | "invalid" | "duplicate" | "not_found";
   targetId?: string;
   message?: string;
 };
@@ -99,6 +99,16 @@ export const createProcessTargets = createServerFn({ method: "POST" })
         });
         const syncJson: any = await syncRes.json().catch(() => ({}));
         if (!syncRes.ok) {
+          if (syncRes.status === 404 || syncJson?.error === "process_not_found") {
+            // Remove o target órfão para o usuário poder tentar de novo
+            await sb.from("monitoring_targets").delete().eq("id", target.id);
+            results.push({
+              processNumber: raw,
+              status: "not_found",
+              message: `Processo não encontrado no DataJud TJRJ. Confira o número e tente novamente.`,
+            });
+            continue;
+          }
           results.push({
             processNumber: raw,
             status: "queued",

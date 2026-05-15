@@ -1,0 +1,1 @@
+DELETE FROM public.monitoring_targets WHERE id = '35ff586f-8863-42e5-bd6f-1892b08e86f4';

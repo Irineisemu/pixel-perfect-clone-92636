@@ -149,6 +149,28 @@ export const getDashboard = createServerFn({ method: "GET" })
 
     const totalNew = processes.reduce((sum, p) => sum + (p.newMovementsCount || 0), 0);
 
+    // Process-type targets pending scrape (still not linked to a process row)
+    const linkedTargetIds = new Set(((linkRows ?? []) as any[]).map((r) => r.target.id));
+    const { data: pendingProcessTargets } = await sb
+      .from("monitoring_targets")
+      .select("id, process_number, nickname, tribunal_alias, discovery_status, source_type, created_at")
+      .eq("type", "process")
+      .eq("is_active", true)
+      .order("created_at", { ascending: false });
+
+    const pendingProcesses = ((pendingProcessTargets ?? []) as any[])
+      .filter((t) => !linkedTargetIds.has(t.id))
+      .map((t) => ({
+        targetId: t.id,
+        processNumber: t.process_number,
+        displayNumber: formatProcessNumber(t.process_number),
+        tribunal: t.tribunal_alias === "api_publica_tjrj" ? "TJRJ" : t.tribunal_alias ?? "—",
+        nickname: t.nickname,
+        sourceType: t.source_type,
+        discoveryStatus: t.discovery_status ?? "pending",
+        createdAt: t.created_at,
+      }));
+
     const hasRunningDiscovery = (lawyers ?? []).some(
       (l: any) => l.discovery_status === "running" || l.discovery_status === "pending",
     );
@@ -164,7 +186,8 @@ export const getDashboard = createServerFn({ method: "GET" })
       },
       lawyers: lawyers ?? [],
       processes,
+      pendingProcesses,
       recentNewMovements,
-      hasRunningDiscovery: hasRunningDiscovery || hasPendingSync,
+      hasRunningDiscovery: hasRunningDiscovery || hasPendingSync || pendingProcesses.length > 0,
     };
   });

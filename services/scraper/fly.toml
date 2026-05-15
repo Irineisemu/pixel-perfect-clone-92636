@@ -1,0 +1,39 @@
+# Exemplo Fly.io — ajuste app name e região
+app = "jusradar-scraper"
+primary_region = "gru"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  TICK_INTERVAL_MS = "5000"
+  INGESTION_CONCURRENCY_SCRAPING = "2"
+  SCRAPING_BROWSER_POOL_SIZE = "3"
+  HEALTH_PORT = "8080"
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+  auto_stop_machines = false
+  auto_start_machines = false
+  min_machines_running = 1
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.http_checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "30s"
+    method = "get"
+    path = "/healthz"
+
+[[mounts]]
+  source = "raw_payloads"
+  destination = "/var/lib/jusradar/raw"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 2
+  memory = "2gb"

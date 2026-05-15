@@ -199,7 +199,7 @@ async function processOne(job: any) {
   }
 
   const start = Date.now();
-  const tribunal: string = job.tribunal;
+  const tribunal: string = String(job.tribunal ?? "").toLowerCase();
   try {
     let raw: AnyRaw;
     let source: string;

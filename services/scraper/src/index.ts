@@ -58,6 +58,13 @@ const PUBLIC_RX = /\b(estado|munic[ií]pio|uni[aã]o|fazenda|inss|defensoria|min
 
 type AnyRaw = TJSPRaw | TJRJRaw;
 
+function canonicalTribunalAlias(tribunal: string) {
+  const normalized = tribunal.toLowerCase();
+  if (normalized === "tjrj") return "api_publica_tjrj";
+  if (normalized === "tjsp") return "api_publica_tjsp";
+  return tribunal;
+}
+
 async function toCanonical(raw: AnyRaw, tribunal: string, source: string) {
   const movements = await Promise.all(
     raw.movimentos.map(async (m, i) => {
@@ -77,7 +84,7 @@ async function toCanonical(raw: AnyRaw, tribunal: string, source: string) {
 
   return {
     processNumber: raw.processNumber,
-    tribunalAlias: tribunal,
+    tribunalAlias: canonicalTribunalAlias(tribunal),
     classCode: null,
     className: raw.className,
     subjectCodes: [] as number[],

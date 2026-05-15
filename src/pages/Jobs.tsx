@@ -85,6 +85,9 @@ export function Jobs() {
         </p>
       </div>
 
+      {/* Worker status */}
+      <WorkerBanner worker={worker} />
+
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
         {[

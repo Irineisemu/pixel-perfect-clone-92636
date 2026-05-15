@@ -144,9 +144,23 @@ export function Jobs() {
                   </td>
                   <td className="px-3 py-2">{j.attempts}/{j.max_attempts}</td>
                   <td className="px-3 py-2">{dur != null ? fmtDuration(dur) : "—"}</td>
-                  <td className="px-3 py-2 text-red-700 max-w-[280px] truncate">
-                    {j.last_error_kind && <span className="text-[10.5px] uppercase mr-1 text-red-500">{j.last_error_kind}</span>}
-                    {j.last_error}
+                  <td className="px-3 py-2 max-w-[280px] truncate">
+                    {j.last_error_kind && (
+                      <span
+                        className={`text-[10.5px] uppercase mr-1 px-1 py-0.5 rounded ${
+                          j.last_error_kind === "auth_failed" || j.last_error_kind === "auth_required"
+                            ? "bg-red-100 text-red-800"
+                            : j.last_error_kind === "captcha_required"
+                            ? "bg-amber-100 text-amber-800"
+                            : j.last_error_kind === "blocked"
+                            ? "bg-orange-100 text-orange-800"
+                            : "bg-zinc-100 text-zinc-700"
+                        }`}
+                      >
+                        {j.last_error_kind}
+                      </span>
+                    )}
+                    <span className="text-red-700">{j.last_error}</span>
                   </td>
                   <td className="px-3 py-2 text-zinc-500">{new Date(j.updated_at).toLocaleString("pt-BR")}</td>
                   <td className="px-3 py-2">

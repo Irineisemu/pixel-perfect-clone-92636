@@ -12,7 +12,7 @@ const CreateProcessSchema = z.object({
 
 type CreateResult = {
   processNumber: string;
-  status: "queued" | "invalid" | "duplicate";
+  status: "queued" | "invalid" | "duplicate" | "not_found";
   targetId?: string;
   message?: string;
 };

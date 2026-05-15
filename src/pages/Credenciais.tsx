@@ -1,5 +1,6 @@
 // @ts-nocheck
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -8,6 +9,7 @@ import {
   upsertCredential,
   deleteCredential,
   testCredential,
+  getCredentialStatus,
 } from "../lib/credentials.functions";
 
 const TRIBUNAIS = [
@@ -29,6 +31,7 @@ function statusPill(s: string | null) {
   if (s === "ok") return <span className="text-[11.5px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">Validada</span>;
   if (s === "failed") return <span className="text-[11.5px] px-1.5 py-0.5 rounded bg-red-50 text-red-700">Credenciais inválidas</span>;
   if (s === "captcha") return <span className="text-[11.5px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-800">Captcha exigido</span>;
+  if (s === "testing") return <span className="text-[11.5px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">Testando…</span>;
   return <span className="text-[11.5px] px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600">Não testada</span>;
 }
 
@@ -37,12 +40,17 @@ export function Credenciais() {
   const upsert = useServerFn(upsertCredential);
   const del = useServerFn(deleteCredential);
   const test = useServerFn(testCredential);
+  const getStatus = useServerFn(getCredentialStatus);
 
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ tribunal: "tjrj", oabNumber: "", oabUf: "RJ", password: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState<Record<string, string | null>>({}); // credId -> jobId
+  const pollers = useRef<Record<string, ReturnType<typeof setInterval>>>({});
+
+  useEffect(() => () => { Object.values(pollers.current).forEach(clearInterval); }, []);
 
   const refresh = async () => {
     setLoading(true);
@@ -76,6 +84,43 @@ export function Credenciais() {
       toast.error("Erro ao salvar", { description: e.message });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const runTest = async (credId: string) => {
+    if (testing[credId]) return;
+    try {
+      const res = await test({ data: { id: credId } });
+      const jobId = (res as any).jobId as string;
+      setTesting((t) => ({ ...t, [credId]: jobId }));
+      setItems((it) => it.map((c) => (c.id === credId ? { ...c, last_validation_status: "testing", last_validation_error: null } : c)));
+      toast.message("Teste iniciado", { description: "Validando login no PJe…" });
+
+      const startedAt = Date.now();
+      pollers.current[credId] = setInterval(async () => {
+        try {
+          const row = await getStatus({ data: { id: credId } });
+          if (!row) return;
+          const s = row.last_validation_status;
+          const elapsed = Date.now() - startedAt;
+          if (s && s !== "testing") {
+            clearInterval(pollers.current[credId]);
+            delete pollers.current[credId];
+            setTesting((t) => { const n = { ...t }; delete n[credId]; return n; });
+            setItems((it) => it.map((c) => (c.id === credId ? { ...c, ...row } : c)));
+            if (s === "ok") toast.success("Credencial validada", { description: "Login no PJe funcionou." });
+            else if (s === "captcha") toast.warning("Captcha exigido pelo PJe", { description: row.last_validation_error ?? undefined });
+            else toast.error("Falha na validação", { description: row.last_validation_error ?? "Verifique OAB e senha." });
+          } else if (elapsed > 120_000) {
+            clearInterval(pollers.current[credId]);
+            delete pollers.current[credId];
+            setTesting((t) => { const n = { ...t }; delete n[credId]; return n; });
+            toast.error("Timeout", { description: "O worker demorou demais. Veja o job em /jobs." });
+          }
+        } catch { /* ignora glitch de polling */ }
+      }, 3000);
+    } catch (e: any) {
+      toast.error("Erro ao iniciar teste", { description: e.message });
     }
   };
 
@@ -146,7 +191,7 @@ export function Credenciais() {
                   <div className="text-[13px] font-medium text-zinc-900">
                     {c.tribunal_alias.toUpperCase()} · OAB/{c.oab_uf} {c.oab_number}
                   </div>
-                  <div className="text-[11.5px] text-zinc-500 mt-0.5 flex items-center gap-2">
+                  <div className="text-[11.5px] text-zinc-500 mt-0.5 flex items-center gap-2 flex-wrap">
                     {statusPill(c.last_validation_status)}
                     {c.last_validated_at && (
                       <span>testada {new Date(c.last_validated_at).toLocaleString("pt-BR")}</span>
@@ -154,13 +199,19 @@ export function Credenciais() {
                     {c.last_validation_error && (
                       <span className="text-red-600 truncate max-w-[280px]">{c.last_validation_error}</span>
                     )}
+                    {testing[c.id] && (
+                      <Link to="/jobs" className="text-blue-700 underline underline-offset-2">
+                        ver job
+                      </Link>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={async () => { await test({ data: { id: c.id } }); toast.success("Teste enfileirado", { description: "Atualize em ~30s." }); }}
-                    className="h-8 px-2.5 rounded-md border border-zinc-200 text-[12px] hover:bg-zinc-50">
-                    Testar
+                    onClick={() => runTest(c.id)}
+                    disabled={!!testing[c.id]}
+                    className="h-8 px-2.5 rounded-md border border-zinc-200 text-[12px] hover:bg-zinc-50 disabled:opacity-60">
+                    {testing[c.id] ? "Testando…" : "Testar"}
                   </button>
                   <button
                     onClick={async () => {

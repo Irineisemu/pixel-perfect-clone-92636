@@ -208,6 +208,13 @@ export async function scrapeTJRJ(
 
 async function loginPje(page: any, creds: TJRJCredentials) {
   await page.goto(selectors.login.url, { waitUntil: "domcontentloaded", timeout: 45_000 });
+
+  // Captcha já na tela de login → não temos como resolver.
+  const loginHtml = await page.content();
+  if (isCaptcha(loginHtml)) {
+    throw new TJRJScrapeError("captcha_required", "captcha exigido na tela de login PJe TJRJ");
+  }
+
   // Tab OAB
   const oabTab = page.locator(selectors.login.tabOAB).first();
   if (await oabTab.count()) await oabTab.click().catch(() => {});
@@ -222,16 +229,29 @@ async function loginPje(page: any, creds: TJRJCredentials) {
     page.click(selectors.login.submit),
   ]);
 
+  // Captcha pós-submit (PJe às vezes só pede captcha após N tentativas).
+  const postHtml = await page.content();
+  if (isCaptcha(postHtml)) {
+    throw new TJRJScrapeError("captcha_required", "captcha exigido após submit do login");
+  }
+
+  // Mensagem explícita de erro nas caixas conhecidas.
   const errorBox = page.locator(selectors.login.errorBox).first();
   if (await errorBox.count()) {
-    const txt = (await errorBox.textContent().catch(() => "")) || "";
-    if (/inv|incorret|falh|inval/i.test(txt)) {
-      throw new TJRJScrapeError("auth_failed", `login PJe falhou: ${txt.slice(0, 120)}`);
+    const txt = ((await errorBox.textContent().catch(() => "")) || "").trim();
+    if (txt && looksLikeAuthFailure(txt)) {
+      throw new TJRJScrapeError("auth_failed", `login PJe falhou: ${txt.slice(0, 160)}`);
     }
   }
-  // Heurística: se ainda está na tela de login, falhou
+
+  // Heurística de fallback no HTML inteiro (PJe pode renderizar fora dos seletores).
+  if (looksLikeAuthFailure(postHtml)) {
+    throw new TJRJScrapeError("auth_failed", "credenciais OAB rejeitadas pelo PJe TJRJ");
+  }
+
+  // Se ainda está em /login.seam após submit, considera falha de credencial.
   if (page.url().includes("login.seam")) {
-    throw new TJRJScrapeError("auth_failed", "ainda em /login.seam após submit");
+    throw new TJRJScrapeError("auth_failed", "permaneceu em /login.seam após submit (credenciais provavelmente inválidas)");
   }
 }
 

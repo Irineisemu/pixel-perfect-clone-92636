@@ -32,6 +32,7 @@ function jobDurationMs(j: any) {
 
 export function Jobs() {
   const fetchJobs = useServerFn(getUserJobs);
+  const fetchWorker = useServerFn(getWorkerStatus);
   const retry = useServerFn(retryJob);
 
   const [filters, setFilters] = useState<{ status: string[]; tribunal?: string; errorKind?: string; page: number }>({
@@ -39,14 +40,19 @@ export function Jobs() {
     page: 1,
   });
   const [data, setData] = useState<any>({ rows: [], total: 0, kpis: {} });
+  const [worker, setWorker] = useState<any>({ workers: [], anyOnline: false, hasAny: false });
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<any>(null);
 
   const load = async () => {
     setLoading(true);
     try {
-      const res = await fetchJobs({ data: { ...filters, pageSize: 25 } });
+      const [res, ws] = await Promise.all([
+        fetchJobs({ data: { ...filters, pageSize: 25 } }),
+        fetchWorker().catch(() => ({ workers: [], anyOnline: false, hasAny: false })),
+      ]);
       setData(res);
+      setWorker(ws);
     } catch (e: any) {
       toast.error("Erro ao carregar", { description: e.message });
     } finally {

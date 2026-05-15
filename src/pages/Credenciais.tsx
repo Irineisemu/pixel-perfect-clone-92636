@@ -27,7 +27,8 @@ const schema = z.object({
 
 function statusPill(s: string | null) {
   if (s === "ok") return <span className="text-[11.5px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">Validada</span>;
-  if (s === "failed") return <span className="text-[11.5px] px-1.5 py-0.5 rounded bg-red-50 text-red-700">Falhou</span>;
+  if (s === "failed") return <span className="text-[11.5px] px-1.5 py-0.5 rounded bg-red-50 text-red-700">Credenciais inválidas</span>;
+  if (s === "captcha") return <span className="text-[11.5px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-800">Captcha exigido</span>;
   return <span className="text-[11.5px] px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600">Não testada</span>;
 }
 

@@ -247,16 +247,50 @@ async function processOne(job: any) {
   } catch (err) {
     const kind =
       err instanceof TJSPScrapeError || err instanceof TJRJScrapeError ? err.kind : "unexpected";
-    const recoverable = kind !== "auth_required" && kind !== "not_found" && kind !== "captcha_required";
+    // Não-recuperáveis: ações do usuário são necessárias antes de tentar de novo.
+    const NON_RECOVERABLE = new Set([
+      "auth_required",
+      "auth_failed",
+      "captcha_required",
+      "not_found",
+      "blocked",
+    ]);
+    const recoverable = !NON_RECOVERABLE.has(kind);
     const status =
       !recoverable || job.attempts >= job.max_attempts ? "dead_letter" : "needs_scraping";
+    const msg = String((err as Error).message ?? err).slice(0, 500);
+
+    // Propaga falha de auth para a credencial do usuário, para aparecer em /credenciais.
+    if ((kind === "auth_failed" || kind === "captcha_required") && tribunal === "tjrj") {
+      try {
+        const userId = await findUserIdForJob(job);
+        if (userId) {
+          const { data: cred } = await db
+            .from("tribunal_credentials")
+            .select("id")
+            .eq("user_id", userId)
+            .eq("tribunal_alias", tribunal)
+            .maybeSingle();
+          if (cred?.id) {
+            await db.rpc("update_credential_validation", {
+              _credential_id: cred.id,
+              _status: kind === "captcha_required" ? "captcha" : "failed",
+              _error: msg,
+            });
+          }
+        }
+      } catch (e) {
+        log("warn", { event: "credential_status_propagation_failed", error: String(e) });
+      }
+    }
+
     await db
       .from("ingestion_jobs")
       .update({
         status,
         locked_until: null,
         scheduled_for: new Date(Date.now() + 60_000 * Math.pow(2, job.attempts)).toISOString(),
-        last_error: String((err as Error).message ?? err).slice(0, 500),
+        last_error: msg,
         last_error_kind: kind,
       })
       .eq("id", job.id);

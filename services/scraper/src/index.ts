@@ -6,6 +6,7 @@
  *   - kind=credential_check — apenas valida login da OAB
  */
 import http from "node:http";
+import ws from "ws";
 import { createClient } from "@supabase/supabase-js";
 import { scrapeTJSP, TJSPScrapeError, type TJSPRaw } from "./adapters/tjsp/index.js";
 import { scrapeTJRJ, TJRJScrapeError, type TJRJRaw, type TJRJCredentials } from "./adapters/tjrj/index.js";
@@ -29,7 +30,10 @@ if (missing.length) {
   process.exit(1);
 }
 
-const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
+const db = createClient(SUPABASE_URL, SERVICE_KEY, {
+  auth: { persistSession: false },
+  realtime: { transport: ws as unknown as typeof WebSocket },
+});
 
 let lastTickAt = Date.now();
 let lastSuccessAt = 0;

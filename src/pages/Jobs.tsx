@@ -233,3 +233,71 @@ export function Jobs() {
     </div>
   );
 }
+
+function fmtAgo(ms: number | null) {
+  if (ms == null) return "nunca";
+  if (ms < 60_000) return `${Math.round(ms / 1000)}s atrás`;
+  if (ms < 3_600_000) return `${Math.round(ms / 60_000)}min atrás`;
+  return `${Math.round(ms / 3_600_000)}h atrás`;
+}
+
+function WorkerBanner({ worker }: { worker: any }) {
+  if (!worker?.hasAny) {
+    return (
+      <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 flex items-start gap-3">
+        <span className="mt-0.5 inline-block h-2 w-2 rounded-full bg-amber-500" />
+        <div className="text-[12.5px]">
+          <div className="font-medium text-amber-900">Nenhum worker de scraping detectado</div>
+          <div className="text-amber-800 mt-0.5">
+            Faça o deploy do worker Playwright em Railway/Fly.io seguindo{" "}
+            <code className="px-1 py-0.5 bg-amber-100 rounded">services/scraper/DEPLOY.md</code>.
+            Sem ele, jobs com login/captcha (TJRJ 1º grau) ficarão pendentes.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const online = worker.workers.filter((w: any) => w.online);
+  const offline = worker.workers.filter((w: any) => !w.online);
+  const allOnline = offline.length === 0;
+
+  return (
+    <div
+      className={`mb-4 rounded-lg border p-3 flex items-start gap-3 ${
+        allOnline
+          ? "border-emerald-200 bg-emerald-50"
+          : online.length > 0
+          ? "border-amber-200 bg-amber-50"
+          : "border-red-200 bg-red-50"
+      }`}
+    >
+      <span
+        className={`mt-1 inline-block h-2 w-2 rounded-full ${
+          allOnline ? "bg-emerald-500 animate-pulse" : online.length > 0 ? "bg-amber-500" : "bg-red-500"
+        }`}
+      />
+      <div className="flex-1 text-[12.5px]">
+        <div className="font-medium text-zinc-900">
+          Worker {allOnline ? "online" : online.length > 0 ? "parcial" : "offline"}
+          <span className="text-zinc-500 font-normal ml-2">
+            {online.length} online · {offline.length} offline
+          </span>
+        </div>
+        <div className="mt-1 space-y-0.5">
+          {worker.workers.map((w: any) => (
+            <div key={w.workerId} className="text-zinc-700 flex items-center gap-2">
+              <span
+                className={`inline-block h-1.5 w-1.5 rounded-full ${w.online ? "bg-emerald-500" : "bg-red-500"}`}
+              />
+              <code className="text-[11.5px]">{w.workerId}</code>
+              <span className="text-zinc-500">
+                · visto {fmtAgo(w.lastSeenMs)} · último sucesso {fmtAgo(w.lastSuccessMs)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

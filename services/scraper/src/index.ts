@@ -298,8 +298,29 @@ async function processOne(job: any) {
   }
 }
 
+async function emitHeartbeat() {
+  try {
+    await db.from("worker_heartbeats").upsert(
+      {
+        worker_id: WORKER_ID,
+        last_seen_at: new Date().toISOString(),
+        last_success_at: lastSuccessAt ? new Date(lastSuccessAt).toISOString() : null,
+        metadata: {
+          concurrency: CONCURRENCY,
+          tickIntervalMs: TICK_MS,
+          pid: process.pid,
+        },
+      },
+      { onConflict: "worker_id" },
+    );
+  } catch (e) {
+    log("warn", { event: "heartbeat_failed", error: String(e) });
+  }
+}
+
 async function tick() {
   lastTickAt = Date.now();
+  await emitHeartbeat();
   const { data: jobs, error } = await db.rpc("pick_ingestion_jobs", {
     _statuses: ["needs_scraping"],
     _worker: WORKER_ID,

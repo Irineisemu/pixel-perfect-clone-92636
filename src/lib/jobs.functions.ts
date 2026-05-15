@@ -100,8 +100,9 @@ export const retryJob = createServerFn({ method: "POST" })
       .select("id")
       .eq("user_id", userId);
     const userTargetIds = new Set((targets ?? []).map((t) => t.id));
+    const payload = (job.payload ?? {}) as Record<string, any>;
     const owns =
-      job.payload?.user_id === userId ||
+      payload.user_id === userId ||
       (job.target_ids ?? []).some((t: string) => userTargetIds.has(t));
     if (!owns) throw new Error("Sem permissão");
 

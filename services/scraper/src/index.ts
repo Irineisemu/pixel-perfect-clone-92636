@@ -242,6 +242,26 @@ async function processOne(job: any) {
       processId = ins.id;
     }
 
+    const targetIds: string[] = job.target_ids ?? [];
+    if (targetIds.length) {
+      for (const targetId of targetIds) {
+        await db.from("target_process_links").upsert(
+          {
+            target_id: targetId,
+            process_id: processId,
+            matched_via: "process_number",
+            matched_value: canonical.processNumber,
+            first_linked_at: new Date().toISOString(),
+          },
+          { onConflict: "target_id,process_id", ignoreDuplicates: true },
+        );
+      }
+      await db
+        .from("monitoring_targets")
+        .update({ discovery_status: "completed", last_discovery_at: new Date().toISOString() })
+        .in("id", targetIds);
+    }
+
     if (existing?.last_known_movements_hash !== canonical.movementsHash) {
       await db.from("process_updates").insert({
         process_id: processId,

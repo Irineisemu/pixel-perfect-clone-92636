@@ -46,7 +46,33 @@ function isBlockedTitle(title: string): boolean {
 
 function isCaptcha(html: string): boolean {
   const h = html.toLowerCase();
-  return h.includes("recaptcha") || h.includes("hcaptcha") || h.includes("g-recaptcha");
+  return (
+    h.includes("recaptcha") ||
+    h.includes("hcaptcha") ||
+    h.includes("g-recaptcha") ||
+    h.includes("cf-challenge") ||
+    h.includes("cf_chl_") ||
+    h.includes("challenge-platform") ||
+    h.includes("verifique se voc") || // "Verifique se você é humano"
+    h.includes("prove que voc") ||
+    h.includes("não sou um rob") ||
+    h.includes("nao sou um rob")
+  );
+}
+
+// Mensagens típicas do PJe TJRJ quando o login falha.
+const AUTH_FAIL_PATTERNS = [
+  /usu[aá]rio\s+ou\s+senha\s+(inv[aá]lid|incorret)/i,
+  /credenciais?\s+inv[aá]lid/i,
+  /senha\s+(inv[aá]lid|incorret)/i,
+  /oab\s+(inv[aá]lid|n[aã]o\s+encontrad)/i,
+  /login\s+(inv[aá]lid|falh)/i,
+  /falha\s+(no\s+)?login/i,
+  /autentica[cç][aã]o\s+(inv[aá]lid|falh)/i,
+];
+
+function looksLikeAuthFailure(text: string): boolean {
+  return AUTH_FAIL_PATTERNS.some((rx) => rx.test(text));
 }
 
 /**

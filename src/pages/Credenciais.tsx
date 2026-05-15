@@ -40,12 +40,17 @@ export function Credenciais() {
   const upsert = useServerFn(upsertCredential);
   const del = useServerFn(deleteCredential);
   const test = useServerFn(testCredential);
+  const getStatus = useServerFn(getCredentialStatus);
 
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ tribunal: "tjrj", oabNumber: "", oabUf: "RJ", password: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState<Record<string, string | null>>({}); // credId -> jobId
+  const pollers = useRef<Record<string, ReturnType<typeof setInterval>>>({});
+
+  useEffect(() => () => { Object.values(pollers.current).forEach(clearInterval); }, []);
 
   const refresh = async () => {
     setLoading(true);

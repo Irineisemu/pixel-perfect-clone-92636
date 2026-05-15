@@ -977,7 +977,7 @@ export type Database = {
         | "done"
         | "failed"
         | "dead_letter"
-      ingestion_source: "datajud" | "tjsp_esaj" | "manual"
+      ingestion_source: "datajud" | "tjsp_esaj" | "manual" | "tjrj_pje"
       movement_urgency: "critical" | "high" | "medium" | "info"
       notification_channel: "email" | "whatsapp"
       notification_frequency: "instant" | "daily" | "weekly"
@@ -1129,7 +1129,7 @@ export const Constants = {
         "failed",
         "dead_letter",
       ],
-      ingestion_source: ["datajud", "tjsp_esaj", "manual"],
+      ingestion_source: ["datajud", "tjsp_esaj", "manual", "tjrj_pje"],
       movement_urgency: ["critical", "high", "medium", "info"],
       notification_channel: ["email", "whatsapp"],
       notification_frequency: ["instant", "daily", "weekly"],

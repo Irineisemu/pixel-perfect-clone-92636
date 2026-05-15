@@ -58,6 +58,13 @@ const PUBLIC_RX = /\b(estado|munic[ií]pio|uni[aã]o|fazenda|inss|defensoria|min
 
 type AnyRaw = TJSPRaw | TJRJRaw;
 
+function canonicalTribunalAlias(tribunal: string) {
+  const normalized = tribunal.toLowerCase();
+  if (normalized === "tjrj") return "api_publica_tjrj";
+  if (normalized === "tjsp") return "api_publica_tjsp";
+  return tribunal;
+}
+
 async function toCanonical(raw: AnyRaw, tribunal: string, source: string) {
   const movements = await Promise.all(
     raw.movimentos.map(async (m, i) => {
@@ -77,7 +84,7 @@ async function toCanonical(raw: AnyRaw, tribunal: string, source: string) {
 
   return {
     processNumber: raw.processNumber,
-    tribunalAlias: tribunal,
+    tribunalAlias: canonicalTribunalAlias(tribunal),
     classCode: null,
     className: raw.className,
     subjectCodes: [] as number[],
@@ -192,7 +199,7 @@ async function processOne(job: any) {
   }
 
   const start = Date.now();
-  const tribunal: string = job.tribunal;
+  const tribunal: string = String(job.tribunal ?? "").toLowerCase();
   try {
     let raw: AnyRaw;
     let source: string;
@@ -233,6 +240,26 @@ async function processOne(job: any) {
         .single();
       if (error) throw error;
       processId = ins.id;
+    }
+
+    const targetIds: string[] = job.target_ids ?? [];
+    if (targetIds.length) {
+      for (const targetId of targetIds) {
+        await db.from("target_process_links").upsert(
+          {
+            target_id: targetId,
+            process_id: processId,
+            matched_via: "process_number",
+            matched_value: canonical.processNumber,
+            first_linked_at: new Date().toISOString(),
+          },
+          { onConflict: "target_id,process_id", ignoreDuplicates: true },
+        );
+      }
+      await db
+        .from("monitoring_targets")
+        .update({ discovery_status: "completed", last_discovery_at: new Date().toISOString() })
+        .in("id", targetIds);
     }
 
     if (existing?.last_known_movements_hash !== canonical.movementsHash) {

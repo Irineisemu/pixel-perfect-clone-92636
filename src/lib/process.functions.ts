@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const CreateProcessSchema = z.object({
   processNumbers: z
@@ -16,6 +17,26 @@ type CreateResult = {
   targetId?: string;
   message?: string;
 };
+
+function maskCNJ(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length !== 20) return value;
+  return `${digits.slice(0, 7)}-${digits.slice(7, 9)}.${digits.slice(9, 13)}.${digits.slice(13, 14)}.${digits.slice(14, 16)}.${digits.slice(16, 20)}`;
+}
+
+async function enqueueTjrjScrapeFallback(targetId: string, processNumber: string, userId: string, source: string) {
+  const formatted = maskCNJ(processNumber);
+  const { error } = await supabaseAdmin.from("ingestion_jobs").insert({
+    kind: "sync",
+    status: "needs_scraping",
+    tribunal: "tjrj",
+    process_number: formatted,
+    target_ids: [targetId],
+    priority: 3,
+    payload: { source, user_id: userId },
+  });
+  if (error) throw error;
+}
 
 export const createProcessTargets = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -100,13 +121,23 @@ export const createProcessTargets = createServerFn({ method: "POST" })
         const syncJson: any = await syncRes.json().catch(() => ({}));
         if (!syncRes.ok) {
           if (syncRes.status === 404 || syncJson?.error === "process_not_found") {
-            // Remove o target órfão para o usuário poder tentar de novo
-            await sb.from("monitoring_targets").delete().eq("id", target.id);
-            results.push({
-              processNumber: raw,
-              status: "not_found",
-              message: `Processo não encontrado no DataJud TJRJ. Confira o número e tente novamente.`,
-            });
+            try {
+              await enqueueTjrjScrapeFallback(target.id, normalized, userId, "manual_number_datajud_not_found");
+              await sb.from("monitoring_targets").update({ discovery_status: "pending" }).eq("id", target.id);
+              results.push({
+                processNumber: raw,
+                status: "queued",
+                targetId: target.id,
+                message: "Não apareceu no DataJud; busca enviada ao scraper TJRJ/PJe no Render.",
+              });
+            } catch (fallbackErr: any) {
+              await sb.from("monitoring_targets").delete().eq("id", target.id);
+              results.push({
+                processNumber: raw,
+                status: "not_found",
+                message: `Não apareceu no DataJud e não foi possível enviar ao scraper TJRJ/PJe: ${fallbackErr?.message ?? "erro desconhecido"}`,
+              });
+            }
             continue;
           }
           results.push({

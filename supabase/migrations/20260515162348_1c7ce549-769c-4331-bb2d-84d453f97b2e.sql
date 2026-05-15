@@ -1,0 +1,1 @@
+ALTER TYPE public.ingestion_source ADD VALUE IF NOT EXISTS 'tjrj_pje';

@@ -91,15 +91,20 @@ export function ProcessNumberForm({ onSuccess, onBack, onClose }: Props) {
       const notFound = results.filter((r: any) => r.status === "not_found");
 
       if (queued > 0) {
-        toast.success(`${queued} processo${queued > 1 ? "s" : ""} adicionado${queued > 1 ? "s" : ""} ao monitoramento.`);
+        const hasFallback = results.some((r: any) => r.status === "queued" && r.message?.includes("scraper TJRJ/PJe"));
+        toast.success(
+          hasFallback
+            ? `${queued} processo${queued > 1 ? "s" : ""} enviado${queued > 1 ? "s" : ""} para busca no TJRJ/PJe.`
+            : `${queued} processo${queued > 1 ? "s" : ""} adicionado${queued > 1 ? "s" : ""} ao monitoramento.`,
+        );
       }
       if (dup > 0) toast(`${dup} processo${dup > 1 ? "s" : ""} já estava${dup > 1 ? "m" : ""} sendo monitorado${dup > 1 ? "s" : ""}.`);
       if (inv > 0) toast.error(`${inv} número${inv > 1 ? "s" : ""} inválido${inv > 1 ? "s" : ""}.`);
       for (const nf of notFound) {
-        toast.error(`Processo ${formatDisplay(nf.processNumber.replace(/\D/g, ""))} não encontrado no DataJud TJRJ.`);
+        toast.error(nf.message || `Processo ${formatDisplay(nf.processNumber.replace(/\D/g, ""))} não encontrado no DataJud TJRJ.`);
       }
       if (notFound.length > 0 && queued === 0) {
-        setError("Nenhum dos processos foi encontrado no DataJud TJRJ. Confira os números e tente novamente.");
+        setError("Nenhum dos processos foi localizado ou enviado para busca complementar no TJRJ/PJe.");
       }
 
       onSuccess?.(results);

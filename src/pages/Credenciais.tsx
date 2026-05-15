@@ -87,6 +87,43 @@ export function Credenciais() {
     }
   };
 
+  const runTest = async (credId: string) => {
+    if (testing[credId]) return;
+    try {
+      const res = await test({ data: { id: credId } });
+      const jobId = (res as any).jobId as string;
+      setTesting((t) => ({ ...t, [credId]: jobId }));
+      setItems((it) => it.map((c) => (c.id === credId ? { ...c, last_validation_status: "testing", last_validation_error: null } : c)));
+      toast.message("Teste iniciado", { description: "Validando login no PJe…" });
+
+      const startedAt = Date.now();
+      pollers.current[credId] = setInterval(async () => {
+        try {
+          const row = await getStatus({ data: { id: credId } });
+          if (!row) return;
+          const s = row.last_validation_status;
+          const elapsed = Date.now() - startedAt;
+          if (s && s !== "testing") {
+            clearInterval(pollers.current[credId]);
+            delete pollers.current[credId];
+            setTesting((t) => { const n = { ...t }; delete n[credId]; return n; });
+            setItems((it) => it.map((c) => (c.id === credId ? { ...c, ...row } : c)));
+            if (s === "ok") toast.success("Credencial validada", { description: "Login no PJe funcionou." });
+            else if (s === "captcha") toast.warning("Captcha exigido pelo PJe", { description: row.last_validation_error ?? undefined });
+            else toast.error("Falha na validação", { description: row.last_validation_error ?? "Verifique OAB e senha." });
+          } else if (elapsed > 120_000) {
+            clearInterval(pollers.current[credId]);
+            delete pollers.current[credId];
+            setTesting((t) => { const n = { ...t }; delete n[credId]; return n; });
+            toast.error("Timeout", { description: "O worker demorou demais. Veja o job em /jobs." });
+          }
+        } catch { /* ignora glitch de polling */ }
+      }, 3000);
+    } catch (e: any) {
+      toast.error("Erro ao iniciar teste", { description: e.message });
+    }
+  };
+
   return (
     <div className="max-w-3xl">
       <div className="mb-6">

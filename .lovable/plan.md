@@ -1,56 +1,144 @@
-# Resumo expansível do processo no dashboard
-
-Expor no card de cada processo todos os dados que o DataJud já entrega (classe, assuntos, órgão julgador, data de ajuizamento, último movimento, sigilo, sistema, formato), com aviso explícito quando partes não estão disponíveis. Tudo lido do banco — sem chamadas extras ao DataJud.
-
 ## Escopo
 
-**Dentro:** card expandível na lista do dashboard (`/`), resumo com classe/assuntos/vara/datas/último movimento/metadados, aviso sobre partes com link pro portal TJRJ, resync dos processos já cadastrados.
+Quatro entregas conectadas para colocar o scraper TJRJ em produção:
 
-**Fora:** página dedicada `/processos/:id`, timeline completa, botão "sincronizar agora" individual, mudanças em outras telas.
+1. **Adapter TJRJ** (`services/scraper/src/adapters/tjrj/`)
+2. **Credenciais OAB por usuário** (UI + criptografia + enfileiramento)
+3. **Painel de logs/monitoramento de jobs** (UI)
+4. **Dockerfile + deploy do worker** (Railway / Fly.io)
 
-## Blocos de execução
+---
 
-### 1. Migration — novos campos em `processes`
-Arquivo `supabase/migrations/<timestamp>_ensure_process_summary_fields.sql`, idempotente com `IF NOT EXISTS`:
-- `filed_at TIMESTAMPTZ` (dataAjuizamento)
-- `organ_code TEXT`, `organ_name TEXT`
-- `municipality_ibge BIGINT`
-- `secrecy_level INT DEFAULT 0`
-- `system_name TEXT`, `format_name TEXT`
-- `last_update_at TIMESTAMPTZ` (dataHoraUltimaAtualizacao)
-- Índice em `filed_at DESC NULLS LAST`
-- `UPDATE processes SET sync_status='pending' WHERE filed_at IS NULL` para forçar resync (sem filtro por `tribunal` — coluna existente é `tribunal_alias`)
+## 1. Adapter TJRJ
 
-### 2. Edge Function — `sync-process-by-number`
-Substituir apenas `upsertProcess` para persistir os novos campos. Conversão de `dataAjuizamento` (YYYYMMDDHHMMSS) → ISO. Manter `tribunal_alias` (não criar coluna `tribunal`). Resto do arquivo intacto.
+Mesmo padrão do TJSP: `index.ts` + `selectors.json` + erros tipados.
 
-### 3. Server function — `src/lib/dashboard.functions.ts`
-- Adicionar novos campos ao `select` de `processes`
-- Buscar última movimentação por processo numa segunda query (`process_movements` ordenada por `occurred_at desc`, agrupar no JS pegando a primeira por `process_id`)
-- Mapear cada processo com: `subjects[]` (zip de codes/names), `instanceLabel`, `secrecyLabel`, `lastMovement`, `filedAt`, `organName`, etc.
-- Manter `requireSupabaseAuth` + `context.supabase` (padrão atual do arquivo) — não trocar por service client
+Alvo: **PJe TJRJ 2º grau** (`https://pje.tjrj.jus.br/2g/ConsultaPublica/listView.seam`) — tem consulta pública por número CNJ sem login. 1º grau exige login com OAB+senha (usado só quando o usuário cadastra credenciais).
 
-### 4. Componente `src/components/processes/ProcessCard.tsx`
-Card autônomo com:
-- Header sempre visível: número, classe, órgão, badges (tribunal, instância, formato, sigilo), badge de novas/em-dia/sincronizando/não-encontrado/falha
-- Botão "Ver resumo completo" / "Recolher resumo" controlando estado local `expanded`
-- Seção expandida: grid de campos (ajuizado em, último movimento, total, última verificação), bloco destacado do movimento mais recente, lista de assuntos como chips, sistema/órgão completo, aviso amarelo sobre partes com link pro portal TJRJ
-- Caso `not_found`: alerta amarelo no lugar do resumo
-- Helpers `formatDateBR`, `formatFullDateBR`, `formatRelativeBR` no próprio arquivo
-- **Estilo:** usar tokens semânticos do design system (`bg-card`, `text-muted-foreground`, `border`, `bg-accent`, `text-destructive`, etc.) e componentes `Card`/`Badge`/`Button` do shadcn em vez de classes Tailwind cruas tipo `bg-white`/`text-gray-600` do snippet de referência
+Fluxo público (sem credencial):
+```
+goto listView.seam
+preencher numeroProcesso (mascarado CNJ)
+click pesquisar → resultados
+click detalhes → página com partes + movimentações
+parse tabelas
+```
 
-### 5. Integração no dashboard
-Substituir o render atual de processos em `src/components/DashboardProcesses.tsx` (não há `src/routes/index.tsx` direto — o dashboard renderiza via esse componente) pelo `<ProcessCard process={p} />`. Remover o bloco antigo de "Sincronizar agora" + `ProcessMovementsTree` inline? **Confirmar:** spec diz que botão de sync individual está fora de escopo, mas ele já existe hoje. Vou **manter** o botão "Sincronizar agora" e o tree de histórico que foram adicionados na iteração anterior, e apenas envolver o resumo do processo no novo `ProcessCard` — isso preserva funcionalidade já entregue ao usuário.
+Fluxo autenticado (com OAB do usuário, 1º grau):
+```
+goto login PJe TJRJ
+fill usuario/senha (das credenciais descriptografadas vindas no payload do job)
+detectar página de erro de login → throw TJRJScrapeError("auth_failed")
+seguir fluxo de consulta
+```
 
-### 6. Resync
-Após deploy da Edge Function, disparar `sync-all-processes` uma vez para popular os novos campos nos processos existentes (a migration já marcou todos como `pending`).
+Erros tipados: `blocked | not_found | parse_failed | timeout | source_unavailable | auth_failed | captcha_required`.
+
+Selectors em JSON versionado. Detecção de Cloudflare/captcha aborta com `kind=blocked` ou `captcha_required` (sem tentar resolver).
+
+Adicionar roteamento em `src/index.ts` baseado em `job.tribunal`:
+```
+tjrj → scrapeTJRJ
+tjsp → scrapeTJSP
+```
+
+---
+
+## 2. Credenciais OAB por usuário
+
+### Banco
+Nova tabela `tribunal_credentials`:
+- `user_id`, `tribunal_alias` (tjrj, tjsp…), `oab_number`, `oab_uf`
+- `password_enc bytea` — AES-GCM via `pgcrypto.pgp_sym_encrypt(password, current_setting('app.creds_key'))`
+- RLS: usuário só lê/escreve as próprias linhas
+- Senha **nunca** retorna ao cliente; campos sensíveis lidos só por função `get_credentials_for_scraper(user_id, tribunal)` `SECURITY DEFINER` chamada pelo worker (service role).
+
+Chave de criptografia: secret `CREDENTIALS_ENCRYPTION_KEY` (peço via `add_secret`). O worker injeta `SET app.creds_key` por sessão antes de chamar a função.
+
+### UI
+Nova página `/configuracoes/credenciais` (e card em `Configuracoes.tsx`):
+- Lista credenciais cadastradas (mostra OAB e tribunal, nunca senha)
+- Form: tribunal (select), OAB, UF, senha (password input)
+- Botão "Testar credencial" → enfileira job `kind=credential_check`
+- Status última validação (ok/falhou + timestamp)
+
+Server functions em `src/lib/credentials.functions.ts`:
+- `listCredentials()`, `upsertCredential()`, `deleteCredential()`, `testCredential()`
+- Todas com `requireSupabaseAuth`. `upsert` chama RPC `set_credential(tribunal, oab, uf, password)` que faz a criptografia server-side.
+
+### Enfileiramento automático
+Quando o adapter falha com `auth_required` (ou um processo de 1º grau não retorna sem login), o worker enfileira `needs_scraping` com `payload.requires_credentials = true` e `payload.user_id`. Se o usuário não tiver credencial cadastrada → marca `dead_letter` com `last_error_kind=missing_credentials` e cria notificação.
+
+---
+
+## 3. Painel de logs/monitoramento
+
+Reaproveita `/admin/ingestion` (já existe) + nova aba **"Jobs"** acessível ao usuário comum em `/configuracoes/jobs`:
+
+- Tabela paginada de `ingestion_jobs` filtrada por `user_id` (via target_ids → monitoring_targets)
+- Colunas: tribunal, processo, status, tentativas, último erro, kind do erro, duração (locked_until - updated_at), agendado para
+- Filtros: status, tribunal, kind do erro, intervalo de datas
+- Detalhe do job (drawer): payload completo, histórico de erros, link para `raw_payloads` mais recente
+- Auto-refresh a cada 10s (realtime opcional via `supabase.channel`)
+
+Server function `getUserJobs({ filters, page })` com `requireSupabaseAuth`, filtra jobs cujos `target_ids` pertencem ao usuário.
+
+Métricas no topo: jobs/hora, taxa de sucesso 24h, jobs em `dead_letter`, latência p95.
+
+---
+
+## 4. Dockerfile + deploy
+
+`services/scraper/Dockerfile`:
+```dockerfile
+FROM mcr.microsoft.com/playwright:v1.48.0-jammy
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev
+COPY tsconfig.json ./
+COPY src ./src
+ENV NODE_ENV=production
+ENV RAW_PAYLOAD_LOCAL_PATH=/var/lib/jusradar/raw
+RUN mkdir -p /var/lib/jusradar/raw
+CMD ["npx","tsx","src/index.ts"]
+```
+
+`services/scraper/.dockerignore`, `fly.toml` e `railway.json` de exemplo.
+
+`services/scraper/DEPLOY.md` cobrindo:
+- Variáveis obrigatórias (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CREDENTIALS_ENCRYPTION_KEY`, pool size, concurrency)
+- **Railway**: `railway up` no diretório, setar envs no dashboard, escalar para 1 réplica (worker singleton inicialmente)
+- **Fly.io**: `fly launch --no-deploy`, ajustar `fly.toml` com volume para `/var/lib/jusradar/raw`, `fly secrets set …`, `fly deploy`
+- Health check: endpoint HTTP `/healthz` opcional (adiciono mini servidor http no worker) para o provider matar pod travado
+- Observabilidade: logs JSON já existem; instruções para `railway logs` e `fly logs`
+- Como rodar 2+ workers (já é seguro: `pick_ingestion_jobs` usa `FOR UPDATE SKIP LOCKED`)
+
+---
 
 ## Detalhes técnicos
 
-- **Schema atual:** coluna é `tribunal_alias` (não `tribunal`). Ajustar todas as referências do snippet original.
-- **Server function existente:** `getDashboard` em `src/lib/dashboard.functions.ts` usa `requireSupabaseAuth` middleware com `context.supabase` (RLS), não service client. Preservar esse padrão.
-- **Order by aninhado:** `.order('process(last_movement_at)', ...)` pode não funcionar em todas as versões do PostgREST; manter ordenação atual por `first_linked_at` se falhar, ou ordenar em JS após mapeamento.
-- **Componente isolado:** `ProcessCard` autônomo, mas as ações já existentes (Sincronizar agora, Ver histórico paginado) ficam fora dele e continuam no `DashboardProcesses` ao redor — para não regredir a feature anterior.
+**Migrações** (uma só):
+- `tribunal_credentials` + RLS + `set_credential` + `get_credentials_for_scraper`
+- Índice `ingestion_jobs(status, scheduled_for)` (se ainda não existir) p/ painel
+- Nova `kind` permitida: `credential_check`
 
-## Pergunta de confirmação
-O snippet do Bloco 5 sugere remover toda a renderização inline antiga, o que apagaria o botão "Sincronizar agora" e o `ProcessMovementsTree` adicionados na iteração passada. Confirma manter esses dois (sync manual + árvore de histórico) acoplados ao novo `ProcessCard`, ou remove tudo e fica só com o card de resumo + cron?
+**Validações UI** (zod, em todas as forms):
+- OAB: `^\d{1,7}$`, UF: 2 letras, senha: min 4 max 200, tribunal: enum
+
+**Secret necessário**: `CREDENTIALS_ENCRYPTION_KEY` (peço via add_secret depois que aprovar o plano).
+
+**Não faço nesta entrega**:
+- Não rodo o worker (precisa do provider do usuário)
+- Não resolvo captcha (aborta com erro tipado)
+- Não implemento 1º grau TJRJ se não houver credencial — fica como `auth_required`
+
+---
+
+## Ordem de execução
+
+1. Migração (tabela + funções + kind)
+2. Pedir secret `CREDENTIALS_ENCRYPTION_KEY`
+3. Adapter TJRJ + roteamento no worker
+4. Server functions de credenciais + UI
+5. Server function de jobs + UI
+6. Dockerfile + DEPLOY.md

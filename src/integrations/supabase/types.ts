@@ -778,6 +778,48 @@ export type Database = {
           },
         ]
       }
+      tribunal_credentials: {
+        Row: {
+          created_at: string
+          id: string
+          last_validated_at: string | null
+          last_validation_error: string | null
+          last_validation_status: string | null
+          oab_number: string
+          oab_uf: string
+          password_enc: string
+          tribunal_alias: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_validated_at?: string | null
+          last_validation_error?: string | null
+          last_validation_status?: string | null
+          oab_number: string
+          oab_uf: string
+          password_enc: string
+          tribunal_alias: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_validated_at?: string | null
+          last_validation_error?: string | null
+          last_validation_status?: string | null
+          oab_number?: string
+          oab_uf?: string
+          password_enc?: string
+          tribunal_alias?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tribunals: {
         Row: {
           alias: string
@@ -840,6 +882,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_tribunal_credential_for_scraper: {
+        Args: { _key: string; _tribunal: string; _user_id: string }
+        Returns: {
+          oab_number: string
+          oab_uf: string
+          password: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -880,6 +930,20 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      set_tribunal_credential: {
+        Args: {
+          _key: string
+          _oab_number: string
+          _oab_uf: string
+          _password: string
+          _tribunal: string
+        }
+        Returns: string
+      }
+      update_credential_validation: {
+        Args: { _credential_id: string; _error: string; _status: string }
+        Returns: undefined
       }
     }
     Enums: {

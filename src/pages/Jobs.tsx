@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { getUserJobs, retryJob } from "../lib/jobs.functions";
+import { getWorkerStatus } from "../lib/worker-status.functions";
 
 const STATUS_OPTIONS = ["queued", "needs_scraping", "processing", "done", "dead_letter"];
 

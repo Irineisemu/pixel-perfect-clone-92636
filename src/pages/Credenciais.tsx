@@ -191,7 +191,7 @@ export function Credenciais() {
                   <div className="text-[13px] font-medium text-zinc-900">
                     {c.tribunal_alias.toUpperCase()} · OAB/{c.oab_uf} {c.oab_number}
                   </div>
-                  <div className="text-[11.5px] text-zinc-500 mt-0.5 flex items-center gap-2">
+                  <div className="text-[11.5px] text-zinc-500 mt-0.5 flex items-center gap-2 flex-wrap">
                     {statusPill(c.last_validation_status)}
                     {c.last_validated_at && (
                       <span>testada {new Date(c.last_validated_at).toLocaleString("pt-BR")}</span>
@@ -199,13 +199,19 @@ export function Credenciais() {
                     {c.last_validation_error && (
                       <span className="text-red-600 truncate max-w-[280px]">{c.last_validation_error}</span>
                     )}
+                    {testing[c.id] && (
+                      <Link to="/jobs" className="text-blue-700 underline underline-offset-2">
+                        ver job
+                      </Link>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={async () => { await test({ data: { id: c.id } }); toast.success("Teste enfileirado", { description: "Atualize em ~30s." }); }}
-                    className="h-8 px-2.5 rounded-md border border-zinc-200 text-[12px] hover:bg-zinc-50">
-                    Testar
+                    onClick={() => runTest(c.id)}
+                    disabled={!!testing[c.id]}
+                    className="h-8 px-2.5 rounded-md border border-zinc-200 text-[12px] hover:bg-zinc-50 disabled:opacity-60">
+                    {testing[c.id] ? "Testando…" : "Testar"}
                   </button>
                   <button
                     onClick={async () => {

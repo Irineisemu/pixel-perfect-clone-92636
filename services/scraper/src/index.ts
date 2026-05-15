@@ -19,6 +19,16 @@ const WORKER_ID = process.env.WORKER_ID ?? `scraper-${process.pid}`;
 const CONCURRENCY = Number(process.env.INGESTION_CONCURRENCY_SCRAPING ?? 2);
 const HEALTH_PORT = Number(process.env.HEALTH_PORT ?? 8080);
 
+const missing = [
+  ["SUPABASE_URL", SUPABASE_URL],
+  ["SUPABASE_SERVICE_ROLE_KEY", SERVICE_KEY],
+  ["CREDENTIALS_ENCRYPTION_KEY", CREDS_KEY],
+].filter(([, v]) => !v).map(([k]) => k);
+if (missing.length) {
+  console.error(JSON.stringify({ ts: new Date().toISOString(), level: "error", event: "fatal_missing_env", missing }));
+  process.exit(1);
+}
+
 const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
 let lastTickAt = Date.now();

@@ -24,19 +24,6 @@ function maskCNJ(value: string): string {
   return `${digits.slice(0, 7)}-${digits.slice(7, 9)}.${digits.slice(9, 13)}.${digits.slice(13, 14)}.${digits.slice(14, 16)}.${digits.slice(16, 20)}`;
 }
 
-async function enqueueTjrjScrapeFallback(targetId: string, processNumber: string, userId: string, source: string) {
-  const formatted = maskCNJ(processNumber);
-  const { error } = await supabaseAdmin.from("ingestion_jobs").insert({
-    kind: "sync",
-    status: "needs_scraping",
-    tribunal: "tjrj",
-    process_number: formatted,
-    target_ids: [targetId],
-    priority: 3,
-    payload: { source, user_id: userId },
-  });
-  if (error) throw error;
-}
 
 export const createProcessTargets = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

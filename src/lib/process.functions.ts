@@ -108,23 +108,12 @@ export const createProcessTargets = createServerFn({ method: "POST" })
         const syncJson: any = await syncRes.json().catch(() => ({}));
         if (!syncRes.ok) {
           if (syncRes.status === 404 || syncJson?.error === "process_not_found") {
-            try {
-              await enqueueTjrjScrapeFallback(target.id, normalized, userId, "manual_number_datajud_not_found");
-              await sb.from("monitoring_targets").update({ discovery_status: "pending" }).eq("id", target.id);
-              results.push({
-                processNumber: raw,
-                status: "queued",
-                targetId: target.id,
-                message: "Não apareceu no DataJud; busca enviada ao scraper TJRJ/PJe no Render.",
-              });
-            } catch (fallbackErr: any) {
-              await sb.from("monitoring_targets").delete().eq("id", target.id);
-              results.push({
-                processNumber: raw,
-                status: "not_found",
-                message: `Não apareceu no DataJud e não foi possível enviar ao scraper TJRJ/PJe: ${fallbackErr?.message ?? "erro desconhecido"}`,
-              });
-            }
+            await sb.from("monitoring_targets").delete().eq("id", target.id);
+            results.push({
+              processNumber: raw,
+              status: "not_found",
+              message: `Processo ${maskCNJ(normalized)} não encontrado no DataJud TJRJ.`,
+            });
             continue;
           }
           results.push({

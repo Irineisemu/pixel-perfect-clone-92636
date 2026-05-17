@@ -19,6 +19,15 @@ export const CanonicalPartySchema = z.object({
     .nullable(),
   qualification: z.string().nullable(),
   isPublicEntity: z.boolean(),
+  representatives: z
+    .array(
+      z.object({
+        name: z.string(),
+        oabNumber: z.string().nullable(),
+        oabUf: z.string().nullable(),
+      }),
+    )
+    .default([]),
 });
 export type CanonicalParty = z.infer<typeof CanonicalPartySchema>;
 

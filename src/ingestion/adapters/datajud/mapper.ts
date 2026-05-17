@@ -25,13 +25,34 @@ const DatajudHitSchema = z.object({
     .array(
       z.object({
         polo: z.string().optional(),
+        // Formato novo: campos na raiz da parte
+        nome: z.string().optional(),
+        tipoPessoa: z.string().optional(),
+        documento: z
+          .array(z.object({ tipo: z.string(), numero: z.string() }))
+          .optional(),
+        qualificacaoEmProcesso: z.string().optional(),
+        // Formato legacy: campos aninhados em "pessoa"
         pessoa: z
           .object({
             nome: z.string().optional(),
             tipoPessoa: z.string().optional(),
-            documento: z.array(z.object({ tipo: z.string(), numero: z.string() })).optional(),
+            documento: z
+              .array(z.object({ tipo: z.string(), numero: z.string() }))
+              .optional(),
             qualificacaoEmProcesso: z.string().optional(),
           })
+          .optional(),
+        // Representantes/advogados — campo crítico que estava ausente
+        representantes: z
+          .array(
+            z.object({
+              nome: z.string().optional(),
+              numeroOAB: z.string().optional(),
+              ufOAB: z.string().optional(),
+              tipoOAB: z.string().optional(),
+            }),
+          )
           .optional(),
       }),
     )
@@ -103,8 +124,11 @@ export async function toCanonical(
   const h = parsed.data;
 
   const parties: CanonicalParty[] = (h.partes ?? []).map((p) => {
-    const name = p.pessoa?.nome ?? "";
-    const docs = p.pessoa?.documento ?? [];
+    // Tenta formato novo (raiz) primeiro, cai para formato legacy (pessoa.nome)
+    const name = (p.nome ?? p.pessoa?.nome ?? "").trim();
+    const docs = p.documento ?? p.pessoa?.documento ?? [];
+    const qualification =
+      p.qualificacaoEmProcesso ?? p.pessoa?.qualificacaoEmProcesso ?? null;
     const cpfCnpj = docs[0];
     return {
       name,
@@ -113,12 +137,19 @@ export async function toCanonical(
       document: cpfCnpj
         ? {
             kind: cpfCnpj.tipo?.toLowerCase().includes("cnpj") ? "cnpj" : "cpf",
-            hash: null, // hash será gerado pelo pipeline downstream se necessário
+            hash: null,
           }
         : null,
-      qualification: p.pessoa?.qualificacaoEmProcesso ?? null,
+      qualification,
       isPublicEntity: detectPublicEntity(name),
-    };
+      representatives: (p.representantes ?? [])
+        .map((r: any) => ({
+          name: (r.nome ?? "").trim(),
+          oabNumber: r.numeroOAB ?? null,
+          oabUf: r.ufOAB ?? null,
+        }))
+        .filter((r: any) => r.name),
+    } as any;
   });
 
   const movements: CanonicalMovement[] = await Promise.all(

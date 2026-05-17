@@ -84,11 +84,16 @@ export function ProcessMovementsTree({ processId }: { processId: string }) {
                 )}
                 {Array.isArray(m.complements) && m.complements.length > 0 && (
                   <ul className="mt-1 ml-2 space-y-0.5 text-[11px] text-zinc-600 list-disc list-inside">
-                    {m.complements.map((c: any, idx: number) => (
-                      <li key={idx}>
-                        {typeof c === "string" ? c : c?.descricao ?? JSON.stringify(c)}
-                      </li>
-                    ))}
+                    {m.complements.map((c: any, idx: number) => {
+                      // DataJud retorna objetos com campos variados: descricao, nome, valor, tipo/codigo
+                      const label =
+                        typeof c === "string"
+                          ? c
+                          : c?.descricao ?? c?.nome ?? c?.valor
+                            ?? (c?.tipo && c?.codigo ? `${c.tipo}: ${c.codigo}` : null)
+                            ?? JSON.stringify(c);
+                      return <li key={idx}>{label}</li>;
+                    })}
                   </ul>
                 )}
               </div>

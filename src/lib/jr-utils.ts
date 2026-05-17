@@ -8,11 +8,11 @@ export const URGENCIA = {
   info:    { label: "Informativo", dot: "bg-blue-500", badge: "bg-blue-50 text-blue-700 border-blue-200", bar: "bg-blue-500", text: "text-blue-700", ring: "ring-blue-200" },
 };
 
-export const NOW = new Date("2026-05-09T14:32:00-03:00").getTime();
-
 export function tempoRelativo(iso) {
+  if (!iso) return "—";
   const t = new Date(iso).getTime();
-  const diff = Math.max(0, NOW - t);
+  if (isNaN(t)) return "—";
+  const diff = Math.max(0, Date.now() - t);
   const min = Math.floor(diff / 60000);
   if (min < 1) return "agora";
   if (min < 60) return `há ${min} min`;

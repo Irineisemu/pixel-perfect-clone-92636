@@ -64,8 +64,19 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow }: ProcessCardPro
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="font-mono text-[13px] text-zinc-900 truncate">
-            {p.displayNumber || p.processNumber}
+          <div className="font-mono text-[13px] text-zinc-900 truncate flex items-center gap-2">
+            <span className="truncate">{p.displayNumber || p.processNumber}</span>
+            {getPortalUrl(p.tribunal, p.processNumber) && (
+              <a
+                href={getPortalUrl(p.tribunal, p.processNumber)!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-0.5 text-[11px] text-sky-600 hover:underline font-sans flex-shrink-0"
+              >
+                <ExternalLink className="h-3 w-3" />
+                Portal
+              </a>
+            )}
           </div>
           <div className="mt-1 text-[12px] text-zinc-700">
             {p.target.name}
@@ -420,4 +431,16 @@ function formatRelativeBR(iso: string | null): string {
   if (diffHour < 24) return `há ${diffHour}h`;
   if (diffDay < 7) return `há ${diffDay}d`;
   return formatDateBR(iso);
+}
+
+function getPortalUrl(tribunal: string, processNumber: string): string | null {
+  const cnj = (processNumber || "").replace(/\D/g, "");
+  if (!cnj) return null;
+  const t = (tribunal || "").toUpperCase();
+  switch (t) {
+    case "TJRJ":
+      return `http://www4.tjrj.jus.br/consultaProcessoWebV2/consultaMov.do?v=2&FLAGNOME=&back=1&tipoConsulta=publica&numProcesso=${cnj}`;
+    default:
+      return null;
+  }
 }

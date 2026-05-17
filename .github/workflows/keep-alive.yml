@@ -1,0 +1,21 @@
+name: Keep Worker Alive
+
+on:
+  schedule:
+    # Pinga o worker a cada 5 minutos para evitar spin-down no Render Free
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # permite rodar manualmente também
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping tjrj-worker
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 https://tjrj-worker.onrender.com/health || echo "000")
+          echo "Health check status: $STATUS"
+          if [ "$STATUS" = "000" ]; then
+            echo "Worker não respondeu (pode estar acordando) — normal no primeiro ping após sleep"
+          else
+            echo "Worker respondeu com status $STATUS"
+          fi

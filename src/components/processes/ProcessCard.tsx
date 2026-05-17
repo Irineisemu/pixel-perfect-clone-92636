@@ -75,7 +75,7 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow }: ProcessCardPro
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  title="Ver processo no portal do tribunal"
+                  title={`Abrir portal do ${p.tribunal} — pesquise por: ${p.processNumber}`}
                   className="flex-shrink-0 inline-flex items-center gap-0.5 text-[11px] text-sky-600 hover:text-sky-800 hover:underline"
                 >
                   <ExternalLink className="h-3 w-3" />
@@ -425,7 +425,7 @@ function portalUrl(tribunal: string, processNumber: string): string | null {
   if (!num) return null;
   const t = tribunal?.toUpperCase();
   if (t === "TJRJ") {
-    return `https://www3.tjrj.jus.br/consultaprocessual/#/consultaprocesso?numProcesso=${encodeURIComponent(num)}`;
+    return `https://www3.tjrj.jus.br/consultaprocessual/`;
   }
   if (t === "TJSP") {
     return `https://esaj.tjsp.jus.br/cpopg/show.do?processo.codigo=&processo.foro=&processo.numero=${encodeURIComponent(num)}`;

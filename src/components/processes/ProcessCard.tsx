@@ -432,3 +432,15 @@ function formatRelativeBR(iso: string | null): string {
   if (diffDay < 7) return `há ${diffDay}d`;
   return formatDateBR(iso);
 }
+
+function getPortalUrl(tribunal: string, processNumber: string): string | null {
+  const cnj = (processNumber || "").replace(/\D/g, "");
+  if (!cnj) return null;
+  const t = (tribunal || "").toUpperCase();
+  switch (t) {
+    case "TJRJ":
+      return `http://www4.tjrj.jus.br/consultaProcessoWebV2/consultaMov.do?v=2&FLAGNOME=&back=1&tipoConsulta=publica&numProcesso=${cnj}`;
+    default:
+      return null;
+  }
+}

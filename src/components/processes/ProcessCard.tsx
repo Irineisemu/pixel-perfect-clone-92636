@@ -64,8 +64,25 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow }: ProcessCardPro
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="font-mono text-[13px] text-zinc-900 truncate">
-            {p.displayNumber || p.processNumber}
+          <div className="flex items-center gap-2">
+            <div className="font-mono text-[13px] text-zinc-900 truncate">
+              {p.displayNumber || p.processNumber}
+            </div>
+            {(() => {
+              const url = portalUrl(p.tribunal, p.processNumber);
+              return url ? (
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Ver processo no portal do tribunal"
+                  className="flex-shrink-0 inline-flex items-center gap-0.5 text-[11px] text-sky-600 hover:text-sky-800 hover:underline"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  <span>Portal</span>
+                </a>
+              ) : null;
+            })()}
           </div>
           <div className="mt-1 text-[12px] text-zinc-700">
             {p.target.name}
@@ -401,6 +418,38 @@ function PartyGroup({
       </ul>
     </div>
   );
+}
+
+function portalUrl(tribunal: string, processNumber: string): string | null {
+  const num = processNumber?.trim();
+  if (!num) return null;
+  const t = tribunal?.toUpperCase();
+  if (t === "TJRJ") {
+    return `http://www4.tjrj.jus.br/consultaProcessoWebV2/consultaMov.do?v=2&FLAGNOME=&back=1&tipoConsulta=publica&numProcesso=${encodeURIComponent(num)}`;
+  }
+  if (t === "TJSP") {
+    return `https://esaj.tjsp.jus.br/cpopg/show.do?processo.codigo=&processo.foro=&processo.numero=${encodeURIComponent(num)}`;
+  }
+  if (t === "TJMG") {
+    return `https://www4.tjmg.jus.br/juridico/sf/proc_resultado2.jsp?listaProcessos=${encodeURIComponent(num)}`;
+  }
+  if (t === "TJRS") {
+    return `https://www.tjrs.jus.br/site_php/consulta/consulta_processo.php?q_nro_processo=${encodeURIComponent(num)}`;
+  }
+  if (t === "TJPR") {
+    return `https://consulta.tjpr.jus.br/projudi_consulta/processo.do?_tj=PR&numero=${encodeURIComponent(num)}`;
+  }
+  if (t === "TJBA") {
+    return `https://esaj.tjba.jus.br/cpopg/show.do?processo.numero=${encodeURIComponent(num)}`;
+  }
+  if (t === "TJPE") {
+    return `https://srv01.tjpe.jus.br/consultaprocessualexterna/processo/${encodeURIComponent(num)}`;
+  }
+  if (t === "TJSC") {
+    return `https://esaj.tjsc.jus.br/cpopg/show.do?processo.numero=${encodeURIComponent(num)}`;
+  }
+  // Fallback: portal CNJ DataJud
+  return `https://www.cnj.jus.br/pjecnj/ConsultaPublica/listView.seam?numeroProcesso=${encodeURIComponent(num)}`;
 }
 
 function formatDateBR(iso: string | null): string {

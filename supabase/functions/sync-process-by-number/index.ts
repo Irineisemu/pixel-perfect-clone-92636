@@ -107,26 +107,45 @@ Deno.serve(async (req) => {
   const { newCount, totalCount } = await upsertMovements(admin, processRow.id, movimentos, isInitialSync);
   console.log(`[sync] movements: ${totalCount} total, ${newCount} new`);
 
-  // Enriquecimento via endpoint público do portal TJRJ.
-  // OBS: a API pública só devolve metadados básicos (comarca, serventia, dataAutuacao).
-  // Partes/representantes ficam atrás de Google reCAPTCHA Enterprise — não acessíveis
-  // sem serviço de solver pago (2Captcha) ou API jurídica privada (Escavador/Codilo).
+  // Enriquecimento via endpoint público do portal TJRJ — MERGE não-destrutivo.
+  // Preserva parties (autores/reus/outros) que o worker Playwright tenha salvado
+  // anteriormente. Apenas atualiza tjrj_metadata e adiciona parties_status.
   try {
     const enrichment = await fetchTJRJPublicMetadata(normalizedNumber);
     if (enrichment) {
+      const { data: existing } = await admin
+        .from("processes")
+        .select("parties_json")
+        .eq("id", processRow.id)
+        .single();
+
+      const existingJson = (existing?.parties_json as any) ?? {};
+      const hasAlreadyScrapedParties =
+        (existingJson.autores?.length ?? 0) > 0 ||
+        (existingJson.reus?.length ?? 0) > 0 ||
+        (existingJson.outros?.length ?? 0) > 0;
+
+      const mergedJson = {
+        ...existingJson,
+        tjrj_metadata: enrichment,
+        tjrj_metadata_scraped_at: new Date().toISOString(),
+        ...(hasAlreadyScrapedParties
+          ? {}
+          : {
+              parties_status: "pending_scrape",
+              parties_message:
+                "Partes ainda não capturadas. O worker Playwright preenche este campo quando o processo for raspado no PJe 2º grau ou e-SAJ.",
+            }),
+      };
+
       await admin
         .from("processes")
-        .update({
-          parties_json: {
-            blocked_reason: "tjrj_captcha_required",
-            message:
-              "Partes não disponíveis: o portal TJRJ exige reCAPTCHA pra exibir partes/representantes.",
-            tjrj_metadata: enrichment,
-            scraped_at: new Date().toISOString(),
-          },
-        })
+        .update({ parties_json: mergedJson })
         .eq("id", processRow.id);
-      console.log(`[sync] tjrj enrichment ok: ${enrichment.nomeComarca ?? "?"}`);
+
+      console.log(
+        `[sync] tjrj enrichment merged (preserved=${hasAlreadyScrapedParties}): ${enrichment.nomeComarca ?? "?"}`,
+      );
     }
   } catch (err: any) {
     console.error("[sync] tjrj enrichment failed:", err?.message ?? err);

@@ -8,6 +8,8 @@ const THROTTLE_MS = Number(process.env.SCRAPING_DEFAULT_THROTTLE_MS ?? 1000);
 const USER_AGENT =
   process.env.SCRAPING_USER_AGENT ?? "JusRadar/1.0 (+contato@jusradar.com.br)";
 const MAX_PAGES = 100;
+// Proxy residencial brasileiro (opcional). Formato: http://user:pass@host:port
+const PROXY_URL = process.env.SCRAPING_PROXY_URL ?? "";
 
 interface PoolEntry {
   browser: Browser;
@@ -32,7 +34,10 @@ class BrowserPool {
 
     let entry = this.entries.find((e) => !e.inUse && e.domain === domain && e.pagesUsed < MAX_PAGES);
     if (!entry && this.entries.length < POOL_SIZE) {
-      const browser = await chromium.launch({ headless: true });
+      const browser = await chromium.launch({
+        headless: true,
+        ...(PROXY_URL ? { proxy: { server: PROXY_URL } } : {}),
+      });
       const context = await browser.newContext({ userAgent: USER_AGENT });
       entry = { browser, context, pagesUsed: 0, inUse: false, domain };
       this.entries.push(entry);

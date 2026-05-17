@@ -111,7 +111,7 @@ export async function scrapeTJRJ(
       await loginPje(page, credentials);
     }
 
-    await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 45_000 });
+    await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 120_000 });
 
     const title = await page.title();
     if (isBlockedTitle(title)) throw new TJRJScrapeError("blocked", `block page: ${title}`);
@@ -130,7 +130,7 @@ export async function scrapeTJRJ(
     });
 
     await Promise.all([
-      page.waitForLoadState("domcontentloaded", { timeout: 30_000 }),
+      page.waitForLoadState("domcontentloaded", { timeout: 90_000 }),
       page.click(submitSel),
     ]);
 
@@ -144,7 +144,7 @@ export async function scrapeTJRJ(
     const detailLink = page.locator(selectors.consultaPublica2g.detailLink).first();
     if (await detailLink.count()) {
       await Promise.all([
-        page.waitForLoadState("domcontentloaded", { timeout: 30_000 }),
+        page.waitForLoadState("domcontentloaded", { timeout: 90_000 }),
         detailLink.click(),
       ]);
     }
@@ -207,7 +207,7 @@ export async function scrapeTJRJ(
 }
 
 async function loginPje(page: any, creds: TJRJCredentials) {
-  await page.goto(selectors.login.url, { waitUntil: "domcontentloaded", timeout: 45_000 });
+  await page.goto(selectors.login.url, { waitUntil: "domcontentloaded", timeout: 120_000 });
 
   // Captcha já na tela de login → não temos como resolver.
   const loginHtml = await page.content();
@@ -225,7 +225,7 @@ async function loginPje(page: any, creds: TJRJCredentials) {
   await page.fill(selectors.login.password, creds.password);
 
   await Promise.all([
-    page.waitForLoadState("domcontentloaded", { timeout: 30_000 }),
+    page.waitForLoadState("domcontentloaded", { timeout: 90_000 }),
     page.click(selectors.login.submit),
   ]);
 

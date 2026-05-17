@@ -263,6 +263,7 @@ async function processOne(job: any) {
     }
 
     if (existing?.last_known_movements_hash !== canonical.movementsHash) {
+      // 1. Log de auditoria (mantém comportamento existente)
       await db.from("process_updates").insert({
         process_id: processId,
         process_number: canonical.processNumber,
@@ -272,12 +273,86 @@ async function processOne(job: any) {
         movements_diff: JSON.parse(JSON.stringify(canonical.movements)),
         movements_hash: canonical.movementsHash,
       });
+
+      // 2. Gravar cada movimento em process_movements (que o dashboard lê).
+      // Idempotente via UNIQUE (process_id, movement_code, occurred_at).
+      if (canonical.movements.length > 0) {
+        const rows = canonical.movements.map((m) => ({
+          process_id: processId,
+          movement_code: m.code,
+          movement_name: m.text,
+          occurred_at: m.occurredAt,
+          organ_code: null,
+          organ_name: null,
+          complements: null,
+          raw_data: { cnjMovementId: m.cnjMovementId, source },
+          is_new: !!existing,
+        }));
+
+        // Chunks de 100 pra evitar payloads gigantes
+        for (let i = 0; i < rows.length; i += 100) {
+          const chunk = rows.slice(i, i + 100);
+          const { error: movErr } = await db
+            .from("process_movements")
+            .upsert(chunk, {
+              onConflict: "process_id,movement_code,occurred_at",
+              ignoreDuplicates: true,
+            });
+          if (movErr) {
+            log("warn", { event: "movements_upsert_failed", processId, error: movErr.message });
+          }
+        }
+      }
+
+      // 3. Gravar partes em processes.parties_json (que o ProcessCard lê)
+      const autores: any[] = [];
+      const reus: any[] = [];
+      const outros: any[] = [];
+      for (const party of canonical.parties) {
+        const entry: any = {
+          nome: party.name,
+          qualificacao: party.qualification,
+          representantes: ((party as any).representatives ?? []).map((r: any) => ({
+            nome: r.name,
+            oab: r.oabNumber && r.oabUf ? `${r.oabUf}${r.oabNumber}` : r.oabNumber ?? null,
+          })),
+        };
+        if (party.polo === "ativo") autores.push(entry);
+        else if (party.polo === "passivo") reus.push(entry);
+        else outros.push(entry);
+      }
+
+      const lastMovementAt =
+        canonical.movements.length > 0
+          ? canonical.movements[canonical.movements.length - 1].occurredAt
+          : null;
+
+      // Buscar parties_json existente pra merge (preserva tjrj_metadata)
+      const { data: currentProcess } = await db
+        .from("processes")
+        .select("parties_json")
+        .eq("id", processId)
+        .single();
+      const existingJson = (currentProcess?.parties_json as any) ?? {};
+
       await db
         .from("processes")
         .update({
           last_known_movements_hash: canonical.movementsHash,
           last_synced_at: canonical.fetchedAt,
           last_source_used: source,
+          total_movements: canonical.movements.length,
+          last_movement_at: lastMovementAt,
+          sync_status: "synced",
+          parties_json: {
+            ...existingJson,
+            autores,
+            reus,
+            outros,
+            scraped_at: new Date().toISOString(),
+            parties_status:
+              autores.length + reus.length + outros.length > 0 ? "ok" : "empty",
+          },
         })
         .eq("id", processId);
     }

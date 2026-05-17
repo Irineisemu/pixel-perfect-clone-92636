@@ -283,6 +283,7 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow }: ProcessCardPro
                   );
                 }
                 const meta = parties?.tjrj_metadata;
+                const isPendingScrape = (parties as any)?.parties_status === "pending_scrape";
                 return (
                   <div className="space-y-2">
                     {meta && (meta.nomeComarca || meta.descricaoServentia) && (
@@ -300,19 +301,28 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow }: ProcessCardPro
                     <div className="flex items-start gap-2 p-3 rounded-md bg-amber-50 border border-amber-200">
                       <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
                       <p className="text-[12px] text-amber-900">
-                        <strong>Partes não disponíveis automaticamente.</strong> O portal TJRJ
-                        protege a lista de autores/réus/representantes com reCAPTCHA, e o
-                        DataJud não devolve esses dados. Consulte direto no{" "}
-                        <a
-                          href="https://www3.tjrj.jus.br/consultaprocessual/"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="underline font-medium inline-flex items-center gap-0.5"
-                        >
-                          portal do TJRJ
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                        .
+                        {isPendingScrape ? (
+                          <>
+                            <strong>Partes aguardando captura.</strong> O worker PJe TJRJ raspa
+                            estes dados em segundo plano. Recarregue em alguns minutos.
+                          </>
+                        ) : (
+                          <>
+                            <strong>Partes não disponíveis automaticamente.</strong> O portal TJRJ
+                            protege a lista de autores/réus/representantes com reCAPTCHA, e o
+                            DataJud não devolve esses dados. Consulte direto no{" "}
+                            <a
+                              href="https://www3.tjrj.jus.br/consultaprocessual/"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline font-medium inline-flex items-center gap-0.5"
+                            >
+                              portal do TJRJ
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                            .
+                          </>
+                        )}
                       </p>
                     </div>
                   </div>

@@ -439,7 +439,7 @@ function getPortalUrl(tribunal: string, processNumber: string): string | null {
   const t = (tribunal || "").toUpperCase();
   switch (t) {
     case "TJRJ":
-      return `http://www4.tjrj.jus.br/consultaProcessoWebV2/consultaMov.do?v=2&FLAGNOME=&back=1&tipoConsulta=publica&numProcesso=${cnj}`;
+      return `https://www3.tjrj.jus.br/consultaprocessual/#/consultaprocesso?numProcesso=${cnj}`;
     default:
       return null;
   }

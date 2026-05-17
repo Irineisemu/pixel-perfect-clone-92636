@@ -425,7 +425,7 @@ function portalUrl(tribunal: string, processNumber: string): string | null {
   if (!num) return null;
   const t = tribunal?.toUpperCase();
   if (t === "TJRJ") {
-    return `http://www4.tjrj.jus.br/consultaProcessoWebV2/consultaMov.do?v=2&FLAGNOME=&back=1&tipoConsulta=publica&numProcesso=${encodeURIComponent(num)}`;
+    return `https://www3.tjrj.jus.br/consultaprocessual/#/consultaprocesso?numProcesso=${encodeURIComponent(num)}`;
   }
   if (t === "TJSP") {
     return `https://esaj.tjsp.jus.br/cpopg/show.do?processo.codigo=&processo.foro=&processo.numero=${encodeURIComponent(num)}`;

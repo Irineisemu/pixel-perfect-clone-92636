@@ -203,50 +203,16 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow }: ProcessCardPro
             </div>
           ) : (
             <>
-              {/* Datas e contagens */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {p.filedAt && (
-                  <Field icon={<Calendar className="h-3 w-3" />} label="Ajuizado em" value={formatDateBR(p.filedAt)} />
-                )}
-                {p.lastMovementAt && (
-                  <Field
-                    icon={<Clock className="h-3 w-3" />}
-                    label="Último movimento"
-                    value={formatDateBR(p.lastMovementAt)}
-                  />
-                )}
-                <Field
-                  icon={<Hash className="h-3 w-3" />}
-                  label="Total de movimentos"
-                  value={String(p.totalMovements)}
-                />
-                {p.lastSyncedAt && (
-                  <Field
-                    icon={<RefreshCw className="h-3 w-3" />}
-                    label="Última verificação"
-                    value={formatRelativeBR(p.lastSyncedAt)}
-                  />
-                )}
-              </div>
-
-              {/* Movimento mais recente — destaque */}
+              {/* Detalhes do movimento mais recente (data por extenso + órgão) */}
               {p.lastMovement && (
-                <div className="rounded-md border border-zinc-200 bg-white p-3">
-                  <div className="text-[10.5px] uppercase tracking-wide text-zinc-500 font-medium">
-                    Movimento mais recente
-                  </div>
-                  <div className="mt-1 text-[13px] font-medium text-zinc-900">
-                    {p.lastMovement.name}
-                  </div>
-                  <div className="mt-0.5 text-[11.5px] text-zinc-600 flex flex-wrap items-center gap-1">
-                    <span>{formatFullDateBR(p.lastMovement.occurredAt)}</span>
-                    {p.lastMovement.organName && (
-                      <>
-                        <span>·</span>
-                        <span>{p.lastMovement.organName}</span>
-                      </>
-                    )}
-                  </div>
+                <div className="text-[12px] text-zinc-600">
+                  <span className="text-zinc-500">Último movimento:</span>{" "}
+                  <span className="font-medium text-zinc-800">
+                    {formatFullDateBR(p.lastMovement.occurredAt)}
+                  </span>
+                  {p.lastMovement.organName && (
+                    <span className="text-zinc-500"> · {p.lastMovement.organName}</span>
+                  )}
                 </div>
               )}
 

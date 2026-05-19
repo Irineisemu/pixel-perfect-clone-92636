@@ -182,7 +182,7 @@ export function DashboardProcesses() {
       {hasRunningDiscovery && (
         <div className="rounded-2xl border border-sky-100 bg-sky-50/50 px-5 py-4 text-[12px] text-sky-700 font-semibold flex items-center gap-2 shadow-sm">
           <span className="inline-block h-2.5 w-2.5 rounded-full bg-sky-500 animate-pulse" />
-          Sincronização em andamento…
+          Sincronização em andamento… — Estamos verificando seus alvos e atualizando os processos automaticamente.
         </div>
       )}
 

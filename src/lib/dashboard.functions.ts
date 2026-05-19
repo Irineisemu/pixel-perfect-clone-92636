@@ -210,7 +210,7 @@ export const getDashboard = createServerFn({ method: "GET" })
         createdAt: t.created_at,
       }));
 
-    const hasRunningDiscovery = (lawyers ?? []).some(
+    const hasRunningDiscovery = (targets ?? []).some(
       (l: any) => l.discovery_status === "running" || l.discovery_status === "pending",
     );
     const hasPendingSync = processes.some(
@@ -220,11 +220,11 @@ export const getDashboard = createServerFn({ method: "GET" })
     return {
       stats: {
         totalProcesses: totalProcesses ?? 0,
-        totalLawyers: lawyers?.length ?? 0,
+        totalAlvos: (targets ?? []).length,
         countProcessesWithRecentUpdates: countProcessesWithRecentUpdates,
         totalUrgent: urgentProcessIds.size,
       },
-      lawyers: lawyers ?? [],
+      targets: targets ?? [],
       processes,
       pendingProcesses,
       recentNewMovements,

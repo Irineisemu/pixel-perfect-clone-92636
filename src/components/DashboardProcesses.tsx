@@ -225,180 +225,183 @@ export function DashboardProcesses() {
         </div>
       )}
 
-      {targets.length > 0 && (
-        <section className="bg-zinc-50/50 rounded-xl border border-zinc-100 p-4 mb-2">
-          <div className="flex items-center justify-between mb-4">
+      {(targets.length > 0 || oabProcesses.length > 0 || otherProcesses.length > 0) && (
+        <section className="bg-zinc-50/50 rounded-xl border border-zinc-100 p-4 mb-2 space-y-4">
+          <div className="flex items-center justify-between">
             <div>
               <h2 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
                 <span className="p-1 rounded bg-zinc-900 text-white">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
                 </span>
-                1. Alvos de Descoberta
+                1. Alvos & Descobertas
               </h2>
-              <p className="text-[11px] text-zinc-500 mt-0.5">Fontes usadas para encontrar novos processos automaticamente.</p>
+              <p className="text-[11px] text-zinc-500 mt-0.5">Fontes de busca e os processos encontrados automaticamente por elas.</p>
             </div>
             <Link to="/alvos" className="text-[11px] font-medium text-zinc-600 hover:text-zinc-900 bg-white border border-zinc-200 px-2 py-1 rounded shadow-sm transition-all hover:shadow">Gerenciar alvos</Link>
           </div>
-          <div className="max-h-[300px] overflow-y-auto pr-1">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-1">
-              {targets.map((t: any) => {
-                const st = statusLabel(t.discovery_status);
-                const isRetrying = retryingId === t.id;
-                
-                let title = t.lawyer_name || t.full_name || "Radar de Busca";
-                let subtitle = "";
-                
-                if (t.type === 'lawyer') {
-                  subtitle = `OAB: ${(t.oab_numbers ?? []).map(oab => formatOABDisplay(oab)).join(", ")}`;
-                } else if (t.type === 'person') {
-                  subtitle = "Monitoramento de Pessoa/CPF";
-                } else if (t.type === 'radar') {
-                  subtitle = "Radar de Captação";
-                }
 
-                return (
-                  <div key={t.id} className="rounded-xl border border-zinc-200 bg-white p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <div className="font-medium text-zinc-900 truncate">{title}</div>
-                          {t.target_process_links?.[0]?.count !== undefined && (
-                            <span className="shrink-0 text-[10px] font-medium text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded-full">
-                              {t.target_process_links[0].count} processos
+          {targets.length > 0 && (
+            <div className="max-h-[300px] overflow-y-auto pr-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-1">
+                {targets.map((t: any) => {
+                  const st = statusLabel(t.discovery_status);
+                  const isRetrying = retryingId === t.id;
+                  
+                  let title = t.lawyer_name || t.full_name || "Radar de Busca";
+                  let subtitle = "";
+                  
+                  if (t.type === 'lawyer') {
+                    subtitle = `OAB: ${(t.oab_numbers ?? []).map(oab => formatOABDisplay(oab)).join(", ")}`;
+                  } else if (t.type === 'person') {
+                    subtitle = "Monitoramento de Pessoa/CPF";
+                  } else if (t.type === 'radar') {
+                    subtitle = "Radar de Captação";
+                  }
+
+                  return (
+                    <div key={t.id} className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm hover:shadow transition-shadow">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <div className="font-medium text-zinc-900 truncate">{title}</div>
+                            {t.target_process_links?.[0]?.count !== undefined && (
+                              <span className="shrink-0 text-[10px] font-medium text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded-full">
+                                {t.target_process_links[0].count} processos
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded border border-zinc-200 bg-zinc-50 text-[11px] text-zinc-700">
+                              {subtitle}
                             </span>
-                          )}
-                        </div>
-                        <div className="mt-1 flex flex-wrap gap-1">
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded border border-zinc-200 bg-zinc-50 text-[11px] text-zinc-700">
-                            {subtitle}
-                          </span>
-                        </div>
-                        <div className="mt-2">
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] ${st.cls}`}>
-                            <span>{st.icon}</span>
-                            <span>{st.text}</span>
-                          </span>
-                          {t.last_discovery_at && (
-                            <span className="ml-2 text-[11px] text-zinc-500">
-                              · {new Date(t.last_discovery_at).toLocaleString("pt-BR")}
+                          </div>
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] ${st.cls}`}>
+                              <span>{st.icon}</span>
+                              <span>{st.text}</span>
                             </span>
-                          )}
+                            {t.last_discovery_at && (
+                              <span className="text-[11px] text-zinc-400">
+                                {new Date(t.last_discovery_at).toLocaleDateString("pt-BR")}
+                              </span>
+                            )}
+                          </div>
                         </div>
+                        {canRetry(t.discovery_status) && (
+                          <button
+                            onClick={() => handleRetry(t.id)}
+                            disabled={isRetrying}
+                            className="px-3 py-1.5 rounded-md bg-zinc-900 text-white text-[12px] font-medium hover:bg-zinc-800 disabled:opacity-50 flex-shrink-0"
+                          >
+                            {isRetrying ? "..." : "Sincronizar"}
+                          </button>
+                        )}
                       </div>
-                      {canRetry(t.discovery_status) && (
-                        <button
-                          onClick={() => handleRetry(t.id)}
-                          disabled={isRetrying}
-                          className="px-3 py-1.5 rounded-md bg-zinc-900 text-white text-[12px] font-medium hover:bg-zinc-800 disabled:opacity-50 flex-shrink-0"
-                        >
-                          {isRetrying ? "Iniciando…" : "Sincronizar"}
-                        </button>
-                      )}
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
+
+          {oabProcesses.length > 0 && (
+            <section className="bg-white rounded-xl border border-zinc-200 overflow-hidden transition-all shadow-sm">
+              <button
+                onClick={() => setIsOabExpanded(!isOabExpanded)}
+                className="w-full text-left px-4 py-2.5 flex items-center justify-between hover:bg-zinc-50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <h2 className="text-[13px] font-semibold text-zinc-700">
+                    Processos encontrados (OAB)
+                    <span className="ml-2 text-zinc-500 font-normal bg-zinc-100 px-1.5 py-0.5 rounded text-[11px]">
+                      {oabProcesses.length}
+                    </span>
+                    {countOabRecent > 0 && (
+                      <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[10px] font-medium animate-pulse">
+                        {countOabRecent} novidades
+                      </span>
+                    )}
+                  </h2>
+                </div>
+                <div className={`transition-transform duration-200 ${isOabExpanded ? 'rotate-180' : ''}`}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
+                    <path d="m6 9 6 6 6-6"/>
+                  </svg>
+                </div>
+              </button>
+              {isOabExpanded && (
+                <div className="border-t border-zinc-100 max-h-[400px] overflow-y-auto divide-y divide-zinc-100">
+                  {oabProcesses.map((p: any) => (
+                    <div key={p.id + p.target.id} id={`process-${p.id}`}>
+                      <ProcessCard
+                        process={p}
+                        isSyncing={syncingId === p.id}
+                        onSyncNow={handleSyncNow}
+                        isHighlighted={highlightedProcessId === p.id}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+
+          {otherProcesses.length > 0 && (
+            <section className="bg-white rounded-xl border border-zinc-200 overflow-hidden transition-all shadow-sm">
+              <button
+                onClick={() => setIsOthersExpanded(!isOthersExpanded)}
+                className="w-full text-left px-4 py-2.5 flex items-center justify-between hover:bg-zinc-50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <h2 className="text-[13px] font-semibold text-zinc-700">
+                    Outros processos de alvos
+                    <span className="ml-2 text-zinc-500 font-normal bg-zinc-100 px-1.5 py-0.5 rounded text-[11px]">
+                      {otherProcesses.length}
+                    </span>
+                    {countOthersRecent > 0 && (
+                      <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[10px] font-medium animate-pulse">
+                        {countOthersRecent} novidades
+                      </span>
+                    )}
+                  </h2>
+                </div>
+                <div className={`transition-transform duration-200 ${isOthersExpanded ? 'rotate-180' : ''}`}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
+                    <path d="m6 9 6 6 6-6"/>
+                  </svg>
+                </div>
+              </button>
+              {isOthersExpanded && (
+                <div className="border-t border-zinc-100 max-h-[400px] overflow-y-auto divide-y divide-zinc-100">
+                  {otherProcesses.map((p: any) => (
+                    <div key={p.id + p.target.id} id={`process-${p.id}`}>
+                      <ProcessCard
+                        process={p}
+                        isSyncing={syncingId === p.id}
+                        onSyncNow={handleSyncNow}
+                        isHighlighted={highlightedProcessId === p.id}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
         </section>
       )}
 
-      {(oabProcesses.length > 0 || otherProcesses.length > 0 || manualProcesses.length > 0 || pendingProcesses.length > 0) && (
+      {(manualProcesses.length > 0 || pendingProcesses.length > 0) && (
         <div className="pt-2 px-1">
           <div className="flex items-center gap-2 mb-4">
             <span className="p-1 rounded bg-zinc-900 text-white">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             </span>
             <div>
-              <h2 className="text-sm font-bold text-zinc-900">2. Monitoramentos</h2>
-              <p className="text-[11px] text-zinc-500">Todos os processos que estão sendo acompanhados pelo sistema.</p>
+              <h2 className="text-sm font-bold text-zinc-900">2. Monitoramentos Diretos</h2>
+              <p className="text-[11px] text-zinc-500">Processos acompanhados especificamente pelo número CNJ.</p>
             </div>
           </div>
         </div>
-      )}
-
-      {oabProcesses.length > 0 && (
-        <section className="bg-white rounded-xl border border-zinc-200 overflow-hidden transition-all">
-          <button
-            onClick={() => setIsOabExpanded(!isOabExpanded)}
-            className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-zinc-50 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold text-zinc-700">
-                Processos da OAB
-                <span className="ml-2 text-zinc-500 font-normal bg-zinc-100 px-1.5 py-0.5 rounded text-xs">
-                  {oabProcesses.length}
-                </span>
-                {countOabRecent > 0 && (
-                  <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium animate-pulse">
-                    {countOabRecent} com novidades
-                  </span>
-                )}
-              </h2>
-            </div>
-            <div className={`transition-transform duration-200 ${isOabExpanded ? 'rotate-180' : ''}`}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
-                <path d="m6 9 6 6 6-6"/>
-              </svg>
-            </div>
-          </button>
-          {isOabExpanded && (
-            <div className="border-t border-zinc-100 max-h-[500px] overflow-y-auto divide-y divide-zinc-100">
-              {oabProcesses.map((p: any) => (
-                <div key={p.id + p.target.id} id={`process-${p.id}`}>
-                  <ProcessCard
-                    process={p}
-                    isSyncing={syncingId === p.id}
-                    onSyncNow={handleSyncNow}
-                    isHighlighted={highlightedProcessId === p.id}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
-
-      {otherProcesses.length > 0 && (
-        <section className="bg-white rounded-xl border border-zinc-200 overflow-hidden transition-all">
-          <button
-            onClick={() => setIsOthersExpanded(!isOthersExpanded)}
-            className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-zinc-50 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold text-zinc-700">
-                Processos de outros alvos
-                <span className="ml-2 text-zinc-500 font-normal bg-zinc-100 px-1.5 py-0.5 rounded text-xs">
-                  {otherProcesses.length}
-                </span>
-                {countOthersRecent > 0 && (
-                  <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium animate-pulse">
-                    {countOthersRecent} com novidades
-                  </span>
-                )}
-              </h2>
-            </div>
-            <div className={`transition-transform duration-200 ${isOthersExpanded ? 'rotate-180' : ''}`}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
-                <path d="m6 9 6 6 6-6"/>
-              </svg>
-            </div>
-          </button>
-          {isOthersExpanded && (
-            <div className="border-t border-zinc-100 max-h-[500px] overflow-y-auto divide-y divide-zinc-100">
-              {otherProcesses.map((p: any) => (
-                <div key={p.id + p.target.id} id={`process-${p.id}`}>
-                  <ProcessCard
-                    process={p}
-                    isSyncing={syncingId === p.id}
-                    onSyncNow={handleSyncNow}
-                    isHighlighted={highlightedProcessId === p.id}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
       )}
 
 

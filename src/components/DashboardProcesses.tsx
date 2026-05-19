@@ -326,7 +326,7 @@ export function DashboardProcesses() {
         </button>
 
         {isProcessesExpanded && (
-          <div className="border-t border-zinc-100">
+          <div className="border-t border-zinc-100 max-h-[500px] overflow-y-auto">
             {processes.length === 0 ? (
               <div className="p-10 text-center">
                 <div className="text-3xl mb-2">📭</div>

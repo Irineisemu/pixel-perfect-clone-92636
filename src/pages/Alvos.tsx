@@ -56,7 +56,7 @@ function StatusToggle({ active, onToggle }) {
 function targetIdentifier(t) {
   if (t.type === "person") return { primary: t.full_name, secondary: (t.cpf ? t.cpf + " · " : "") + t.qualification + (t.aliases?.length ? ` · ${t.aliases.length} variação${t.aliases.length>1?"es":""}` : "") };
   if (t.type === "process") return { primary: maskCNJ(t.process_number), secondary: `${t.tribunal_alias || "—"}${t.nickname ? ` · ${t.nickname}` : ""}`, mono: true };
-  if (t.type === "lawyer") return { primary: t.lawyer_name, secondary: `OAB: ${(t.oab_numbers || []).join(", ")}` };
+  if (t.type === "lawyer") return { primary: t.lawyer_name, secondary: `OAB: ${(t.oab_numbers || []).join(", ")}`, processCount: t.processCount };
   const tribunais = (t.tribunal_aliases || []).join(", ") || "Todos";
   const classes = (t.class_codes || []).slice(0, 2).join(" · ");
   const kw = (t.keywords || []).slice(0, 2).map((k) => `"${k}"`).join(" ");
@@ -532,7 +532,14 @@ function TargetRow({ t, onEdit, onDuplicate, onDelete, onToggle }) {
     <tr onClick={onEdit} className="group cursor-pointer border-b border-zinc-100 hover:bg-zinc-50/70 transition">
       <td className="py-3 pl-4 pr-2 align-middle"><TypeBadge type={t.type} /></td>
       <td className="py-3 px-3 align-middle min-w-0">
-        <div className={Utils.cx("text-[13px] text-zinc-900 truncate", id.mono && "font-mono tabular-nums")}>{id.primary}</div>
+        <div className="flex items-center gap-2">
+          <div className={Utils.cx("text-[13px] text-zinc-900 truncate", id.mono && "font-mono tabular-nums")}>{id.primary}</div>
+          {id.processCount !== undefined && t.type === 'lawyer' && (
+            <span className="shrink-0 text-[10px] font-medium text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded-full">
+              {id.processCount} processos
+            </span>
+          )}
+        </div>
         {id.secondary && <div className="text-[11.5px] text-zinc-500 truncate mt-0.5">{id.secondary}</div>}
       </td>
       <td className="py-3 px-3 align-middle">
@@ -562,7 +569,14 @@ function TargetCard({ t, onEdit, onDuplicate, onDelete, onToggle }) {
         <TypeBadge type={t.type} />
         <RowKebab onEdit={onEdit} onDuplicate={onDuplicate} onDelete={onDelete} />
       </div>
-      <div className={Utils.cx("mt-2 text-[13.5px] text-zinc-900 font-medium", id.mono && "font-mono tabular-nums")}>{id.primary}</div>
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <div className={Utils.cx("text-[13.5px] text-zinc-900 font-medium truncate", id.mono && "font-mono tabular-nums")}>{id.primary}</div>
+        {id.processCount !== undefined && t.type === 'lawyer' && (
+          <span className="shrink-0 text-[10px] font-medium text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded-full">
+            {id.processCount}
+          </span>
+        )}
+      </div>
       {id.secondary && <div className="text-[12px] text-zinc-500 mt-0.5">{id.secondary}</div>}
       <div className="mt-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -761,7 +775,7 @@ export function Alvos() {
           {[
             { id: "process", ids: ["process"], label: "Processos", emoji: "📄" },
             { id: "person",  ids: ["person", "radar"], label: "Pessoas / CPF", emoji: "👤" },
-            { id: "lawyer",  ids: ["lawyer"], label: "OABs", emoji: "⚖️" },
+            { id: "lawyer",  ids: ["lawyer"], label: "Advogados", emoji: "⚖️" },
           ].map((group) => {
             const groupItems = items.filter(t => group.ids.includes(t.type));
             const isExpanded = expandedGroups[group.id];

@@ -101,6 +101,7 @@ function rowToUi(r: any) {
     notes: "", 
     stats30d: 0,
     sparkline: [0, 0, 0, 0, 0, 0, 0],
+    processCount: r.process_count?.[0]?.count ?? 0,
   };
 }
 
@@ -149,7 +150,7 @@ export function useTargets() {
     setLoading(true);
     const { data, error } = await supabase
       .from("monitoring_targets")
-      .select("*")
+      .select("*, process_count:target_process_links(count)")
       .order("created_at", { ascending: false });
     if (error) {
       console.error("[useTargets] load", error);

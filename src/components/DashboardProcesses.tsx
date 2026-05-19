@@ -103,7 +103,7 @@ export function DashboardProcesses() {
   const handleSyncNow = async (processId: string) => {
     setSyncingId(processId);
     try {
-      const res: any = await syncNowFn({ data: { processId } });
+      const res: any = await syncNowFn({ processId });
       if (res?.ok) {
         toast.success("Sincronização concluída.");
         await load();
@@ -157,7 +157,7 @@ export function DashboardProcesses() {
   const handleRetry = async (targetId: string) => {
     setRetryingId(targetId);
     try {
-      const res: any = await retryFn({ data: { targetId } });
+      const res: any = await retryFn({ targetId });
       if (res?.error === "discovery_already_running") {
         toast("Descoberta já está em andamento.");
       } else if (res?.error === "rate_limit_exceeded") {

@@ -136,31 +136,40 @@ export const getDashboard = createServerFn({ method: "GET" })
       };
     });
 
-    // Movimentações novas (até 20)
+    // Movimentações novas (única por processo, mais recente)
     const processIds = processes.map((p) => p.id);
     let recentNewMovements: any[] = [];
+    let countProcessesWithUpdates = 0;
+
     if (processIds.length > 0) {
+      // Fetch all new movements for these processes to group them correctly
       const { data: movs } = await sb
         .from("process_movements")
         .select("id, movement_name, occurred_at, organ_name, process_id")
         .eq("is_new", true)
         .in("process_id", processIds)
-        .order("occurred_at", { ascending: false })
-        .limit(20);
+        .order("occurred_at", { ascending: false });
 
       const procById = new Map(processes.map((p) => [p.id, p]));
-      recentNewMovements = (movs ?? []).map((m: any) => {
-        const p = procById.get(m.process_id);
-        return {
-          id: m.id,
-          movementName: m.movement_name,
-          occurredAt: m.occurred_at,
-          organName: m.organ_name,
-          processId: m.process_id,
-          processNumber: p?.displayNumber,
-          processClass: p?.className,
-        };
-      });
+      const seenProcesses = new Set();
+      
+      for (const m of (movs ?? []) as any[]) {
+        if (!seenProcesses.has(m.process_id)) {
+          seenProcesses.add(m.process_id);
+          const p = procById.get(m.process_id);
+          recentNewMovements.push({
+            id: m.id,
+            movementName: m.movement_name,
+            occurredAt: m.occurred_at,
+            organName: m.organ_name,
+            processId: m.process_id,
+            processNumber: p?.displayNumber,
+            processClass: p?.className,
+          });
+          if (recentNewMovements.length >= 20) break;
+        }
+      }
+      countProcessesWithUpdates = seenProcesses.size;
     }
 
     // Process-type targets pending scrape (still not linked to a process row)

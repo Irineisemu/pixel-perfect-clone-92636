@@ -213,7 +213,7 @@ export function DashboardProcesses() {
               const subtitle = t.type === 'lawyer' ? `OAB: ${(t.oab_numbers ?? []).map(oab => formatOABDisplay(oab)).join(", ")}` : t.type === 'person' ? "Pessoa/CPF" : "Radar";
 
               return (
-                <div key={t.id} className="p-4 border border-zinc-100 bg-white rounded-2xl shadow-[0_2px_4px_rgba(0,0,0,0.02)] flex items-center justify-between gap-4">
+                <div key={t.id} className="p-5 border border-zinc-100 bg-white rounded-2xl shadow-sm flex items-center justify-between gap-4 transition-all hover:shadow-md">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-[14px] text-zinc-900 truncate">{t.lawyer_name || t.full_name || "Radar"}</span>

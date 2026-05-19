@@ -71,8 +71,15 @@ export function ProcessMovementsTree({ processId }: { processId: string }) {
         <div className="text-[12px] text-rose-600 mb-2">Erro: {error}</div>
       )}
 
+      {loading && flat.length === 0 && (
+        <div className="flex items-center gap-2 text-[12px] text-zinc-500 py-4">
+          <span className="w-3 h-3 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
+          Carregando histórico…
+        </div>
+      )}
+
       {flat.length === 0 && !loading && !error && (
-        <div className="text-[12px] text-zinc-500 italic">Nenhuma movimentação registrada.</div>
+        <div className="text-[12px] text-zinc-500 italic py-2">Nenhuma movimentação registrada.</div>
       )}
 
       <ol className="relative border-l border-zinc-200 ml-2 space-y-3">

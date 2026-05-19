@@ -12,8 +12,8 @@ export const getDashboard = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const sb = context.supabase;
 
-    let countUrgentMovements = 0;
-    let countUrgentProcesses = 0;
+    const urgentProcessIds = new Set<string>();
+
 
     // 1. Get total counts directly for accurate stats
     const { count: totalProcesses } = await sb
@@ -88,7 +88,7 @@ export const getDashboard = createServerFn({ method: "GET" })
 
     const processes = (linkRows ?? []).map((r: any) => {
       const p = r.process;
-      if (p.is_urgent) countUrgentProcesses++;
+      if (p.is_urgent) urgentProcessIds.add(p.id);
       const codes: number[] = p.subject_codes ?? [];
       const names: string[] = p.subject_names ?? [];
       const subjects = codes.map((code, i) => ({ code, name: names[i] ?? null }));
@@ -123,7 +123,7 @@ export const getDashboard = createServerFn({ method: "GET" })
           ? { name: lm.movement_name, occurredAt: lm.occurred_at, organName: lm.organ_name }
           : null,
         parties: p.parties_json ?? null,
-        isUrgent: p.is_urgent ?? false,
+        isUrgent: (p.is_urgent ?? false) || (lm?.urgency === 'critical' || lm?.urgency === 'high'),
         matchedVia: r.matched_via,
         matchedValue: r.matched_value,
         linkedAt: r.first_linked_at,
@@ -167,7 +167,7 @@ export const getDashboard = createServerFn({ method: "GET" })
           if (isRecent) countProcessesWithRecentUpdates++;
           
           if (m.urgency === 'critical' || m.urgency === 'high') {
-            countUrgentMovements++;
+            urgentProcessIds.add(m.process_id);
           }
 
           if (recentNewMovements.length < 20) {
@@ -222,8 +222,7 @@ export const getDashboard = createServerFn({ method: "GET" })
         totalProcesses: totalProcesses ?? 0,
         totalLawyers: lawyers?.length ?? 0,
         countProcessesWithRecentUpdates: countProcessesWithRecentUpdates,
-        countUrgentMovements: countUrgentMovements,
-        countUrgentProcesses: countUrgentProcesses,
+        totalUrgent: urgentProcessIds.size,
       },
       lawyers: lawyers ?? [],
       processes,

@@ -38,7 +38,7 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
     (async () => {
       const [{ data: trib }, { data: mov }] = await Promise.all([
         supabase.from("tribunals").select("alias,name,status,sphere,last_synced_at"),
-        supabase.from("movements").select("id,occurred_at,text,urgency,process_id").order("occurred_at", { ascending: false }).limit(50),
+        supabase.from("process_movements").select("id,occurred_at,movement_name,urgency,process_id").order("occurred_at", { ascending: false }).limit(50),
       ]);
       if (!active) return;
       setTribunais((trib || []).map((t) => ({
@@ -52,18 +52,25 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
   }, []);
 
   const [dashboardData, setDashboardData] = useState<any>(null);
-  useEffect(() => {
-    let active = true;
-    fetchDashboard().then((res) => {
-      if (active) setDashboardData(res);
-    });
-    return () => { active = false; };
+  const loadDashboard = useCallback(async () => {
+    try {
+      const res = await fetchDashboard();
+      setDashboardData(res);
+    } catch (err) {
+      console.error("[AppShell] dashboard error:", err);
+    }
   }, [fetchDashboard]);
+
+  useEffect(() => {
+    loadDashboard();
+    const it = setInterval(loadDashboard, 30000); // 30s polling
+    return () => clearInterval(it);
+  }, [loadDashboard]);
 
   const stats = useMemo(() => {
     const NOW = Date.now();
-    const novas24h = dashboardData?.stats?.totalNewMovements ?? movements.filter((m) => NOW - new Date(m.occurred_at).getTime() < 24 * 3600e3).length;
-    const urgentes = dashboardData?.stats?.countUrgentMovements ?? movements.filter((m) => m.urgency === "critical" || m.urgency === "high").length;
+    const novas24h = dashboardData?.stats?.countProcessesWithRecentUpdates ?? movements.filter((m) => NOW - new Date(m.occurred_at).getTime() < 24 * 3600e3).length;
+    const urgentes = dashboardData?.stats?.totalUrgent ?? movements.filter((m) => m.urgency === "critical" || m.urgency === "high").length;
     const tribunaisAtivos = tribunais.filter((t) => t.status === "ativo").length;
     const tribunaisAtrasados = tribunais.filter((t) => t.status !== "ativo").length;
     

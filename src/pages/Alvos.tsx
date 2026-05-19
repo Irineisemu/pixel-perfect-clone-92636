@@ -621,10 +621,10 @@ export function Alvos() {
   const [drawer, setDrawer] = useState<any>({ open: false, mode: "create", initial: null });
   const [confirm, setConfirm] = useState<any>(null);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
-    process: false,
-    person: false,
-    lawyer: false,
-    radar: false
+    process: true,
+    person: true,
+    lawyer: true,
+    radar: true
   });
   const navigate = useNavigate();
   const createLawyer = useServerFn(createLawyerTarget);

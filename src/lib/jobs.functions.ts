@@ -13,7 +13,10 @@ const filtersSchema = z.object({
 
 export const getUserJobs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => filtersSchema.parse(input ?? {}))
+  .inputValidator((input: any) => {
+    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : input;
+    return filtersSchema.parse(payload ?? {});
+  })
   .handler(async ({ data, context }) => {
     const { userId } = context;
 

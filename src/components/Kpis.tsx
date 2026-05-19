@@ -2,9 +2,11 @@
 import { Icon } from "./Icon";
 import { Utils } from "../lib/jr-utils";
 
-function Kpi({ icon, label, value, hint, isUrgent }) {
+function Kpi({ icon, label, value, hint, isUrgent, onClick }) {
   return (
-    <div className={`rounded-lg border bg-white p-4 transition shadow-sm ${
+    <div 
+      onClick={onClick}
+      className={`rounded-lg border bg-white p-4 transition shadow-sm ${onClick ? "cursor-pointer active:scale-95" : ""} ${
       isUrgent && value > 0 
         ? "border-rose-200 bg-rose-50/30 hover:border-rose-300" 
         : "border-zinc-200 hover:border-zinc-300"
@@ -28,12 +30,36 @@ function Kpi({ icon, label, value, hint, isUrgent }) {
 export function KpiRow({ stats }) {
   const hasProcesses = stats.totalProcessos > 0;
   
+  const handleProcessosClick = () => {
+    const section1 = document.getElementById("section-targets");
+    const section2 = document.getElementById("section-manual");
+    
+    if (section1 && section2) {
+      // Calcular o ponto médio entre as duas seções
+      const rect1 = section1.getBoundingClientRect();
+      const rect2 = section2.getBoundingClientRect();
+      
+      const middleY = (rect1.top + window.scrollY + rect2.bottom + window.scrollY) / 2;
+      const viewportHeight = window.innerHeight;
+      
+      window.scrollTo({
+        top: middleY - (viewportHeight / 2),
+        behavior: "smooth"
+      });
+    } else if (section1) {
+      section1.scrollIntoView({ behavior: "smooth", block: "center" });
+    } else if (section2) {
+      section2.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       <Kpi 
         icon="layers" 
         label="Processos"
         value={stats.totalMonitorado.toLocaleString("pt-BR")}
+        onClick={handleProcessosClick}
         hint={
           <div className="flex flex-col">
             <span>{stats.totalMonitorado === 1 ? "processo monitorado" : "processos monitorados"}</span>
@@ -44,7 +70,6 @@ export function KpiRow({ stats }) {
             )}
           </div>
         } 
-
       />
       <Kpi icon="activity" label="Novas mov. (24h)" value={stats.novas24h} hint="últimas 24 horas" />
       <Kpi icon="alert-octagon" label="Urgentes pendentes" value={stats.urgentes} hint="prazos < 48h ou intimações" isUrgent />

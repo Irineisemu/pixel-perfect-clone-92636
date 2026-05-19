@@ -48,9 +48,10 @@ interface ProcessCardProps {
   process: ProcessCardProcess;
   isSyncing: boolean;
   onSyncNow: (id: string) => void;
+  isHighlighted?: boolean;
 }
 
-export function ProcessCard({ process: p, isSyncing, onSyncNow }: ProcessCardProps) {
+export function ProcessCard({ process: p, isSyncing, onSyncNow, isHighlighted }: ProcessCardProps) {
   const [showSummary, setShowSummary] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
 
@@ -60,7 +61,7 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow }: ProcessCardPro
   const pending = p.syncStatus === "pending";
 
   return (
-    <div className={`p-5 ${hasNew ? "bg-rose-50/30" : ""}`}>
+    <div className={`p-5 transition-all duration-500 ${isHighlighted ? "bg-amber-50 ring-2 ring-amber-400 ring-inset shadow-md" : hasNew ? "bg-rose-50/30" : ""}`}>
       {/* Header — meta tags em cima, número grande, classe/órgão como subtítulo */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">

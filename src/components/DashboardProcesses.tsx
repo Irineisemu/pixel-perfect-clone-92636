@@ -55,11 +55,10 @@ export function DashboardProcesses() {
   const locateProcess = (processId: string) => {
     const p = data?.processes?.find(proc => proc.id === processId);
     if (p) {
-      if (p.target?.type === 'lawyer') setIsOabExpanded(true);
+      if (p.target?.id) setExpandedTargetId(p.target.id);
       else if (p.target?.type === 'process') setIsManualExpanded(true);
       else setIsOthersExpanded(true);
     } else {
-      setIsOabExpanded(true);
       setIsManualExpanded(true);
     }
     

@@ -16,6 +16,67 @@ import { TribunalStatus } from "./TribunalStatus";
 import { Drawer } from "./Drawer";
 import { CmdK } from "./CmdK";
 
+function SourcesPopover({ stats, dashboardData, onNav, children }: { stats: any, dashboardData: any, onNav: any, children: React.ReactNode }) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        {children}
+      </PopoverTrigger>
+      <PopoverContent className="w-72 p-0 overflow-hidden rounded-2xl shadow-xl border-zinc-100" align="start">
+        <div className="p-4 bg-zinc-50 border-b border-zinc-100">
+          <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Fontes de monitoramento</h3>
+        </div>
+        <div className="max-h-[280px] overflow-y-auto p-2 space-y-1 bg-white">
+          {dashboardData?.targets?.map((t: any) => (
+            <div key={t.id} className="flex items-center justify-between p-2.5 rounded-xl hover:bg-zinc-50 transition-colors">
+              <div className="min-w-0 flex-1">
+                <div className="text-[12px] font-bold text-zinc-900 truncate leading-tight">
+                  {t.lawyer_name || t.full_name || "Radar"}
+                </div>
+                {t.type === 'lawyer' && t.oab_numbers?.length > 0 && (
+                  <div className="text-[9px] text-zinc-400 font-mono truncate mt-0.5">
+                    {(t.oab_numbers as string[]).map(oab => oab.split('/')[0]).join(", ")}
+                  </div>
+                )}
+                <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-tighter mt-0.5">
+                  {t.type === 'lawyer' ? 'Advogado' : t.type === 'person' ? 'Pessoa/CPF' : 'Radar'}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${
+                  t.discovery_status === 'running' ? 'text-sky-600 bg-sky-50' : 
+                  t.discovery_status === 'completed' ? 'text-emerald-600 bg-emerald-50' : 
+                  'text-zinc-500 bg-zinc-50'
+                }`}>
+                  {t.discovery_status === 'running' ? 'Sinc.' : t.discovery_status === 'completed' ? 'Ok' : 'Pendente'}
+                </span>
+                <div className={`w-1.5 h-1.5 rounded-full ${t.discovery_status === 'running' ? 'bg-sky-500 animate-pulse' : 'bg-emerald-500'}`} />
+              </div>
+            </div>
+          ))}
+          {(dashboardData?.pendingProcesses?.length > 0 || dashboardData?.processes?.some(p => p.target?.type === 'process')) && (
+            <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-zinc-50 transition-colors border-t border-zinc-50 mt-1">
+              <div className="min-w-0 flex-1">
+                <div className="text-[12px] font-bold text-zinc-900 truncate leading-tight">Monitoramentos Diretos</div>
+                <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-tighter mt-0.5">Números CNJ individuais</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded text-emerald-600 bg-emerald-50">Ativo</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="p-3 bg-zinc-50 border-t border-zinc-100">
+          <button onClick={() => onNav("alvos")} className="w-full py-2 text-[10px] font-bold text-zinc-500 hover:text-zinc-900 uppercase tracking-widest text-center transition-colors">
+            Gerenciar todos os alvos
+          </button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export function AppShell({ route, children }: { route: "inicio" | "alvos" | "configuracoes"; children?: React.ReactNode }) {
   const navigate = useNavigate();
   const fetchDashboard = useServerFn(getDashboard);

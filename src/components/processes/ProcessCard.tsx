@@ -42,6 +42,7 @@ export interface ProcessCardProcess {
   newMovementsCount: number;
   syncStatus: string;
   target: { name: string };
+  isUrgent: boolean;
 }
 
 interface ProcessCardProps {

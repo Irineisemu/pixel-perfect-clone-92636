@@ -601,7 +601,7 @@ function EmptyState({ filter, onCreate }) {
       </div>
       <h3 className="mt-4 text-[15px] font-medium text-zinc-900">{labels[filter] || labels.todos}</h3>
       <p className="mt-1 text-[12.5px] text-zinc-500 max-w-sm mx-auto">
-        Cadastre uma pessoa, um processo ou um radar de captação para o JusRadar começar a vasculhar os tribunais por você.
+        Cadastre uma pessoa, advogado, um processo ou um radar de captação para o JusRadar começar a monitorar por você.
       </p>
       <button onClick={onCreate}
         className="mt-5 h-9 px-4 rounded-md bg-zinc-900 text-white text-[13px] font-medium hover:bg-zinc-800 inline-flex items-center gap-1.5">

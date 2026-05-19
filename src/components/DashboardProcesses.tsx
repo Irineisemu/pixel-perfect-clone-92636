@@ -330,10 +330,10 @@ export function DashboardProcesses() {
 
           <div className="overflow-hidden">
             <button onClick={() => setIsMovementsExpanded(!isMovementsExpanded)} className="w-full text-left py-3 px-1 flex items-center justify-between border-b border-rose-100 group">
-              <h2 className="text-[11px] font-black text-rose-600 uppercase tracking-widest flex items-center gap-2">
+              <h2 className="text-[11px] font-bold text-rose-600 uppercase tracking-widest flex items-center gap-2">
                 <span className={`w-1.5 h-1.5 rounded-full bg-rose-500 ${stats?.countProcessesWithRecentUpdates > 0 ? 'animate-pulse' : 'opacity-50'}`} />
                 Resumo de andamentos
-                {stats?.countProcessesWithRecentUpdates > 0 && <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[9px] font-black">{stats.countProcessesWithRecentUpdates} NOVOS</span>}
+                {stats?.countProcessesWithRecentUpdates > 0 && <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[9px] font-bold">{stats.countProcessesWithRecentUpdates} NOVOS</span>}
               </h2>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" className={`text-rose-200 transition-transform ${isMovementsExpanded ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6"/></svg>
             </button>

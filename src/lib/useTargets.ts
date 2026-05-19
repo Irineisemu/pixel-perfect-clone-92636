@@ -101,6 +101,7 @@ function rowToUi(r: any) {
     notes: "", 
     stats30d: 0,
     sparkline: [0, 0, 0, 0, 0, 0, 0],
+    processCount: r.process_count?.[0]?.count ?? 0,
   };
 }
 

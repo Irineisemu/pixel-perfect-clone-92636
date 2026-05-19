@@ -29,6 +29,9 @@ export const createProcessTargets = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: any) => {
     const payload = input?.data ?? input;
+    if (!payload || typeof payload !== 'object') {
+      throw new Error("Dados de entrada inválidos.");
+    }
     return CreateProcessSchema.parse(payload);
   })
   .handler(async ({ data, context }) => {

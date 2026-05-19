@@ -700,8 +700,9 @@ export function Alvos() {
       <div className="flex flex-wrap items-center gap-2 mb-4">
         {[
           { id: "todos",   label: "Todos",     n: counters.total },
-          { id: "person",  label: "Pessoas",   n: counters.person },
           { id: "process", label: "Processos", n: counters.process },
+          { id: "person",  label: "Pessoas/CPF",   n: counters.person },
+          { id: "lawyer",  label: "Advogados", n: counters.lawyer },
           { id: "radar",   label: "Radares",   n: counters.radar },
         ].map((c) => (
           <button key={c.id} onClick={() => setFilter(c.id)} aria-pressed={filter === c.id}

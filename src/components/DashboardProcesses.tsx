@@ -42,6 +42,8 @@ export function DashboardProcesses() {
   const [loading, setLoading] = useState(!cachedDashboard);
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [isMovementsExpanded, setIsMovementsExpanded] = useState(false);
+
   
 
   const handleSyncNow = async (processId: string) => {
@@ -223,31 +225,62 @@ export function DashboardProcesses() {
       )}
 
       {recentNewMovements.length > 0 && (
-        <section>
-          <h2 className="text-sm font-semibold text-zinc-700 mb-2 px-1 flex items-center gap-2">
-            <span className="inline-block h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
-            Movimentações novas
-            <span className="text-zinc-500 font-normal">({recentNewMovements.length})</span>
-          </h2>
-          <div className="rounded-xl border border-rose-200 bg-rose-50/40 divide-y divide-rose-100">
-            {recentNewMovements.map((m: any) => (
-              <div key={m.id} className="p-3 flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="text-[13px] font-medium text-zinc-900">{m.movementName}</div>
-                  <div className="mt-0.5 text-[11.5px] text-zinc-600">
-                    <span className="font-mono">{m.processNumber}</span>
-                    {m.processClass && <span> · {m.processClass}</span>}
-                    {m.organName && <span className="text-zinc-500"> · {m.organName}</span>}
+        <section className="bg-rose-50/30 rounded-xl border border-rose-100 overflow-hidden transition-all">
+          <button
+            onClick={() => setIsMovementsExpanded(!isMovementsExpanded)}
+            className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-rose-50/50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="inline-block h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+              <h2 className="text-sm font-semibold text-zinc-700">
+                Novas movimentações detectadas
+                <span className="ml-2 text-rose-600 font-bold bg-rose-100 px-1.5 py-0.5 rounded text-xs">
+                  {recentNewMovements.length}
+                </span>
+              </h2>
+              <span className="text-[11px] text-rose-500 font-normal ml-2 hidden sm:inline">
+                (Andamentos recentes nos seus processos monitorados)
+              </span>
+            </div>
+            <div className={`transition-transform duration-200 ${isMovementsExpanded ? 'rotate-180' : ''}`}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
+                <path d="m6 9 6 6 6-6"/>
+              </svg>
+            </div>
+          </button>
+          
+          {isMovementsExpanded && (
+            <div className="border-t border-rose-100 bg-white/50 divide-y divide-rose-100 max-h-[400px] overflow-y-auto">
+              <div className="px-4 py-2 bg-rose-50/50 text-[11px] text-rose-700 leading-relaxed border-b border-rose-100">
+                Estas são as últimas atualizações publicadas pelos tribunais nos processos que você monitora. 
+                Elas aparecerão aqui até a próxima sincronização geral.
+              </div>
+              {recentNewMovements.map((m: any) => (
+                <div key={m.id} className="p-3 px-4 flex items-start justify-between gap-3 hover:bg-rose-50/30 transition-colors">
+                  <div className="min-w-0">
+                    <div className="text-[13px] font-medium text-zinc-900 leading-snug">{m.movementName}</div>
+                    <div className="mt-1 text-[11.5px] text-zinc-600 flex flex-wrap items-center gap-x-2">
+                      <span className="font-mono text-zinc-900 font-medium">{m.processNumber}</span>
+                      <span className="text-zinc-300">|</span>
+                      <span>{m.processClass}</span>
+                      {m.organName && (
+                        <>
+                          <span className="text-zinc-300">|</span>
+                          <span className="text-zinc-500">{m.organName}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-[11px] text-zinc-500 flex-shrink-0 font-medium whitespace-nowrap bg-zinc-100 px-1.5 py-0.5 rounded">
+                    {new Date(m.occurredAt).toLocaleDateString("pt-BR")}
                   </div>
                 </div>
-                <div className="text-[11px] text-zinc-500 flex-shrink-0">
-                  {new Date(m.occurredAt).toLocaleDateString("pt-BR")}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
+
 
       <section>
         <div className="flex items-center justify-between mb-2 px-1">

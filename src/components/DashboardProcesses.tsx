@@ -233,9 +233,9 @@ export function DashboardProcesses() {
                 <span className="p-1 rounded bg-zinc-900 text-white">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
                 </span>
-                Alvos de Descoberta
+                1. Alvos de Descoberta
               </h2>
-              <p className="text-[11px] text-zinc-500 mt-0.5">Fontes usadas para encontrar novos processos automaticamente (OABs, CPFs e Radares).</p>
+              <p className="text-[11px] text-zinc-500 mt-0.5">Fontes usadas para encontrar novos processos automaticamente.</p>
             </div>
             <Link to="/alvos" className="text-[11px] font-medium text-zinc-600 hover:text-zinc-900 bg-white border border-zinc-200 px-2 py-1 rounded shadow-sm transition-all hover:shadow">Gerenciar alvos</Link>
           </div>
@@ -301,6 +301,20 @@ export function DashboardProcesses() {
             </div>
           </div>
         </section>
+      )}
+
+      {(oabProcesses.length > 0 || otherProcesses.length > 0 || manualProcesses.length > 0 || pendingProcesses.length > 0) && (
+        <div className="pt-2 px-1">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="p-1 rounded bg-zinc-900 text-white">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </span>
+            <div>
+              <h2 className="text-sm font-bold text-zinc-900">2. Monitoramentos</h2>
+              <p className="text-[11px] text-zinc-500">Todos os processos que estão sendo acompanhados pelo sistema.</p>
+            </div>
+          </div>
+        </div>
       )}
 
       {oabProcesses.length > 0 && (
@@ -388,88 +402,6 @@ export function DashboardProcesses() {
       )}
 
 
-      {recentNewMovements.length > 0 && (
-        <section className="bg-rose-50/30 rounded-xl border border-rose-100 overflow-hidden transition-all">
-          <button
-            onClick={() => setIsMovementsExpanded(!isMovementsExpanded)}
-            className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-rose-50/50 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <span className={`inline-block h-2 w-2 rounded-full bg-rose-500 ${stats?.countProcessesWithRecentUpdates > 0 ? 'animate-pulse' : 'opacity-50'}`} />
-              <h2 className="text-sm font-semibold text-zinc-700">
-                Últimas movimentações detectadas
-                {stats?.countProcessesWithRecentUpdates > 0 && (
-                  <span className="ml-2 text-rose-600 font-bold bg-rose-100 px-1.5 py-0.5 rounded text-xs animate-pulse">
-                    {stats.countProcessesWithRecentUpdates} novas
-                  </span>
-                )}
-              </h2>
-              <span className="text-[11px] text-rose-500 font-normal ml-2 hidden sm:inline">
-                (Aqui estão as últimas movimentações dos seus processos)
-              </span>
-            </div>
-            <div className={`transition-transform duration-200 ${isMovementsExpanded ? 'rotate-180' : ''}`}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
-                <path d="m6 9 6 6 6-6"/>
-              </svg>
-            </div>
-          </button>
-          
-          {isMovementsExpanded && (
-            <div className="border-t border-rose-100 bg-white/50 divide-y divide-rose-100 max-h-[400px] overflow-y-auto">
-              <div className="px-4 py-2 bg-rose-50/50 text-[11px] text-rose-700 leading-relaxed border-b border-rose-100">
-                Estas são as últimas atualizações de cada processo monitorado. 
-                {stats?.countProcessesWithRecentUpdates > 0 && ` Detectamos ${stats.countProcessesWithRecentUpdates} andamento(s) nas últimas 24h.`}
-              </div>
-              {recentNewMovements.map((m: any) => (
-                <button 
-                  key={m.id} 
-                  onClick={() => locateProcess(m.processId)}
-                  className="w-full text-left p-3 px-4 flex items-start justify-between gap-3 hover:bg-rose-50 transition-colors group"
-                >
-                  <div className="min-w-0">
-                    <div className="text-[13px] font-medium text-zinc-900 leading-snug group-hover:text-rose-700 transition-colors flex items-center gap-2">
-                      {m.movementName}
-                      {m.isRecent && (
-                        <span className="px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-600 text-[10px] font-bold animate-pulse">NOVO</span>
-                      )}
-                      {m.urgency && m.urgency !== 'info' && (
-                        <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                          m.urgency === 'critical' ? 'bg-red-100 text-red-600' : 
-                          m.urgency === 'high' ? 'bg-orange-100 text-orange-600' :
-                          'bg-amber-100 text-amber-600'
-                        }`}>
-                          {m.urgency === 'critical' ? 'URGENTE' : m.urgency === 'high' ? 'ALTA PRIORIDADE' : 'MÉDIA'}
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-1 text-[11.5px] text-zinc-600 flex flex-wrap items-center gap-x-2">
-                      <span className="font-mono text-zinc-900 font-medium">{m.processNumber}</span>
-                      <span className="text-zinc-300">|</span>
-                      <span>{m.processClass}</span>
-                      {m.organName && (
-                        <>
-                          <span className="text-zinc-300">|</span>
-                          <span className="text-zinc-500">{m.organName}</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                    <div className="text-[11px] text-zinc-500 font-medium whitespace-nowrap bg-zinc-100 px-1.5 py-0.5 rounded">
-                      {new Date(m.occurredAt).toLocaleDateString("pt-BR")}
-                    </div>
-                    <span className="text-[10px] text-rose-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
-                      Ver processo
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
 
 
       {processes.length === 0 && (
@@ -499,19 +431,6 @@ export function DashboardProcesses() {
         </section>
       )}
 
-      {manualProcesses.length > 0 && (
-        <div className="pt-2 px-1">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="p-1 rounded bg-zinc-200 text-zinc-700">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            </span>
-            <div>
-              <h2 className="text-sm font-bold text-zinc-900">Monitoramentos Diretos</h2>
-              <p className="text-[11px] text-zinc-500">Processos específicos sendo acompanhados pelo número CNJ.</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {manualProcesses.length > 0 && (
         <section className="bg-white rounded-xl border border-zinc-200 overflow-hidden transition-all">
@@ -605,8 +524,97 @@ export function DashboardProcesses() {
           )}
         </section>
       )}
-    </div>
 
+      {recentNewMovements.length > 0 && (
+        <div className="pt-2 px-1">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="p-1 rounded bg-zinc-900 text-white">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </span>
+            <div>
+              <h2 className="text-sm font-bold text-zinc-900">3. Últimas Movimentações</h2>
+              <p className="text-[11px] text-zinc-500">Linha do tempo das novidades encontradas nos seus processos.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {recentNewMovements.length > 0 && (
+        <section className="bg-rose-50/30 rounded-xl border border-rose-100 overflow-hidden transition-all">
+          <button
+            onClick={() => setIsMovementsExpanded(!isMovementsExpanded)}
+            className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-rose-50/50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className={`inline-block h-2 w-2 rounded-full bg-rose-500 ${stats?.countProcessesWithRecentUpdates > 0 ? 'animate-pulse' : 'opacity-50'}`} />
+              <h2 className="text-sm font-semibold text-zinc-700">
+                Resumo de andamentos
+                {stats?.countProcessesWithRecentUpdates > 0 && (
+                  <span className="ml-2 text-rose-600 font-bold bg-rose-100 px-1.5 py-0.5 rounded text-xs animate-pulse">
+                    {stats.countProcessesWithRecentUpdates} novos
+                  </span>
+                )}
+              </h2>
+            </div>
+            <div className={`transition-transform duration-200 ${isMovementsExpanded ? 'rotate-180' : ''}`}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
+                <path d="m6 9 6 6 6-6"/>
+              </svg>
+            </div>
+          </button>
+          
+          {isMovementsExpanded && (
+            <div className="border-t border-rose-100 bg-white/50 divide-y divide-rose-100 max-h-[400px] overflow-y-auto">
+              {recentNewMovements.map((m: any) => (
+                <button 
+                  key={m.id} 
+                  onClick={() => locateProcess(m.processId)}
+                  className="w-full text-left p-3 px-4 flex items-start justify-between gap-3 hover:bg-rose-50 transition-colors group"
+                >
+                  <div className="min-w-0">
+                    <div className="text-[13px] font-medium text-zinc-900 leading-snug group-hover:text-rose-700 transition-colors flex items-center gap-2">
+                      {m.movementName}
+                      {m.isRecent && (
+                        <span className="px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-600 text-[10px] font-bold animate-pulse">NOVO</span>
+                      )}
+                      {m.urgency && m.urgency !== 'info' && (
+                        <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                          m.urgency === 'critical' ? 'bg-red-100 text-red-600' : 
+                          m.urgency === 'high' ? 'bg-orange-100 text-orange-600' :
+                          'bg-amber-100 text-amber-600'
+                        }`}>
+                          {m.urgency === 'critical' ? 'URGENTE' : m.urgency === 'high' ? 'ALTA PRIORIDADE' : 'MÉDIA'}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-1 text-[11.5px] text-zinc-600 flex flex-wrap items-center gap-x-2">
+                      <span className="font-mono text-zinc-900 font-medium">{m.processNumber}</span>
+                      <span className="text-zinc-300">|</span>
+                      <span>{m.processClass}</span>
+                      {m.organName && (
+                        <>
+                          <span className="text-zinc-300">|</span>
+                          <span className="text-zinc-500">{m.organName}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    <div className="text-[11px] text-zinc-500 font-medium whitespace-nowrap bg-zinc-100 px-1.5 py-0.5 rounded">
+                      {new Date(m.occurredAt).toLocaleDateString("pt-BR")}
+                    </div>
+                    <span className="text-[10px] text-rose-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+                      Ver processo
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+    </div>
   );
 }
 

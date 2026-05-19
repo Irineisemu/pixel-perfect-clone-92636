@@ -43,6 +43,8 @@ export function DashboardProcesses() {
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [isMovementsExpanded, setIsMovementsExpanded] = useState(false);
+  const [isPendingExpanded, setIsPendingExpanded] = useState(false);
+
 
   
 

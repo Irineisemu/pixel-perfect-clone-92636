@@ -160,6 +160,10 @@ export const getDashboard = createServerFn({ method: "GET" })
           
           const isRecent = new Date(m.occurred_at) >= yesterday;
           if (isRecent) countProcessesWithRecentUpdates++;
+          
+          if (m.urgency === 'critical' || m.urgency === 'high') {
+            countUrgentMovements++;
+          }
 
           if (recentNewMovements.length < 20) {
             recentNewMovements.push({

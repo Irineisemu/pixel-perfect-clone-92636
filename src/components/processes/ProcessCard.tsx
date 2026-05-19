@@ -42,6 +42,7 @@ export interface ProcessCardProcess {
   newMovementsCount: number;
   syncStatus: string;
   target: { name: string };
+  isUrgent: boolean;
 }
 
 interface ProcessCardProps {
@@ -78,6 +79,11 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow, isHighlighted }:
             {p.secrecyLevel > 0 && (
               <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
                 ⚠ {p.secrecyLabel}
+              </span>
+            )}
+            {p.isUrgent && (
+              <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700 border border-red-200 animate-pulse">
+                🚨 URGENTE
               </span>
             )}
           </div>

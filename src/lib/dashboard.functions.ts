@@ -51,7 +51,7 @@ export const getDashboard = createServerFn({ method: "GET" })
           filed_at, organ_code, organ_name,
           municipality_ibge, secrecy_level,
           system_name, format_name, last_update_at,
-          parties_json
+          parties_json, is_urgent
         )
         `,
       )
@@ -85,6 +85,7 @@ export const getDashboard = createServerFn({ method: "GET" })
 
     const processes = (linkRows ?? []).map((r: any) => {
       const p = r.process;
+      if (p.is_urgent) countUrgentProcesses++;
       const codes: number[] = p.subject_codes ?? [];
       const names: string[] = p.subject_names ?? [];
       const subjects = codes.map((code, i) => ({ code, name: names[i] ?? null }));
@@ -119,6 +120,7 @@ export const getDashboard = createServerFn({ method: "GET" })
           ? { name: lm.movement_name, occurredAt: lm.occurred_at, organName: lm.organ_name }
           : null,
         parties: p.parties_json ?? null,
+        isUrgent: p.is_urgent ?? false,
         matchedVia: r.matched_via,
         matchedValue: r.matched_value,
         linkedAt: r.first_linked_at,
@@ -138,6 +140,8 @@ export const getDashboard = createServerFn({ method: "GET" })
     const processIds = processes.map((p) => p.id);
     let recentNewMovements: any[] = [];
     let countProcessesWithRecentUpdates = 0;
+    let countUrgentMovements = 0;
+    let countUrgentProcesses = 0;
     
     const yesterday = new Date();
     yesterday.setHours(yesterday.getHours() - 24);
@@ -145,7 +149,7 @@ export const getDashboard = createServerFn({ method: "GET" })
     if (processIds.length > 0) {
       const { data: movs } = await sb
         .from("process_movements")
-        .select("id, movement_name, occurred_at, organ_name, process_id")
+        .select("id, movement_name, occurred_at, organ_name, process_id, urgency, deadline")
         .in("process_id", processIds)
         .order("occurred_at", { ascending: false });
 
@@ -159,6 +163,10 @@ export const getDashboard = createServerFn({ method: "GET" })
           
           const isRecent = new Date(m.occurred_at) >= yesterday;
           if (isRecent) countProcessesWithRecentUpdates++;
+          
+          if (m.urgency === 'critical' || m.urgency === 'high') {
+            countUrgentMovements++;
+          }
 
           if (recentNewMovements.length < 20) {
             recentNewMovements.push({
@@ -169,7 +177,9 @@ export const getDashboard = createServerFn({ method: "GET" })
               processId: m.process_id,
               processNumber: p?.displayNumber,
               processClass: p?.className,
-              isRecent
+              isRecent,
+              urgency: m.urgency,
+              deadline: m.deadline
             });
           }
         }
@@ -210,6 +220,8 @@ export const getDashboard = createServerFn({ method: "GET" })
         totalProcesses: totalProcesses ?? 0,
         totalLawyers: lawyers?.length ?? 0,
         countProcessesWithRecentUpdates: countProcessesWithRecentUpdates,
+        countUrgentMovements: countUrgentMovements,
+        countUrgentProcesses: countUrgentProcesses,
       },
       lawyers: lawyers ?? [],
       processes,

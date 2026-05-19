@@ -40,16 +40,36 @@ export function CmdK({ open, onClose }) {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKey);
     setTimeout(() => inputRef.current?.focus(), 50);
-    (async () => {
-      const { data } = await supabase
-        .from("processes")
-        .select("id, process_number, class_name, organ_name")
-        .order("last_synced_at", { ascending: false })
-        .limit(50);
-      setProcesses(data || []);
-    })();
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
+
+  useEffect(() => {
+    if (!open) return;
+    
+    const fetchProcesses = async () => {
+      let query = supabase
+        .from("processes")
+        .select("id, process_number, class_name, organ_name")
+        .order("last_synced_at", { ascending: false });
+
+      if (q.trim()) {
+        const ql = q.trim().toLowerCase();
+        const digits = ql.replace(/\D/g, "");
+        
+        if (digits) {
+          query = query.or(`process_number.ilike.%${digits}%,class_name.ilike.%${ql}%,organ_name.ilike.%${ql}%`);
+        } else {
+          query = query.or(`class_name.ilike.%${ql}%,organ_name.ilike.%${ql}%`);
+        }
+      }
+
+      const { data } = await query.limit(20);
+      setProcesses(data || []);
+    };
+
+    const timer = setTimeout(fetchProcesses, 300);
+    return () => clearTimeout(timer);
+  }, [open, q]);
 
   if (!open) return null;
   const ql = q.trim().toLowerCase();

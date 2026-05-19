@@ -702,7 +702,7 @@ export function Alvos() {
           <p className="text-[13.5px] text-zinc-600 mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-medium text-[12px] border border-indigo-100">
               <Icon name="search" className="h-3 w-3" />
-              {counters.person + counters.lawyer + counters.radar} fontes de busca
+              {counters.person + counters.lawyer + counters.radar} alvos de busca
             </span>
             <span className="text-zinc-300">·</span>
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 font-medium text-[12px] border border-sky-100">
@@ -728,7 +728,7 @@ export function Alvos() {
         <div>
           <h4 className="text-[13px] font-semibold text-amber-900">Entenda seus alvos</h4>
           <p className="text-[12.5px] text-amber-800/80 leading-relaxed mt-0.5">
-            <strong>Fontes de busca</strong> (CPF, OAB e Radares) são critérios usados para descobrir novos processos automaticamente. 
+            <strong>Alvos de busca</strong> (CPF, OAB e Radares) são critérios usados para descobrir novos processos automaticamente. 
             <strong> Processos diretos</strong> são monitorados pelo número CNJ específico.
           </p>
         </div>
@@ -796,7 +796,7 @@ export function Alvos() {
         <div className="space-y-8">
           <div>
             <div className="flex items-center gap-2 px-1 mb-4">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">Fontes de Descoberta</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">Alvos</span>
               <div className="h-px flex-1 bg-zinc-100" />
             </div>
             <div className="space-y-4">
@@ -834,7 +834,7 @@ export function Alvos() {
                       <div className="border-t border-zinc-100 max-h-[400px] overflow-y-auto custom-scrollbar">
                         {groupItems.length === 0 ? (
                           <div className="p-8 text-center text-zinc-400 text-[13px]">
-                            Nenhuma fonte de busca cadastrada.
+                            Nenhum alvo de busca cadastrado.
                           </div>
                         ) : (
                           <>

@@ -138,6 +138,7 @@ export const getDashboard = createServerFn({ method: "GET" })
     const processIds = processes.map((p) => p.id);
     let recentNewMovements: any[] = [];
     let countProcessesWithUpdates = 0;
+    let totalNewMovementsCount = 0;
 
     if (processIds.length > 0) {
       // Fetch all new movements for these processes to group them correctly
@@ -152,6 +153,7 @@ export const getDashboard = createServerFn({ method: "GET" })
       const seenProcesses = new Set();
       
       for (const m of (movs ?? []) as any[]) {
+        totalNewMovementsCount++;
         if (!seenProcesses.has(m.process_id)) {
           seenProcesses.add(m.process_id);
           const p = procById.get(m.process_id);
@@ -164,10 +166,16 @@ export const getDashboard = createServerFn({ method: "GET" })
             processNumber: p?.displayNumber,
             processClass: p?.className,
           });
-          if (recentNewMovements.length >= 20) break;
+          // We still want to count all, so we don't break yet, 
+          // but we only add to recentNewMovements up to 20 unique processes
         }
       }
       countProcessesWithUpdates = seenProcesses.size;
+      // Truncate the list for display if needed (though we already break in a sense if we wanted 20)
+      // Actually, if we want 20 unique ones, we should continue until we have 20.
+      if (recentNewMovements.length > 20) {
+        recentNewMovements = recentNewMovements.slice(0, 20);
+      }
     }
 
     // Process-type targets pending scrape (still not linked to a process row)
@@ -203,7 +211,8 @@ export const getDashboard = createServerFn({ method: "GET" })
       stats: {
         totalProcesses: totalProcesses ?? 0,
         totalLawyers: lawyers?.length ?? 0,
-        totalNewMovements: countProcessesWithUpdates,
+        totalNewMovements: totalNewMovementsCount,
+        countProcessesWithUpdates: countProcessesWithUpdates,
       },
       lawyers: lawyers ?? [],
       processes,

@@ -8,6 +8,7 @@ import { triggerRediscovery } from "@/lib/lawyer.functions";
 import { syncProcessNow, syncAll } from "@/lib/process.functions";
 import { formatOABDisplay } from "@/types/targets";
 import { ProcessCard } from "@/components/processes/ProcessCard";
+import { RefreshCw } from "lucide-react";
 
 function statusLabel(s: string | null) {
   switch (s) {

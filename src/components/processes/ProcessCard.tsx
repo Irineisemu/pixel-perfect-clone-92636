@@ -172,11 +172,15 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow, isHighlighted }:
       )}
 
       {/* Action row: ver resumo / ver histórico */}
-      <div className="mt-3 pt-3 border-t border-zinc-100 flex items-center gap-4 text-[12px]">
+      <div className="mt-4 pt-3 border-t border-zinc-100 flex flex-wrap items-center gap-2 text-[12px]">
         <button
           onClick={() => setShowSummary((v) => !v)}
           aria-expanded={showSummary}
-          className="inline-flex items-center gap-1 text-zinc-700 hover:text-zinc-900"
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all font-medium ${
+            showSummary 
+              ? "bg-sky-100 border-sky-200 text-sky-800 shadow-sm" 
+              : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 hover:text-zinc-900"
+          }`}
         >
           {showSummary ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
           {showSummary ? "Recolher resumo" : "Ver resumo completo"}
@@ -184,7 +188,11 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow, isHighlighted }:
         <button
           onClick={() => setShowHistory((v) => !v)}
           aria-expanded={showHistory}
-          className="inline-flex items-center gap-1 text-zinc-700 hover:text-zinc-900"
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all font-medium ${
+            showHistory 
+              ? "bg-sky-100 border-sky-200 text-sky-800 shadow-sm" 
+              : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 hover:text-zinc-900"
+          }`}
         >
           <History className="h-3.5 w-3.5" />
           {showHistory ? "Ocultar histórico" : "Ver histórico"}

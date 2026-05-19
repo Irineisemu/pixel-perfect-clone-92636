@@ -217,6 +217,7 @@ export const getDashboard = createServerFn({ method: "GET" })
         totalProcesses: totalProcesses ?? 0,
         totalLawyers: lawyers?.length ?? 0,
         countProcessesWithRecentUpdates: countProcessesWithRecentUpdates,
+        countUrgentMovements: countUrgentMovements,
       },
       lawyers: lawyers ?? [],
       processes,

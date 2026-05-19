@@ -225,8 +225,16 @@ export const listProcessMovements = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const sb = context.supabase;
-    const from = (data.page - 1) * data.pageSize;
-    const to = from + data.pageSize - 1;
+    
+    // Fallback para quando o inputValidator passa o objeto direto ou dentro de data
+    const processId = data.processId;
+    const page = data.page || 1;
+    const pageSize = data.pageSize || 20;
+
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    console.log(`[listProcessMovements] Fetching movements for ${processId}, range ${from}-${to}`);
 
     const { data: rows, count, error } = await sb
       .from("process_movements")
@@ -234,18 +242,19 @@ export const listProcessMovements = createServerFn({ method: "POST" })
         "id, movement_code, movement_name, occurred_at, organ_name, organ_code, complements, is_new",
         { count: "exact" },
       )
-      .eq("process_id", data.processId)
+      .eq("process_id", processId)
       .order("occurred_at", { ascending: false })
       .range(from, to);
 
     if (error) {
-      return { movements: [], total: 0, page: data.page, pageSize: data.pageSize, error: error.message };
+      console.error("[listProcessMovements] DB error:", error);
+      return { movements: [], total: 0, page, pageSize, error: error.message };
     }
 
     return {
       movements: rows ?? [],
       total: count ?? 0,
-      page: data.page,
-      pageSize: data.pageSize,
+      page,
+      pageSize,
     };
   });

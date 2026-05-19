@@ -328,8 +328,8 @@ export function DashboardProcesses() {
             </div>
           </div>
 
-          <div className="overflow-hidden">
-            <button onClick={() => setIsMovementsExpanded(!isMovementsExpanded)} className="w-full text-left py-3 px-1 flex items-center justify-between border-b border-rose-100 group">
+          <div className="overflow-hidden bg-white border border-zinc-100 rounded-2xl px-4 shadow-sm">
+            <button onClick={() => setIsMovementsExpanded(!isMovementsExpanded)} className={`w-full text-left py-4 flex items-center justify-between group ${isMovementsExpanded ? 'border-b border-rose-50' : ''}`}>
               <h2 className="text-[11px] font-bold text-rose-600 uppercase tracking-widest flex items-center gap-2">
                 <span className={`w-1.5 h-1.5 rounded-full bg-rose-500 ${stats?.countProcessesWithRecentUpdates > 0 ? 'animate-pulse' : 'opacity-50'}`} />
                 Resumo de andamentos

@@ -724,7 +724,7 @@ export function Alvos() {
         <EmptyState filter={filter} onCreate={() => setDrawer({ open: true, mode: "create", initial: null })} />
       ) : filter !== "todos" ? (
         <>
-          <div className="hidden lg:block rounded-lg border border-zinc-200 bg-white overflow-hidden">
+          <div className="hidden lg:block rounded-lg border border-zinc-200 bg-white overflow-hidden max-h-[600px] overflow-y-auto custom-scrollbar">
             <table className="w-full text-left">
               <thead className="bg-zinc-50/60 border-b border-zinc-200">
                 <tr className="text-[10.5px] font-semibold uppercase tracking-wider text-zinc-500">

@@ -81,6 +81,11 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow, isHighlighted }:
                 ⚠ {p.secrecyLabel}
               </span>
             )}
+            {p.isUrgent && (
+              <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700 border border-red-200 animate-pulse">
+                🚨 URGENTE
+              </span>
+            )}
           </div>
 
           <div className="mt-1.5 font-mono text-[14px] font-semibold text-zinc-900 truncate flex items-center gap-2">

@@ -383,14 +383,14 @@ export function DashboardProcesses() {
         <section className="bg-white rounded-xl border border-zinc-200 overflow-hidden">
           <div className="p-10 text-center">
             <div className="text-3xl mb-2">📭</div>
-            {lawyers.length === 0 ? (
+            {targets.length === 0 ? (
               <>
-                <p className="text-sm text-zinc-600 mb-3">Nenhum processo monitorado ainda.</p>
+                <p className="text-sm text-zinc-600 mb-3">Nenhum processo ou alvo monitorado ainda.</p>
                 <Link
                   to="/alvos"
                   className="inline-block px-3 py-1.5 rounded-md bg-zinc-900 text-white text-[13px] font-medium hover:bg-zinc-800"
                 >
-                  Adicionar processo
+                  Adicionar alvo ou processo
                 </Link>
               </>
             ) : hasRunningDiscovery ? (
@@ -399,7 +399,7 @@ export function DashboardProcesses() {
               </p>
             ) : (
               <p className="text-sm text-zinc-600">
-                Nenhum processo vinculado ainda. Vá em <Link to="/alvos" className="underline">Alvos</Link> para adicionar.
+                Nenhum processo vinculado ainda. Vá em <Link to="/alvos" className="underline">Alvos</Link> para adicionar mais fontes.
               </p>
             )}
           </div>

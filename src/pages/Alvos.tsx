@@ -619,6 +619,12 @@ export function Alvos() {
   const [filter, setFilter] = useState("todos");
   const [drawer, setDrawer] = useState<any>({ open: false, mode: "create", initial: null });
   const [confirm, setConfirm] = useState<any>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
+    process: false,
+    person: false,
+    lawyer: false,
+    radar: false
+  });
   const navigate = useNavigate();
   const createLawyer = useServerFn(createLawyerTarget);
 
@@ -714,7 +720,7 @@ export function Alvos() {
 
       {filtered.length === 0 ? (
         <EmptyState filter={filter} onCreate={() => setDrawer({ open: true, mode: "create", initial: null })} />
-      ) : (
+      ) : filter !== "todos" ? (
         <>
           <div className="hidden lg:block rounded-lg border border-zinc-200 bg-white overflow-hidden">
             <table className="w-full text-left">
@@ -748,6 +754,79 @@ export function Alvos() {
             ))}
           </div>
         </>
+      ) : (
+        <div className="space-y-4">
+          {[
+            { id: "process", label: "Processos", emoji: "📄" },
+            { id: "person", label: "Pessoas / CPF", emoji: "👤" },
+            { id: "lawyer", label: "OABs", emoji: "⚖️" },
+            { id: "radar", label: "Radares de captação", emoji: "📡" },
+          ].map((group) => {
+            const groupItems = items.filter(t => t.type === group.id);
+            if (groupItems.length === 0) return null;
+            const isExpanded = expandedGroups[group.id];
+
+            return (
+              <section key={group.id} className="bg-white rounded-xl border border-zinc-200 overflow-hidden transition-all">
+                <button
+                  onClick={() => setExpandedGroups(prev => ({ ...prev, [group.id]: !prev[group.id] }))}
+                  className="w-full text-left px-4 py-3.5 flex items-center justify-between hover:bg-zinc-50 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{group.emoji}</span>
+                    <h2 className="text-sm font-semibold text-zinc-700">
+                      {group.label}
+                      <span className="ml-2 text-zinc-500 font-normal bg-zinc-100 px-1.5 py-0.5 rounded text-xs">
+                        {groupItems.length}
+                      </span>
+                    </h2>
+                  </div>
+                  <div className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
+                      <path d="m6 9 6 6 6-6"/>
+                    </svg>
+                  </div>
+                </button>
+
+                {isExpanded && (
+                  <div className="border-t border-zinc-100">
+                    <div className="hidden lg:block overflow-hidden">
+                      <table className="w-full text-left">
+                        <thead className="bg-zinc-50/30 border-b border-zinc-100">
+                          <tr className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                            <th className="py-2 pl-4 pr-2 w-32">Tipo</th>
+                            <th className="py-2 px-3">Identificador</th>
+                            <th className="py-2 px-3 w-40">Status</th>
+                            <th className="py-2 px-3 w-44">Movimentações 30d</th>
+                            <th className="py-2 pr-4 pl-1 w-12"></th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-100">
+                          {groupItems.map((t) => (
+                            <TargetRow key={t.id} t={t}
+                              onEdit={() => setDrawer({ open: true, mode: "edit", initial: t })}
+                              onDuplicate={() => duplicate(t.id)}
+                              onDelete={() => setConfirm({ id: t.id, name: targetIdentifier(t).primary })}
+                              onToggle={() => toggle(t.id)} />
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="lg:hidden p-3 grid gap-2">
+                      {groupItems.map((t) => (
+                        <TargetCard key={t.id} t={t}
+                          onEdit={() => setDrawer({ open: true, mode: "edit", initial: t })}
+                          onDuplicate={() => duplicate(t.id)}
+                          onDelete={() => setConfirm({ id: t.id, name: targetIdentifier(t).primary })}
+                          onToggle={() => toggle(t.id)} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </section>
+            );
+          })}
+        </div>
       )}
 
       <CreateDrawer

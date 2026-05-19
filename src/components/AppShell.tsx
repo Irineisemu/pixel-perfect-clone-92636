@@ -38,7 +38,7 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
     (async () => {
       const [{ data: trib }, { data: mov }] = await Promise.all([
         supabase.from("tribunals").select("alias,name,status,sphere,last_synced_at"),
-        supabase.from("movements").select("id,occurred_at,text,urgency,process_id").order("occurred_at", { ascending: false }).limit(50),
+        supabase.from("process_movements").select("id,occurred_at,movement_name,urgency,process_id").order("occurred_at", { ascending: false }).limit(50),
       ]);
       if (!active) return;
       setTribunais((trib || []).map((t) => ({

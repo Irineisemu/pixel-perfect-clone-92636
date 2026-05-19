@@ -352,7 +352,7 @@ export function DashboardProcesses() {
                         <span className="truncate">{m.processClass}</span>
                       </div>
                     </div>
-                    <div className="text-[10px] font-black text-zinc-400 bg-zinc-50 px-2 py-1 rounded border border-zinc-100">{new Date(m.occurredAt).toLocaleDateString("pt-BR")}</div>
+                    <div className="text-[10px] font-semibold text-zinc-600 bg-zinc-50 px-2 py-1 rounded border border-zinc-100">{new Date(m.occurredAt).toLocaleDateString("pt-BR")}</div>
                   </button>
                 ))}
               </div>

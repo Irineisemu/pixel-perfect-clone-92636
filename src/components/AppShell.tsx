@@ -54,13 +54,11 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
   const [dashboardData, setDashboardData] = useState<any>(null);
   useEffect(() => {
     let active = true;
-    import("@/lib/dashboard.functions").then(({ getDashboard }) => {
-      getDashboard().then((res) => {
-        if (active) setDashboardData(res);
-      });
+    fetchDashboard().then((res) => {
+      if (active) setDashboardData(res);
     });
     return () => { active = false; };
-  }, []);
+  }, [fetchDashboard]);
 
   const stats = useMemo(() => {
     const NOW = Date.now();

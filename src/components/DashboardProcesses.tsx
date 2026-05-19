@@ -175,9 +175,7 @@ export function DashboardProcesses() {
   const yesterday = new Date();
   yesterday.setHours(yesterday.getHours() - 24);
 
-  const countOabRecent = oabProcesses.filter((p: any) => p.lastMovement && new Date(p.lastMovement.occurredAt) >= yesterday).length;
   const countManualRecent = manualProcesses.filter((p: any) => p.lastMovement && new Date(p.lastMovement.occurredAt) >= yesterday).length;
-  const countOthersRecent = otherProcesses.filter((p: any) => p.lastMovement && new Date(p.lastMovement.occurredAt) >= yesterday).length;
 
   return (
     <div className="space-y-6 pb-10">

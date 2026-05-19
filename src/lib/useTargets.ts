@@ -150,7 +150,7 @@ export function useTargets() {
     setLoading(true);
     const { data, error } = await supabase
       .from("monitoring_targets")
-      .select("*")
+      .select("*, process_count:target_process_links(count)")
       .order("created_at", { ascending: false });
     if (error) {
       console.error("[useTargets] load", error);

@@ -72,8 +72,17 @@ export function DashboardProcesses() {
       }
     };
     window.addEventListener("locate-process", onLocate);
+
+    // Check for pending locate from navigation
+    if (window.pendingLocateId && !loading && data) {
+      const id = window.pendingLocateId;
+      window.pendingLocateId = null;
+      // Delay so the mount transition finishes
+      setTimeout(() => locateProcess(id), 500);
+    }
+
     return () => window.removeEventListener("locate-process", onLocate);
-  }, []);
+  }, [loading, data]);
 
 
   

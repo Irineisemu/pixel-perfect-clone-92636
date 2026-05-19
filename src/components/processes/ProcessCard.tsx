@@ -105,8 +105,8 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow, isHighlighted }:
 
         <div className="flex flex-col items-end gap-2 flex-shrink-0">
           {hasNew ? (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[11px] font-semibold">
-              {p.newMovementsCount} nova{p.newMovementsCount > 1 ? "s" : ""}
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[11px] font-semibold animate-pulse">
+              Novo
             </span>
           ) : p.syncStatus === "synced" ? (
             <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-medium">

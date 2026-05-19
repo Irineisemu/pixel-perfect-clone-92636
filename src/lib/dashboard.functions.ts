@@ -140,6 +140,7 @@ export const getDashboard = createServerFn({ method: "GET" })
     let recentNewMovements: any[] = [];
     let countProcessesWithRecentUpdates = 0;
     let countUrgentMovements = 0;
+    let countUrgentProcesses = 0;
     
     const yesterday = new Date();
     yesterday.setHours(yesterday.getHours() - 24);

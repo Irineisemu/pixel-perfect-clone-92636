@@ -228,12 +228,14 @@ export function DashboardProcesses() {
             className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-rose-50/50 transition-colors"
           >
             <div className="flex items-center gap-2">
-              <span className="inline-block h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+              <span className={`inline-block h-2 w-2 rounded-full bg-rose-500 ${stats?.countProcessesWithRecentUpdates > 0 ? 'animate-pulse' : 'opacity-50'}`} />
               <h2 className="text-sm font-semibold text-zinc-700">
                 Últimas movimentações detectadas
-                <span className="ml-2 text-rose-600 font-bold bg-rose-100 px-1.5 py-0.5 rounded text-xs">
-                  {stats?.totalNewMovements ?? recentNewMovements.length}
-                </span>
+                {stats?.countProcessesWithRecentUpdates > 0 && (
+                  <span className="ml-2 text-rose-600 font-bold bg-rose-100 px-1.5 py-0.5 rounded text-xs animate-pulse">
+                    {stats.countProcessesWithRecentUpdates} novas
+                  </span>
+                )}
               </h2>
               <span className="text-[11px] text-rose-500 font-normal ml-2 hidden sm:inline">
                 (Aqui está as ultimas movimentações dos seus processos)

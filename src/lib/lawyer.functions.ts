@@ -168,9 +168,13 @@ export const getDiscoveryStatus = createServerFn({ method: "GET" })
 // ============================================================
 export const triggerRediscovery = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({ targetId: z.string().uuid() }).parse(input),
-  )
+  .inputValidator((input: any) => {
+    const payload = input?.data ?? input;
+    if (!payload || typeof payload !== 'object') {
+      throw new Error("Dados de entrada inválidos.");
+    }
+    return z.object({ targetId: z.string().uuid() }).parse(payload);
+  })
   .handler(async ({ data, context }) => {
     const { data: target } = await supabaseAdmin
       .from("monitoring_targets")

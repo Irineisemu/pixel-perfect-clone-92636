@@ -208,11 +208,8 @@ const ListMovementsSchema = z.object({
 export const listProcessMovements = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: any) => {
-    // Para GET, o input pode vir diretamente ou em um objeto
+    // TanStack Start might wrap the input in a 'data' property or pass it directly
     const payload = input?.data ?? input;
-    if (!payload) {
-      throw new Error("Parâmetros de busca não fornecidos.");
-    }
     return ListMovementsSchema.parse(payload);
   })
   .handler(async ({ data, context }) => {

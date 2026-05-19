@@ -27,7 +27,10 @@ function maskCNJ(value: string): string {
 
 export const createProcessTargets = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => CreateProcessSchema.parse(data))
+  .inputValidator((input: any) => {
+    const payload = input?.data ?? input;
+    return CreateProcessSchema.parse(payload);
+  })
   .handler(async ({ data, context }) => {
     const sb = context.supabase;
     const userId = context.userId;

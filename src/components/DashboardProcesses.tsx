@@ -292,89 +292,91 @@ export function DashboardProcesses() {
             </div>
           )}
 
-          {oabProcesses.length > 0 && (
-            <section className="bg-white rounded-xl border border-zinc-200 overflow-hidden transition-all shadow-sm">
-              <button
-                onClick={() => setIsOabExpanded(!isOabExpanded)}
-                className="w-full text-left px-4 py-2.5 flex items-center justify-between hover:bg-zinc-50 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <h2 className="text-[13px] font-semibold text-zinc-700">
-                    Processos encontrados (OAB)
-                    <span className="ml-2 text-zinc-500 font-normal bg-zinc-100 px-1.5 py-0.5 rounded text-[11px]">
-                      {oabProcesses.length}
-                    </span>
-                    {countOabRecent > 0 && (
-                      <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[10px] font-medium animate-pulse">
-                        {countOabRecent} novidades
+          <div className="space-y-3 pt-2">
+            {oabProcesses.length > 0 && (
+              <div className="overflow-hidden transition-all">
+                <button
+                  onClick={() => setIsOabExpanded(!isOabExpanded)}
+                  className="w-full text-left py-2 px-1 flex items-center justify-between hover:bg-zinc-50 transition-colors border-b border-zinc-100"
+                >
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-[12px] font-bold text-zinc-600 uppercase tracking-wider">
+                      Processos encontrados (OAB)
+                      <span className="ml-2 text-zinc-400 font-medium">
+                        {oabProcesses.length}
                       </span>
-                    )}
-                  </h2>
-                </div>
-                <div className={`transition-transform duration-200 ${isOabExpanded ? 'rotate-180' : ''}`}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
-                    <path d="m6 9 6 6 6-6"/>
-                  </svg>
-                </div>
-              </button>
-              {isOabExpanded && (
-                <div className="border-t border-zinc-100 max-h-[400px] overflow-y-auto divide-y divide-zinc-100">
-                  {oabProcesses.map((p: any) => (
-                    <div key={p.id + p.target.id} id={`process-${p.id}`}>
-                      <ProcessCard
-                        process={p}
-                        isSyncing={syncingId === p.id}
-                        onSyncNow={handleSyncNow}
-                        isHighlighted={highlightedProcessId === p.id}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
+                      {countOabRecent > 0 && (
+                        <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[10px] font-bold">
+                          {countOabRecent} NOVIDADES
+                        </span>
+                      )}
+                    </h2>
+                  </div>
+                  <div className={`transition-transform duration-200 ${isOabExpanded ? 'rotate-180' : ''}`}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
+                      <path d="m6 9 6 6 6-6"/>
+                    </svg>
+                  </div>
+                </button>
+                {isOabExpanded && (
+                  <div className="mt-2 space-y-2 max-h-[400px] overflow-y-auto pr-1">
+                    {oabProcesses.map((p: any) => (
+                      <div key={p.id + p.target.id} id={`process-${p.id}`}>
+                        <ProcessCard
+                          process={p}
+                          isSyncing={syncingId === p.id}
+                          onSyncNow={handleSyncNow}
+                          isHighlighted={highlightedProcessId === p.id}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
-          {otherProcesses.length > 0 && (
-            <section className="bg-white rounded-xl border border-zinc-200 overflow-hidden transition-all shadow-sm">
-              <button
-                onClick={() => setIsOthersExpanded(!isOthersExpanded)}
-                className="w-full text-left px-4 py-2.5 flex items-center justify-between hover:bg-zinc-50 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <h2 className="text-[13px] font-semibold text-zinc-700">
-                    Outros processos de alvos
-                    <span className="ml-2 text-zinc-500 font-normal bg-zinc-100 px-1.5 py-0.5 rounded text-[11px]">
-                      {otherProcesses.length}
-                    </span>
-                    {countOthersRecent > 0 && (
-                      <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[10px] font-medium animate-pulse">
-                        {countOthersRecent} novidades
+            {otherProcesses.length > 0 && (
+              <div className="overflow-hidden transition-all">
+                <button
+                  onClick={() => setIsOthersExpanded(!isOthersExpanded)}
+                  className="w-full text-left py-2 px-1 flex items-center justify-between hover:bg-zinc-50 transition-colors border-b border-zinc-100"
+                >
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-[12px] font-bold text-zinc-600 uppercase tracking-wider">
+                      Outros processos de alvos
+                      <span className="ml-2 text-zinc-400 font-medium">
+                        {otherProcesses.length}
                       </span>
-                    )}
-                  </h2>
-                </div>
-                <div className={`transition-transform duration-200 ${isOthersExpanded ? 'rotate-180' : ''}`}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
-                    <path d="m6 9 6 6 6-6"/>
-                  </svg>
-                </div>
-              </button>
-              {isOthersExpanded && (
-                <div className="border-t border-zinc-100 max-h-[400px] overflow-y-auto divide-y divide-zinc-100">
-                  {otherProcesses.map((p: any) => (
-                    <div key={p.id + p.target.id} id={`process-${p.id}`}>
-                      <ProcessCard
-                        process={p}
-                        isSyncing={syncingId === p.id}
-                        onSyncNow={handleSyncNow}
-                        isHighlighted={highlightedProcessId === p.id}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
+                      {countOthersRecent > 0 && (
+                        <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[10px] font-bold">
+                          {countOthersRecent} NOVIDADES
+                        </span>
+                      )}
+                    </h2>
+                  </div>
+                  <div className={`transition-transform duration-200 ${isOthersExpanded ? 'rotate-180' : ''}`}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
+                      <path d="m6 9 6 6 6-6"/>
+                    </svg>
+                  </div>
+                </button>
+                {isOthersExpanded && (
+                  <div className="mt-2 space-y-2 max-h-[400px] overflow-y-auto pr-1">
+                    {otherProcesses.map((p: any) => (
+                      <div key={p.id + p.target.id} id={`process-${p.id}`}>
+                        <ProcessCard
+                          process={p}
+                          isSyncing={syncingId === p.id}
+                          onSyncNow={handleSyncNow}
+                          isHighlighted={highlightedProcessId === p.id}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </section>
       )}
 

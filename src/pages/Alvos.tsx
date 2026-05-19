@@ -791,7 +791,13 @@ export function Alvos() {
 
                 {isExpanded && (
                   <div className="border-t border-zinc-100">
-                    <div className="hidden lg:block overflow-hidden">
+                    {groupItems.length === 0 ? (
+                      <div className="p-8 text-center text-zinc-400 text-[13px]">
+                        Nenhum item cadastrado nesta categoria.
+                      </div>
+                    ) : (
+                      <>
+                        <div className="hidden lg:block overflow-hidden">
                       <table className="w-full text-left">
                         <thead className="bg-zinc-50/30 border-b border-zinc-100">
                           <tr className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">

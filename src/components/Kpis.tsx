@@ -2,17 +2,25 @@
 import { Icon } from "./Icon";
 import { Utils } from "../lib/jr-utils";
 
-function Kpi({ icon, label, value, hint }) {
+function Kpi({ icon, label, value, hint, isUrgent }) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4 hover:border-zinc-300 transition">
+    <div className={`rounded-lg border bg-white p-4 transition shadow-sm ${
+      isUrgent && value > 0 
+        ? "border-rose-200 bg-rose-50/30 hover:border-rose-300" 
+        : "border-zinc-200 hover:border-zinc-300"
+    }`}>
       <div className="flex items-center gap-2 text-zinc-500">
-        <Icon name={icon} className="h-3.5 w-3.5" />
-        <span className="text-[11px] font-medium uppercase tracking-wide">{label}</span>
+        <Icon name={icon} className={`h-3.5 w-3.5 ${isUrgent && value > 0 ? "text-rose-500" : ""}`} />
+        <span className={`text-[11px] font-medium uppercase tracking-wide ${isUrgent && value > 0 ? "text-rose-700" : ""}`}>{label}</span>
       </div>
       <div className="mt-3 flex items-baseline gap-2">
-        <span className="font-display text-3xl text-zinc-900 tabular-nums tracking-tight">{value}</span>
+        <span className={`font-display text-3xl tabular-nums tracking-tight ${
+          isUrgent && value > 0 ? "text-rose-600 font-bold" : "text-zinc-900"
+        }`}>
+          {value}
+        </span>
       </div>
-      {hint && <div className="mt-1 text-[12px] text-zinc-500">{hint}</div>}
+      {hint && <div className={`mt-1 text-[12px] ${isUrgent && value > 0 ? "text-rose-500" : "text-zinc-500"}`}>{hint}</div>}
     </div>
   );
 }

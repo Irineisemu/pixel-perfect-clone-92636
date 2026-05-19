@@ -228,12 +228,14 @@ export function DashboardProcesses() {
             className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-rose-50/50 transition-colors"
           >
             <div className="flex items-center gap-2">
-              <span className="inline-block h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+              <span className={`inline-block h-2 w-2 rounded-full bg-rose-500 ${stats?.countProcessesWithRecentUpdates > 0 ? 'animate-pulse' : 'opacity-50'}`} />
               <h2 className="text-sm font-semibold text-zinc-700">
                 Últimas movimentações detectadas
-                <span className="ml-2 text-rose-600 font-bold bg-rose-100 px-1.5 py-0.5 rounded text-xs">
-                  {stats?.totalNewMovements ?? recentNewMovements.length}
-                </span>
+                {stats?.countProcessesWithRecentUpdates > 0 && (
+                  <span className="ml-2 text-rose-600 font-bold bg-rose-100 px-1.5 py-0.5 rounded text-xs animate-pulse">
+                    {stats.countProcessesWithRecentUpdates} novas
+                  </span>
+                )}
               </h2>
               <span className="text-[11px] text-rose-500 font-normal ml-2 hidden sm:inline">
                 (Aqui está as ultimas movimentações dos seus processos)
@@ -249,8 +251,8 @@ export function DashboardProcesses() {
           {isMovementsExpanded && (
             <div className="border-t border-rose-100 bg-white/50 divide-y divide-rose-100 max-h-[400px] overflow-y-auto">
               <div className="px-4 py-2 bg-rose-50/50 text-[11px] text-rose-700 leading-relaxed border-b border-rose-100">
-                Estas são as movimentações detectadas nas últimas 24 horas. 
-                Elas aparecerão aqui até a próxima sincronização geral.
+                Estas são as últimas atualizações de cada processo monitorado. 
+                {stats?.countProcessesWithRecentUpdates > 0 && ` Detectamos ${stats.countProcessesWithRecentUpdates} andamento(s) nas últimas 24h.`}
               </div>
               {recentNewMovements.map((m: any) => (
                 <button 
@@ -259,7 +261,12 @@ export function DashboardProcesses() {
                   className="w-full text-left p-3 px-4 flex items-start justify-between gap-3 hover:bg-rose-50 transition-colors group"
                 >
                   <div className="min-w-0">
-                    <div className="text-[13px] font-medium text-zinc-900 leading-snug group-hover:text-rose-700 transition-colors">{m.movementName}</div>
+                    <div className="text-[13px] font-medium text-zinc-900 leading-snug group-hover:text-rose-700 transition-colors flex items-center gap-2">
+                      {m.movementName}
+                      {m.isRecent && (
+                        <span className="px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-600 text-[10px] font-bold animate-pulse">NOVO</span>
+                      )}
+                    </div>
                     <div className="mt-1 text-[11.5px] text-zinc-600 flex flex-wrap items-center gap-x-2">
                       <span className="font-mono text-zinc-900 font-medium">{m.processNumber}</span>
                       <span className="text-zinc-300">|</span>
@@ -302,9 +309,9 @@ export function DashboardProcesses() {
                   {processes.length}
                 </span>
               )}
-              {stats?.countProcessesWithUpdates > 0 && (
+              {stats?.countProcessesWithRecentUpdates > 0 && (
                 <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium animate-pulse">
-                  {stats.countProcessesWithUpdates} com movimentação recente
+                  {stats.countProcessesWithRecentUpdates} com movimentação recente
                 </span>
               )}
             </h2>

@@ -201,15 +201,18 @@ export const syncProcessNow = createServerFn({ method: "POST" })
 
 const ListMovementsSchema = z.object({
   processId: z.string().uuid(),
-  page: z.number().int().min(1).default(1),
-  pageSize: z.number().int().min(1).max(100).default(20),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
 
 export const listProcessMovements = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: any) => {
-    // Handle both { data: T } and T formats
+    // Para GET, o input pode vir diretamente ou em um objeto
     const payload = input?.data ?? input;
+    if (!payload) {
+      throw new Error("Parâmetros de busca não fornecidos.");
+    }
     return ListMovementsSchema.parse(payload);
   })
   .handler(async ({ data, context }) => {

@@ -134,21 +134,18 @@ export const getDashboard = createServerFn({ method: "GET" })
       };
     });
 
-    // Movimentações recentes (últimas 24h)
+    // Últimas movimentações (uma por processo)
     const processIds = processes.map((p) => p.id);
     let recentNewMovements: any[] = [];
-    let countProcessesWithUpdates = 0;
-    let totalNewMovementsCount = 0;
-
+    let countProcessesWithRecentUpdates = 0;
+    
     const yesterday = new Date();
     yesterday.setHours(yesterday.getHours() - 24);
 
     if (processIds.length > 0) {
-      // Buscamos as movimentações que ocorreram nas últimas 24h
       const { data: movs } = await sb
         .from("process_movements")
         .select("id, movement_name, occurred_at, organ_name, process_id")
-        .gte("occurred_at", yesterday.toISOString())
         .in("process_id", processIds)
         .order("occurred_at", { ascending: false });
 
@@ -156,25 +153,26 @@ export const getDashboard = createServerFn({ method: "GET" })
       const seenProcesses = new Set();
       
       for (const m of (movs ?? []) as any[]) {
-        totalNewMovementsCount++;
         if (!seenProcesses.has(m.process_id)) {
           seenProcesses.add(m.process_id);
           const p = procById.get(m.process_id);
-          recentNewMovements.push({
-            id: m.id,
-            movementName: m.movement_name,
-            occurredAt: m.occurred_at,
-            organName: m.organ_name,
-            processId: m.process_id,
-            processNumber: p?.displayNumber,
-            processClass: p?.className,
-          });
+          
+          const isRecent = new Date(m.occurred_at) >= yesterday;
+          if (isRecent) countProcessesWithRecentUpdates++;
+
+          if (recentNewMovements.length < 20) {
+            recentNewMovements.push({
+              id: m.id,
+              movementName: m.movement_name,
+              occurredAt: m.occurred_at,
+              organName: m.organ_name,
+              processId: m.process_id,
+              processNumber: p?.displayNumber,
+              processClass: p?.className,
+              isRecent
+            });
+          }
         }
-      }
-      countProcessesWithUpdates = seenProcesses.size;
-      
-      if (recentNewMovements.length > 20) {
-        recentNewMovements = recentNewMovements.slice(0, 20);
       }
     }
 

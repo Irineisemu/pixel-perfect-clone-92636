@@ -128,8 +128,8 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
               <div className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">Painel</div>
               <h1 className="font-display text-2xl md:text-[28px] tracking-tight text-zinc-900">Bom dia, {greetingName}.</h1>
               <p className="text-[13.5px] text-zinc-600 mt-0.5">
-                Você tem {stats.totalMonitorado} processo{stats.totalMonitorado !== 1 ? "s" : ""} sendo monitorado{stats.totalMonitorado !== 1 ? "s" : ""}
-                {stats.totalAlvos > 0 && ` vinculados a ${stats.totalAlvos} alvo${stats.totalAlvos !== 1 ? "s" : ""} ativo${stats.totalAlvos !== 1 ? "s" : ""}`}.
+                Monitorando {stats.totalMonitorado} processo{stats.totalMonitorado !== 1 ? "s" : ""} 
+                {stats.totalAlvos > 0 && ` a partir de ${stats.totalAlvos} fonte${stats.totalAlvos !== 1 ? "s" : ""} de descoberta (OAB/CPF)`}.
               </p>
             </div>
           </div>

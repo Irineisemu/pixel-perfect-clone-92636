@@ -44,6 +44,7 @@ export function DashboardProcesses() {
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [isMovementsExpanded, setIsMovementsExpanded] = useState(false);
   const [isPendingExpanded, setIsPendingExpanded] = useState(false);
+  const [isProcessesExpanded, setIsProcessesExpanded] = useState(false);
 
 
   
@@ -259,51 +260,70 @@ export function DashboardProcesses() {
       )}
 
 
-      <section>
-        <div className="flex items-center justify-between mb-2 px-1">
-          <h2 className="text-sm font-semibold text-zinc-700">
-            Processos {processes.length > 0 && <span className="text-zinc-500 font-normal">({processes.length})</span>}
-            {stats?.totalNewMovements > 0 && (
-              <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium">
-                {stats.totalNewMovements} nova{stats.totalNewMovements > 1 ? "s" : ""}
-              </span>
-            )}
-          </h2>
-        </div>
-
-        {processes.length === 0 ? (
-          <div className="rounded-xl border border-zinc-200 bg-white p-10 text-center">
-            <div className="text-3xl mb-2">📭</div>
-            {lawyers.length === 0 ? (
-              <>
-                <p className="text-sm text-zinc-600 mb-3">Nenhum processo monitorado ainda.</p>
-                <Link
-                  to="/alvos"
-                  className="inline-block px-3 py-1.5 rounded-md bg-zinc-900 text-white text-[13px] font-medium hover:bg-zinc-800"
-                >
-                  Adicionar processo
-                </Link>
-              </>
-            ) : hasRunningDiscovery ? (
-              <p className="text-sm text-zinc-600">
-                Sincronização em andamento. Esta página atualiza sozinha.
-              </p>
-            ) : (
-              <p className="text-sm text-zinc-600">
-                Nenhum processo vinculado ainda. Vá em <Link to="/alvos" className="underline">Alvos</Link> para adicionar.
-              </p>
-            )}
+      <section className="bg-white rounded-xl border border-zinc-200 overflow-hidden transition-all">
+        <button
+          onClick={() => setIsProcessesExpanded(!isProcessesExpanded)}
+          className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-zinc-50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-zinc-700">
+              Processos monitorados
+              {processes.length > 0 && (
+                <span className="ml-2 text-zinc-500 font-normal bg-zinc-100 px-1.5 py-0.5 rounded text-xs">
+                  {processes.length}
+                </span>
+              )}
+              {stats?.totalNewMovements > 0 && (
+                <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium animate-pulse">
+                  {stats.totalNewMovements} nova{stats.totalNewMovements > 1 ? "s" : ""}
+                </span>
+              )}
+            </h2>
           </div>
-        ) : (
-          <div className="rounded-xl border border-zinc-200 bg-white divide-y divide-zinc-100">
-            {processes.map((p: any) => (
-              <ProcessCard
-                key={p.id + p.target.id}
-                process={p}
-                isSyncing={syncingId === p.id}
-                onSyncNow={handleSyncNow}
-              />
-            ))}
+          <div className={`transition-transform duration-200 ${isProcessesExpanded ? 'rotate-180' : ''}`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </div>
+        </button>
+
+        {isProcessesExpanded && (
+          <div className="border-t border-zinc-100">
+            {processes.length === 0 ? (
+              <div className="p-10 text-center">
+                <div className="text-3xl mb-2">📭</div>
+                {lawyers.length === 0 ? (
+                  <>
+                    <p className="text-sm text-zinc-600 mb-3">Nenhum processo monitorado ainda.</p>
+                    <Link
+                      to="/alvos"
+                      className="inline-block px-3 py-1.5 rounded-md bg-zinc-900 text-white text-[13px] font-medium hover:bg-zinc-800"
+                    >
+                      Adicionar processo
+                    </Link>
+                  </>
+                ) : hasRunningDiscovery ? (
+                  <p className="text-sm text-zinc-600">
+                    Sincronização em andamento. Esta página atualiza sozinha.
+                  </p>
+                ) : (
+                  <p className="text-sm text-zinc-600">
+                    Nenhum processo vinculado ainda. Vá em <Link to="/alvos" className="underline">Alvos</Link> para adicionar.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="divide-y divide-zinc-100">
+                {processes.map((p: any) => (
+                  <ProcessCard
+                    key={p.id + p.target.id}
+                    process={p}
+                    isSyncing={syncingId === p.id}
+                    onSyncNow={handleSyncNow}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </section>

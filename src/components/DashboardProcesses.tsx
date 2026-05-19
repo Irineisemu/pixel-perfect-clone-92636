@@ -173,50 +173,52 @@ export function DashboardProcesses() {
 
         <section>
           <h2 className="text-sm font-semibold text-zinc-700 mb-2 px-1">Advogados monitorados</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {lawyers.map((lw: any) => {
-              const st = statusLabel(lw.discovery_status);
-              const isRetrying = retryingId === lw.id;
-              return (
-                <div key={lw.id} className="rounded-xl border border-zinc-200 bg-white p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="font-medium text-zinc-900 truncate">{lw.lawyer_name}</div>
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        {(lw.oab_numbers ?? []).map((oab: string) => (
-                          <span
-                            key={oab}
-                            className="inline-flex items-center px-1.5 py-0.5 rounded border border-zinc-200 bg-zinc-50 text-[11px] text-zinc-700"
-                          >
-                            OAB {formatOABDisplay(oab)}
+          <div className="max-h-[300px] overflow-y-auto pr-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-1">
+              {lawyers.map((lw: any) => {
+                const st = statusLabel(lw.discovery_status);
+                const isRetrying = retryingId === lw.id;
+                return (
+                  <div key={lw.id} className="rounded-xl border border-zinc-200 bg-white p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="font-medium text-zinc-900 truncate">{lw.lawyer_name}</div>
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {(lw.oab_numbers ?? []).map((oab: string) => (
+                            <span
+                              key={oab}
+                              className="inline-flex items-center px-1.5 py-0.5 rounded border border-zinc-200 bg-zinc-50 text-[11px] text-zinc-700"
+                            >
+                              OAB {formatOABDisplay(oab)}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="mt-2">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] ${st.cls}`}>
+                            <span>{st.icon}</span>
+                            <span>{st.text}</span>
                           </span>
-                        ))}
+                          {lw.last_discovery_at && (
+                            <span className="ml-2 text-[11px] text-zinc-500">
+                              · {new Date(lw.last_discovery_at).toLocaleString("pt-BR")}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="mt-2">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] ${st.cls}`}>
-                          <span>{st.icon}</span>
-                          <span>{st.text}</span>
-                        </span>
-                        {lw.last_discovery_at && (
-                          <span className="ml-2 text-[11px] text-zinc-500">
-                            · {new Date(lw.last_discovery_at).toLocaleString("pt-BR")}
-                          </span>
-                        )}
-                      </div>
+                      {canRetry(lw.discovery_status) && (
+                        <button
+                          onClick={() => handleRetry(lw.id)}
+                          disabled={isRetrying}
+                          className="px-3 py-1.5 rounded-md bg-zinc-900 text-white text-[12px] font-medium hover:bg-zinc-800 disabled:opacity-50 flex-shrink-0"
+                        >
+                          {isRetrying ? "Iniciando…" : "Buscar processos"}
+                        </button>
+                      )}
                     </div>
-                    {canRetry(lw.discovery_status) && (
-                      <button
-                        onClick={() => handleRetry(lw.id)}
-                        disabled={isRetrying}
-                        className="px-3 py-1.5 rounded-md bg-zinc-900 text-white text-[12px] font-medium hover:bg-zinc-800 disabled:opacity-50 flex-shrink-0"
-                      >
-                        {isRetrying ? "Iniciando…" : "Buscar processos"}
-                      </button>
-                    )}
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </section>
       )}
@@ -324,7 +326,7 @@ export function DashboardProcesses() {
         </button>
 
         {isProcessesExpanded && (
-          <div className="border-t border-zinc-100">
+          <div className="border-t border-zinc-100 max-h-[500px] overflow-y-auto">
             {processes.length === 0 ? (
               <div className="p-10 text-center">
                 <div className="text-3xl mb-2">📭</div>

@@ -724,7 +724,7 @@ export function Alvos() {
         <EmptyState filter={filter} onCreate={() => setDrawer({ open: true, mode: "create", initial: null })} />
       ) : filter !== "todos" ? (
         <>
-          <div className="hidden lg:block rounded-lg border border-zinc-200 bg-white overflow-hidden">
+          <div className="hidden lg:block rounded-lg border border-zinc-200 bg-white overflow-hidden max-h-[600px] overflow-y-auto custom-scrollbar">
             <table className="w-full text-left">
               <thead className="bg-zinc-50/60 border-b border-zinc-200">
                 <tr className="text-[10.5px] font-semibold uppercase tracking-wider text-zinc-500">
@@ -746,7 +746,7 @@ export function Alvos() {
               </tbody>
             </table>
           </div>
-          <div className="lg:hidden grid gap-2">
+          <div className="lg:hidden grid gap-2 max-h-[600px] overflow-y-auto pr-1">
             {filtered.map((t) => (
               <TargetCard key={t.id} t={t}
                 onEdit={() => setDrawer({ open: true, mode: "edit", initial: t })}
@@ -789,7 +789,7 @@ export function Alvos() {
                 </button>
 
                 {isExpanded && (
-                  <div className="border-t border-zinc-100">
+                  <div className="border-t border-zinc-100 max-h-[400px] overflow-y-auto custom-scrollbar">
                     {groupItems.length === 0 ? (
                       <div className="p-8 text-center text-zinc-400 text-[13px]">
                         Nenhum item cadastrado nesta categoria.

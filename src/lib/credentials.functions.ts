@@ -26,7 +26,13 @@ export const listCredentials = createServerFn({ method: "GET" })
 
 export const upsertCredential = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => upsertSchema.parse(input))
+  .inputValidator((input: any) => {
+    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : input;
+    if (!payload || typeof payload !== 'object') {
+      throw new Error("Parâmetros de entrada inválidos.");
+    }
+    return upsertSchema.parse(payload);
+  })
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const key = process.env.CREDENTIALS_ENCRYPTION_KEY;

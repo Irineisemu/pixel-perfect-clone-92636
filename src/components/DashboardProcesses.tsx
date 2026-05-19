@@ -267,7 +267,7 @@ export function DashboardProcesses() {
 
       {/* 2. MONITORAMENTOS DIRETOS */}
       {(manualProcesses.length > 0 || pendingProcesses.length > 0) && (
-        <section className="bg-sky-50/60 border border-sky-100/80 rounded-[32px] p-5 md:p-8 space-y-6">
+        <section className="bg-white border border-zinc-100/80 rounded-[32px] p-5 md:p-8 space-y-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-zinc-50">
           <div className="flex items-center gap-3 px-2">
             <span className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center text-xs font-bold shadow-sm">2</span>
             <div>

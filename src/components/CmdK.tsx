@@ -72,15 +72,7 @@ export function CmdK({ open, onClose }) {
   }, [open, q]);
 
   if (!open) return null;
-  const ql = q.trim().toLowerCase();
-  const matches = processes.filter((p) => {
-    if (!ql) return true;
-    return (
-      (p.process_number || "").includes(ql.replace(/\D/g, "")) ||
-      (p.class_name || "").toLowerCase().includes(ql) ||
-      (p.organ_name || "").toLowerCase().includes(ql)
-    );
-  }).slice(0, 8);
+  const matches = processes;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-start justify-center pt-[12vh] px-4">

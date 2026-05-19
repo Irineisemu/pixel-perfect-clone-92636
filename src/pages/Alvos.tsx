@@ -605,7 +605,7 @@ function EmptyState({ filter, onCreate }) {
       </p>
       <button onClick={onCreate}
         className="mt-5 h-9 px-4 rounded-md bg-zinc-900 text-white text-[13px] font-medium hover:bg-zinc-800 inline-flex items-center gap-1.5">
-        <Icon name="plus" className="h-4 w-4" /> Cadastrar primeiro alvo
+        <Icon name="plus" className="h-4 w-4" /> Novo monitoramento
       </button>
     </div>
   );

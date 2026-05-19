@@ -213,7 +213,7 @@ export function DashboardProcesses() {
               <h2 className="text-sm font-semibold text-zinc-700">
                 Novas movimentações detectadas
                 <span className="ml-2 text-rose-600 font-bold bg-rose-100 px-1.5 py-0.5 rounded text-xs">
-                  {recentNewMovements.length}
+                  {stats?.totalNewMovements ?? recentNewMovements.length}
                 </span>
               </h2>
               <span className="text-[11px] text-rose-500 font-normal ml-2 hidden sm:inline">

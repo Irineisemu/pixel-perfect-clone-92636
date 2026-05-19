@@ -81,7 +81,10 @@ export function CmdK({ open, onClose }) {
                 <Item key={p.id} icon="hash"
                   primary={formatProcessNumber(p.process_number)}
                   secondary={[p.class_name, p.organ_name].filter(Boolean).join(" — ") || "—"}
-                  onSelect={onClose} />
+                  onSelect={() => {
+                    window.dispatchEvent(new CustomEvent("locate-process", { detail: { processId: p.id } }));
+                    onClose();
+                  }} />
               ))}
             </Group>
           ) : (

@@ -88,7 +88,7 @@ export const getDashboard = createServerFn({ method: "GET" })
 
     const processes = (linkRows ?? []).map((r: any) => {
       const p = r.process;
-      if (p.is_urgent) countUrgentProcesses++;
+      if (p.is_urgent) urgentProcessIds.add(p.id);
       const codes: number[] = p.subject_codes ?? [];
       const names: string[] = p.subject_names ?? [];
       const subjects = codes.map((code, i) => ({ code, name: names[i] ?? null }));

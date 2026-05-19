@@ -789,7 +789,7 @@ export function Alvos() {
                 </button>
 
                 {isExpanded && (
-                  <div className="border-t border-zinc-100">
+                  <div className="border-t border-zinc-100 max-h-[400px] overflow-y-auto custom-scrollbar">
                     {groupItems.length === 0 ? (
                       <div className="p-8 text-center text-zinc-400 text-[13px]">
                         Nenhum item cadastrado nesta categoria.

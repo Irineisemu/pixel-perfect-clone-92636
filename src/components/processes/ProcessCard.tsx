@@ -103,7 +103,7 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow, isHighlighted }:
             )}
           </div>
 
-          <div className="mt-1 text-[12.5px] text-zinc-600 truncate">
+          <div className="mt-1 text-[12.5px] text-zinc-700 truncate">
             {[p.className, p.organName].filter(Boolean).join(" · ")}
             {!p.className && !p.organName && p.target.name}
           </div>

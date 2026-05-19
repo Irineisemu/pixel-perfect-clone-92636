@@ -554,6 +554,7 @@ export type Database = {
           format_name: string | null
           id: string
           instance: number | null
+          is_urgent: boolean | null
           last_known_movements_hash: string | null
           last_movement_at: string | null
           last_source_used:
@@ -583,6 +584,7 @@ export type Database = {
           format_name?: string | null
           id?: string
           instance?: number | null
+          is_urgent?: boolean | null
           last_known_movements_hash?: string | null
           last_movement_at?: string | null
           last_source_used?:
@@ -612,6 +614,7 @@ export type Database = {
           format_name?: string | null
           id?: string
           instance?: number | null
+          is_urgent?: boolean | null
           last_known_movements_hash?: string | null
           last_movement_at?: string | null
           last_source_used?:

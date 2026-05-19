@@ -340,7 +340,7 @@ export function DashboardProcesses() {
             {isMovementsExpanded && (
               <div className="mt-2 divide-y divide-zinc-50 max-h-[400px] overflow-y-auto">
                 {recentNewMovements.map((m: any) => (
-                  <button key={m.id} onClick={() => locateProcess(m.processId)} className="w-full text-left py-3 px-1 flex items-start justify-between gap-4 hover:bg-zinc-50 transition-colors group">
+                  <button key={m.id} onClick={() => locateProcess(m.processId)} className="w-full text-left py-4 px-1 flex items-start justify-between gap-4 hover:bg-zinc-50 transition-colors group">
                     <div className="min-w-0 flex-1">
                       <div className="text-[13px] font-bold text-zinc-900 leading-tight group-hover:text-zinc-600">
                         {m.movementName}

@@ -251,8 +251,8 @@ export function DashboardProcesses() {
           {isMovementsExpanded && (
             <div className="border-t border-rose-100 bg-white/50 divide-y divide-rose-100 max-h-[400px] overflow-y-auto">
               <div className="px-4 py-2 bg-rose-50/50 text-[11px] text-rose-700 leading-relaxed border-b border-rose-100">
-                Estas são as movimentações detectadas nas últimas 24 horas. 
-                Elas aparecerão aqui até a próxima sincronização geral.
+                Estas são as últimas atualizações de cada processo monitorado. 
+                {stats?.countProcessesWithRecentUpdates > 0 && ` Detectamos ${stats.countProcessesWithRecentUpdates} andamento(s) nas últimas 24h.`}
               </div>
               {recentNewMovements.map((m: any) => (
                 <button 

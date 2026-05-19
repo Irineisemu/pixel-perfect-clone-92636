@@ -318,6 +318,15 @@ export function DashboardProcesses() {
                       {m.isRecent && (
                         <span className="px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-600 text-[10px] font-bold animate-pulse">NOVO</span>
                       )}
+                      {m.urgency && m.urgency !== 'info' && (
+                        <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                          m.urgency === 'critical' ? 'bg-red-100 text-red-600' : 
+                          m.urgency === 'high' ? 'bg-orange-100 text-orange-600' :
+                          'bg-amber-100 text-amber-600'
+                        }`}>
+                          {m.urgency === 'critical' ? 'URGENTE' : m.urgency === 'high' ? 'ALTA PRIORIDADE' : 'MÉDIA'}
+                        </span>
+                      )}
                     </div>
                     <div className="mt-1 text-[11.5px] text-zinc-600 flex flex-wrap items-center gap-x-2">
                       <span className="font-mono text-zinc-900 font-medium">{m.processNumber}</span>

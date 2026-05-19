@@ -134,18 +134,21 @@ export const getDashboard = createServerFn({ method: "GET" })
       };
     });
 
-    // Movimentações novas (única por processo, mais recente)
+    // Movimentações recentes (últimas 24h)
     const processIds = processes.map((p) => p.id);
     let recentNewMovements: any[] = [];
     let countProcessesWithUpdates = 0;
     let totalNewMovementsCount = 0;
 
+    const yesterday = new Date();
+    yesterday.setHours(yesterday.getHours() - 24);
+
     if (processIds.length > 0) {
-      // Fetch all new movements for these processes to group them correctly
+      // Buscamos as movimentações que ocorreram nas últimas 24h
       const { data: movs } = await sb
         .from("process_movements")
         .select("id, movement_name, occurred_at, organ_name, process_id")
-        .eq("is_new", true)
+        .gte("occurred_at", yesterday.toISOString())
         .in("process_id", processIds)
         .order("occurred_at", { ascending: false });
 
@@ -166,13 +169,10 @@ export const getDashboard = createServerFn({ method: "GET" })
             processNumber: p?.displayNumber,
             processClass: p?.className,
           });
-          // We still want to count all, so we don't break yet, 
-          // but we only add to recentNewMovements up to 20 unique processes
         }
       }
       countProcessesWithUpdates = seenProcesses.size;
-      // Truncate the list for display if needed (though we already break in a sense if we wanted 20)
-      // Actually, if we want 20 unique ones, we should continue until we have 20.
+      
       if (recentNewMovements.length > 20) {
         recentNewMovements = recentNewMovements.slice(0, 20);
       }

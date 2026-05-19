@@ -307,9 +307,9 @@ export function DashboardProcesses() {
                   {processes.length}
                 </span>
               )}
-              {stats?.totalNewMovements > 0 && (
+              {stats?.countProcessesWithUpdates > 0 && (
                 <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium animate-pulse">
-                  {stats.totalNewMovements} nova{stats.totalNewMovements > 1 ? "s" : ""}
+                  {stats.countProcessesWithUpdates} processo{stats.countProcessesWithUpdates > 1 ? "s" : ""} com novidades
                 </span>
               )}
             </h2>

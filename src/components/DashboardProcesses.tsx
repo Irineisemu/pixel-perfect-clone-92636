@@ -338,9 +338,9 @@ export function DashboardProcesses() {
                   </div>
                 </button>
                 {isOthersExpanded && (
-                  <div className="mt-3 space-y-3 max-h-[400px] overflow-y-auto pr-1">
+                  <div className="mt-1 max-h-[400px] overflow-y-auto pr-1 divide-y divide-zinc-50">
                     {otherProcesses.map((p: any) => (
-                      <div key={p.id + p.target.id} id={`process-${p.id}`} className="border border-zinc-100 rounded-xl overflow-hidden bg-white shadow-sm">
+                      <div key={p.id + p.target.id} id={`process-${p.id}`}>
                         <ProcessCard
                           process={p}
                           isSyncing={syncingId === p.id}

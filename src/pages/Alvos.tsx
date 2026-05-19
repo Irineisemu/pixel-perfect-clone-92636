@@ -569,7 +569,14 @@ function TargetCard({ t, onEdit, onDuplicate, onDelete, onToggle }) {
         <TypeBadge type={t.type} />
         <RowKebab onEdit={onEdit} onDuplicate={onDuplicate} onDelete={onDelete} />
       </div>
-      <div className={Utils.cx("mt-2 text-[13.5px] text-zinc-900 font-medium", id.mono && "font-mono tabular-nums")}>{id.primary}</div>
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <div className={Utils.cx("text-[13.5px] text-zinc-900 font-medium truncate", id.mono && "font-mono tabular-nums")}>{id.primary}</div>
+        {id.processCount !== undefined && t.type === 'lawyer' && (
+          <span className="shrink-0 text-[10px] font-medium text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded-full">
+            {id.processCount}
+          </span>
+        )}
+      </div>
       {id.secondary && <div className="text-[12px] text-zinc-500 mt-0.5">{id.secondary}</div>}
       <div className="mt-3 flex items-center justify-between">
         <div className="flex items-center gap-2">

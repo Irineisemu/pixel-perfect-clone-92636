@@ -54,8 +54,9 @@ function StatusToggle({ active, onToggle }) {
 }
 
 function targetIdentifier(t) {
-  if (t.type === "person") return { primary: t.full_name, secondary: t.qualification + (t.aliases?.length ? ` · ${t.aliases.length} variação${t.aliases.length>1?"es":""}` : "") };
+  if (t.type === "person") return { primary: t.full_name, secondary: (t.cpf ? t.cpf + " · " : "") + t.qualification + (t.aliases?.length ? ` · ${t.aliases.length} variação${t.aliases.length>1?"es":""}` : "") };
   if (t.type === "process") return { primary: maskCNJ(t.process_number), secondary: `${t.tribunal_alias || "—"}${t.nickname ? ` · ${t.nickname}` : ""}`, mono: true };
+  if (t.type === "lawyer") return { primary: t.lawyer_name, secondary: `OAB: ${(t.oab_numbers || []).join(", ")}`, processCount: t.processCount };
   const tribunais = (t.tribunal_aliases || []).join(", ") || "Todos";
   const classes = (t.class_codes || []).slice(0, 2).join(" · ");
   const kw = (t.keywords || []).slice(0, 2).map((k) => `"${k}"`).join(" ");
@@ -531,7 +532,14 @@ function TargetRow({ t, onEdit, onDuplicate, onDelete, onToggle }) {
     <tr onClick={onEdit} className="group cursor-pointer border-b border-zinc-100 hover:bg-zinc-50/70 transition">
       <td className="py-3 pl-4 pr-2 align-middle"><TypeBadge type={t.type} /></td>
       <td className="py-3 px-3 align-middle min-w-0">
-        <div className={Utils.cx("text-[13px] text-zinc-900 truncate", id.mono && "font-mono tabular-nums")}>{id.primary}</div>
+        <div className="flex items-center gap-2">
+          <div className={Utils.cx("text-[13px] text-zinc-900 truncate", id.mono && "font-mono tabular-nums")}>{id.primary}</div>
+          {id.processCount !== undefined && t.type === 'lawyer' && (
+            <span className="shrink-0 text-[10px] font-medium text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded-full">
+              {id.processCount} processos
+            </span>
+          )}
+        </div>
         {id.secondary && <div className="text-[11.5px] text-zinc-500 truncate mt-0.5">{id.secondary}</div>}
       </td>
       <td className="py-3 px-3 align-middle">
@@ -561,7 +569,14 @@ function TargetCard({ t, onEdit, onDuplicate, onDelete, onToggle }) {
         <TypeBadge type={t.type} />
         <RowKebab onEdit={onEdit} onDuplicate={onDuplicate} onDelete={onDelete} />
       </div>
-      <div className={Utils.cx("mt-2 text-[13.5px] text-zinc-900 font-medium", id.mono && "font-mono tabular-nums")}>{id.primary}</div>
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <div className={Utils.cx("text-[13.5px] text-zinc-900 font-medium truncate", id.mono && "font-mono tabular-nums")}>{id.primary}</div>
+        {id.processCount !== undefined && t.type === 'lawyer' && (
+          <span className="shrink-0 text-[10px] font-medium text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded-full">
+            {id.processCount}
+          </span>
+        )}
+      </div>
       {id.secondary && <div className="text-[12px] text-zinc-500 mt-0.5">{id.secondary}</div>}
       <div className="mt-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -578,7 +593,7 @@ function TargetCard({ t, onEdit, onDuplicate, onDelete, onToggle }) {
 }
 
 function EmptyState({ filter, onCreate }) {
-  const labels: any = { todos: "Você ainda não tem alvos", person: "Nenhuma pessoa monitorada", process: "Nenhum processo específico", radar: "Nenhum radar de captação" };
+  const labels: any = { todos: "Você ainda não tem monitoramentos", person: "Nenhuma pessoa monitorada", process: "Nenhum processo específico", radar: "Nenhum radar de captação", lawyer: "Nenhum advogado monitorado" };
   return (
     <div className="rounded-lg border border-dashed border-zinc-200 bg-zinc-50/50 p-12 text-center">
       <div className="grid place-items-center mx-auto h-12 w-12 rounded-full bg-white border border-zinc-200">
@@ -586,11 +601,11 @@ function EmptyState({ filter, onCreate }) {
       </div>
       <h3 className="mt-4 text-[15px] font-medium text-zinc-900">{labels[filter] || labels.todos}</h3>
       <p className="mt-1 text-[12.5px] text-zinc-500 max-w-sm mx-auto">
-        Cadastre uma pessoa, um processo ou um radar de captação para o JusRadar começar a vasculhar os tribunais por você.
+        Cadastre uma pessoa, advogado, um processo ou um radar de captação para o JusRadar começar a monitorar por você.
       </p>
       <button onClick={onCreate}
         className="mt-5 h-9 px-4 rounded-md bg-zinc-900 text-white text-[13px] font-medium hover:bg-zinc-800 inline-flex items-center gap-1.5">
-        <Icon name="plus" className="h-4 w-4" /> Cadastrar primeiro alvo
+        <Icon name="plus" className="h-4 w-4" /> Novo monitoramento
       </button>
     </div>
   );
@@ -619,11 +634,18 @@ export function Alvos() {
   const [filter, setFilter] = useState("todos");
   const [drawer, setDrawer] = useState<any>({ open: false, mode: "create", initial: null });
   const [confirm, setConfirm] = useState<any>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
+    process: true,
+    person: true,
+    lawyer: true,
+    radar: true
+  });
   const navigate = useNavigate();
   const createLawyer = useServerFn(createLawyerTarget);
 
   const filtered = useMemo(() => {
     if (filter === "todos") return items;
+    if (filter === "person") return items.filter((t) => t.type === "person" || t.type === "radar");
     return items.filter((t) => t.type === filter);
   }, [items, filter]);
 
@@ -676,26 +698,48 @@ export function Alvos() {
       <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
         <div>
           <div className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">Monitoramento</div>
-          <h1 className="font-display text-2xl md:text-[28px] tracking-tight text-zinc-900">Alvos de Monitoramento</h1>
-          <p className="text-[13.5px] text-zinc-600 mt-0.5">
-            {counters.total} alvo{counters.total !== 1 ? "s" : ""} cadastrado{counters.total !== 1 ? "s" : ""} · {counters.active} ativos ·
-            <span className={Utils.cx("ml-1", radarLimitReached ? "text-amber-700" : "text-zinc-500")}>
-              {counters.radar}/{RADAR_LIMIT} radares
+          <h1 className="font-display text-2xl md:text-[28px] tracking-tight text-zinc-900">Configuração de Monitoramento</h1>
+          <p className="text-[13.5px] text-zinc-600 mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-medium text-[12px] border border-indigo-100">
+              <Icon name="search" className="h-3 w-3" />
+              {counters.person + counters.lawyer + counters.radar} alvos de busca
+            </span>
+            <span className="text-zinc-300">·</span>
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 font-medium text-[12px] border border-sky-100">
+              <Icon name="file-text" className="h-3 w-3" />
+              {counters.process} processos diretos
+            </span>
+            <span className="text-zinc-300">·</span>
+            <span className={Utils.cx("text-zinc-500 text-[12px]", radarLimitReached && "text-amber-700 font-medium")}>
+              {counters.radar}/{RADAR_LIMIT} radares ativos
             </span>
           </p>
         </div>
         <button onClick={() => setDrawer({ open: true, mode: "create", initial: null })}
           className="h-9 px-3.5 rounded-md bg-zinc-900 text-white text-[13px] font-medium hover:bg-zinc-800 inline-flex items-center gap-1.5">
-          <Icon name="plus" className="h-4 w-4" /> Novo alvo
+          <Icon name="plus" className="h-4 w-4" /> Novo monitoramento
         </button>
+      </div>
+
+      <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 mb-6 flex items-start gap-3">
+        <div className="mt-0.5 grid h-5 w-5 place-items-center rounded-full bg-amber-100 text-amber-700">
+          <Icon name="info" className="h-3.5 w-3.5" />
+        </div>
+        <div>
+          <h4 className="text-[13px] font-semibold text-amber-900">Entenda seus alvos</h4>
+          <p className="text-[12.5px] text-amber-800/80 leading-relaxed mt-0.5">
+            <strong>Alvos de busca</strong> (CPF, OAB e Radares) são critérios usados para descobrir novos processos automaticamente. 
+            <strong> Processos diretos</strong> são monitorados pelo número CNJ específico.
+          </p>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 mb-4">
         {[
           { id: "todos",   label: "Todos",     n: counters.total },
-          { id: "person",  label: "Pessoas",   n: counters.person },
-          { id: "process", label: "Processos", n: counters.process },
-          { id: "radar",   label: "Radares",   n: counters.radar },
+          { id: "lawyer",  label: "Advogados (OAB)", n: counters.lawyer },
+          { id: "person",  label: "Pessoas / CPF",   n: counters.person + counters.radar },
+          { id: "process", label: "Processos (CNJ)", n: counters.process },
         ].map((c) => (
           <button key={c.id} onClick={() => setFilter(c.id)} aria-pressed={filter === c.id}
             className={Utils.cx(
@@ -714,9 +758,9 @@ export function Alvos() {
 
       {filtered.length === 0 ? (
         <EmptyState filter={filter} onCreate={() => setDrawer({ open: true, mode: "create", initial: null })} />
-      ) : (
+      ) : filter !== "todos" ? (
         <>
-          <div className="hidden lg:block rounded-lg border border-zinc-200 bg-white overflow-hidden">
+          <div className="hidden lg:block rounded-lg border border-zinc-200 bg-white overflow-hidden max-h-[600px] overflow-y-auto custom-scrollbar">
             <table className="w-full text-left">
               <thead className="bg-zinc-50/60 border-b border-zinc-200">
                 <tr className="text-[10.5px] font-semibold uppercase tracking-wider text-zinc-500">
@@ -738,7 +782,7 @@ export function Alvos() {
               </tbody>
             </table>
           </div>
-          <div className="lg:hidden grid gap-2">
+          <div className="lg:hidden grid gap-2 max-h-[600px] overflow-y-auto pr-1">
             {filtered.map((t) => (
               <TargetCard key={t.id} t={t}
                 onEdit={() => setDrawer({ open: true, mode: "edit", initial: t })}
@@ -748,7 +792,179 @@ export function Alvos() {
             ))}
           </div>
         </>
-      )}
+      ) : (
+        <div className="space-y-8">
+          <div>
+            <div className="flex items-center gap-2 px-1 mb-4">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">Alvos</span>
+              <div className="h-px flex-1 bg-zinc-100" />
+            </div>
+            <div className="space-y-4">
+              {[
+                { id: "lawyer",  ids: ["lawyer"], label: "Advogados (OAB)", emoji: "⚖️", sub: "Monitora automaticamente novos processos vinculados a estas OABs." },
+                { id: "person",  ids: ["person", "radar"], label: "Pessoas / CPF", emoji: "👤", sub: "Busca novos processos onde estas pessoas figuram como parte." },
+              ].map((group) => {
+                const groupItems = items.filter(t => group.ids.includes(t.type));
+                const isExpanded = expandedGroups[group.id];
+
+                return (
+                  <section key={group.id} className="bg-white rounded-xl border border-zinc-200 overflow-hidden transition-all shadow-sm">
+                    <button
+                      onClick={() => setExpandedGroups(prev => ({ ...prev, [group.id]: !prev[group.id] }))}
+                      className="w-full text-left px-4 py-3.5 flex items-center justify-between hover:bg-zinc-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">{group.emoji}</span>
+                        <div>
+                          <h2 className="text-[14px] font-semibold text-zinc-800 flex items-center gap-2">
+                            {group.label}
+                            <span className="text-zinc-400 font-normal bg-zinc-100 px-1.5 py-0.5 rounded text-[11px]">
+                              {groupItems.length}
+                            </span>
+                          </h2>
+                          <p className="text-[11.5px] text-zinc-500 font-normal">{group.sub}</p>
+                        </div>
+                      </div>
+                      <div className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
+                        <Icon name="chevron-down" className="h-4 w-4 text-zinc-400" />
+                      </div>
+                    </button>
+
+                    {isExpanded && (
+                      <div className="border-t border-zinc-100 max-h-[400px] overflow-y-auto custom-scrollbar">
+                        {groupItems.length === 0 ? (
+                          <div className="p-8 text-center text-zinc-400 text-[13px]">
+                            Nenhum alvo de busca cadastrado.
+                          </div>
+                        ) : (
+                          <>
+                            <div className="hidden lg:block overflow-hidden">
+                              <table className="w-full text-left">
+                                <thead className="bg-zinc-50/30 border-b border-zinc-100">
+                                  <tr className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                                    <th className="py-2 pl-4 pr-2 w-32">Tipo</th>
+                                    <th className="py-2 px-3">Identificador</th>
+                                    <th className="py-2 px-3 w-40">Status</th>
+                                    <th className="py-2 px-3 w-44">Movimentações 30d</th>
+                                    <th className="py-2 pr-4 pl-1 w-12"></th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-zinc-100">
+                                  {groupItems.map((t) => (
+                                    <TargetRow key={t.id} t={t}
+                                      onEdit={() => setDrawer({ open: true, mode: "edit", initial: t })}
+                                      onDuplicate={() => duplicate(t.id)}
+                                      onDelete={() => setConfirm({ id: t.id, name: targetIdentifier(t).primary })}
+                                      onToggle={() => toggle(t.id)} />
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                            <div className="lg:hidden p-3 grid gap-2">
+                              {groupItems.map((t) => (
+                                <TargetCard key={t.id} t={t}
+                                  onEdit={() => setDrawer({ open: true, mode: "edit", initial: t })}
+                                  onDuplicate={() => duplicate(t.id)}
+                                  onDelete={() => setConfirm({ id: t.id, name: targetIdentifier(t).primary })}
+                                  onToggle={() => toggle(t.id)} />
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </section>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 px-1 mb-4">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">Monitoramento Direto</span>
+              <div className="h-px flex-1 bg-zinc-100" />
+            </div>
+            <div className="space-y-4">
+              {[
+                { id: "process", ids: ["process"], label: "Processos (CNJ)", emoji: "📄", sub: "Monitora atualizações e novas movimentações de números CNJ específicos." },
+              ].map((group) => {
+                const groupItems = items.filter(t => group.ids.includes(t.type));
+                const isExpanded = expandedGroups[group.id];
+
+                return (
+                  <section key={group.id} className="bg-white rounded-xl border border-zinc-200 overflow-hidden transition-all shadow-sm">
+                    <button
+                      onClick={() => setExpandedGroups(prev => ({ ...prev, [group.id]: !prev[group.id] }))}
+                      className="w-full text-left px-4 py-3.5 flex items-center justify-between hover:bg-zinc-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">{group.emoji}</span>
+                        <div>
+                          <h2 className="text-[14px] font-semibold text-zinc-800 flex items-center gap-2">
+                            {group.label}
+                            <span className="text-zinc-400 font-normal bg-zinc-100 px-1.5 py-0.5 rounded text-[11px]">
+                              {groupItems.length}
+                            </span>
+                          </h2>
+                          <p className="text-[11.5px] text-zinc-500 font-normal">{group.sub}</p>
+                        </div>
+                      </div>
+                      <div className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
+                        <Icon name="chevron-down" className="h-4 w-4 text-zinc-400" />
+                      </div>
+                    </button>
+
+                    {isExpanded && (
+                      <div className="border-t border-zinc-100 max-h-[400px] overflow-y-auto custom-scrollbar">
+                        {groupItems.length === 0 ? (
+                          <div className="p-8 text-center text-zinc-400 text-[13px]">
+                            Nenhum processo cadastrado para monitoramento direto.
+                          </div>
+                        ) : (
+                          <>
+                            <div className="hidden lg:block overflow-hidden">
+                              <table className="w-full text-left">
+                                <thead className="bg-zinc-50/30 border-b border-zinc-100">
+                                  <tr className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                                    <th className="py-2 pl-4 pr-2 w-32">Tipo</th>
+                                    <th className="py-2 px-3">Identificador</th>
+                                    <th className="py-2 px-3 w-40">Status</th>
+                                    <th className="py-2 px-3 w-44">Movimentações 30d</th>
+                                    <th className="py-2 pr-4 pl-1 w-12"></th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-zinc-100">
+                                  {groupItems.map((t) => (
+                                    <TargetRow key={t.id} t={t}
+                                      onEdit={() => setDrawer({ open: true, mode: "edit", initial: t })}
+                                      onDuplicate={() => duplicate(t.id)}
+                                      onDelete={() => setConfirm({ id: t.id, name: targetIdentifier(t).primary })}
+                                      onToggle={() => toggle(t.id)} />
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                            <div className="lg:hidden p-3 grid gap-2">
+                              {groupItems.map((t) => (
+                                <TargetCard key={t.id} t={t}
+                                  onEdit={() => setDrawer({ open: true, mode: "edit", initial: t })}
+                                  onDuplicate={() => duplicate(t.id)}
+                                  onDelete={() => setConfirm({ id: t.id, name: targetIdentifier(t).primary })}
+                                  onToggle={() => toggle(t.id)} />
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </section>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )
+    }
 
       <CreateDrawer
         open={drawer.open}

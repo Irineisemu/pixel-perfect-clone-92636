@@ -12,10 +12,27 @@ export const getDashboard = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const sb = context.supabase;
 
-    const { data: lawyers } = await sb
+    const urgentProcessIds = new Set<string>();
+
+
+    // 1. Get total counts directly for accurate stats
+    const { count: totalProcesses } = await sb
+      .from("target_process_links")
+      .select("*", { count: "exact", head: true })
+      .is("unlinked_at", null);
+
+    // 1. Get total count of processes with new movements
+    // Note: totalNewMovements is now calculated by processes with at least one new movement
+    // in the grouping logic below.
+    // Note: head: true and count: exact with select("process_id") doesn't do distinct naturally in PostgREST.
+    // However, to keep it simple and accurate based on what the user expects (unique items in the list), 
+    // we'll fetch and unique-ify or use a better query if needed. 
+    // For now, let's fetch enough to show the unique ones.
+
+    const { data: targets } = await sb
       .from("monitoring_targets")
-      .select("id, lawyer_name, oab_numbers, discovery_status, last_discovery_at, created_at")
-      .eq("type", "lawyer")
+      .select("id, lawyer_name, full_name, type, oab_numbers, discovery_status, last_discovery_at, created_at, target_process_links(count)")
+      .in("type", ["lawyer", "person", "radar"])
       .eq("is_active", true)
       .order("created_at", { ascending: false });
 
@@ -37,7 +54,7 @@ export const getDashboard = createServerFn({ method: "GET" })
           filed_at, organ_code, organ_name,
           municipality_ibge, secrecy_level,
           system_name, format_name, last_update_at,
-          parties_json
+          parties_json, is_urgent
         )
         `,
       )
@@ -71,6 +88,7 @@ export const getDashboard = createServerFn({ method: "GET" })
 
     const processes = (linkRows ?? []).map((r: any) => {
       const p = r.process;
+      if (p.is_urgent) urgentProcessIds.add(p.id);
       const codes: number[] = p.subject_codes ?? [];
       const names: string[] = p.subject_names ?? [];
       const subjects = codes.map((code, i) => ({ code, name: names[i] ?? null }));
@@ -105,6 +123,7 @@ export const getDashboard = createServerFn({ method: "GET" })
           ? { name: lm.movement_name, occurredAt: lm.occurred_at, organName: lm.organ_name }
           : null,
         parties: p.parties_json ?? null,
+        isUrgent: (p.is_urgent ?? false) || (lm?.urgency === 'critical' || lm?.urgency === 'high'),
         matchedVia: r.matched_via,
         matchedValue: r.matched_value,
         linkedAt: r.first_linked_at,
@@ -120,34 +139,54 @@ export const getDashboard = createServerFn({ method: "GET" })
       };
     });
 
-    // Movimentações novas (até 20)
+    // Últimas movimentações (uma por processo)
     const processIds = processes.map((p) => p.id);
     let recentNewMovements: any[] = [];
+    let countProcessesWithRecentUpdates = 0;
+
+    
+    const yesterday = new Date();
+    yesterday.setHours(yesterday.getHours() - 24);
+
     if (processIds.length > 0) {
       const { data: movs } = await sb
         .from("process_movements")
-        .select("id, movement_name, occurred_at, organ_name, process_id")
-        .eq("is_new", true)
+        .select("id, movement_name, occurred_at, organ_name, process_id, urgency, deadline")
         .in("process_id", processIds)
-        .order("occurred_at", { ascending: false })
-        .limit(20);
+        .order("occurred_at", { ascending: false });
 
       const procById = new Map(processes.map((p) => [p.id, p]));
-      recentNewMovements = (movs ?? []).map((m: any) => {
-        const p = procById.get(m.process_id);
-        return {
-          id: m.id,
-          movementName: m.movement_name,
-          occurredAt: m.occurred_at,
-          organName: m.organ_name,
-          processId: m.process_id,
-          processNumber: p?.displayNumber,
-          processClass: p?.className,
-        };
-      });
-    }
+      const seenProcesses = new Set();
+      
+      for (const m of (movs ?? []) as any[]) {
+        if (!seenProcesses.has(m.process_id)) {
+          seenProcesses.add(m.process_id);
+          const p = procById.get(m.process_id);
+          
+          const isRecent = new Date(m.occurred_at) >= yesterday;
+          if (isRecent) countProcessesWithRecentUpdates++;
+          
+          if (m.urgency === 'critical' || m.urgency === 'high') {
+            urgentProcessIds.add(m.process_id);
+          }
 
-    const totalNew = processes.reduce((sum, p) => sum + (p.newMovementsCount || 0), 0);
+          if (recentNewMovements.length < 20) {
+            recentNewMovements.push({
+              id: m.id,
+              movementName: m.movement_name,
+              occurredAt: m.occurred_at,
+              organName: m.organ_name,
+              processId: m.process_id,
+              processNumber: p?.displayNumber,
+              processClass: p?.className,
+              isRecent,
+              urgency: m.urgency,
+              deadline: m.deadline
+            });
+          }
+        }
+      }
+    }
 
     // Process-type targets pending scrape (still not linked to a process row)
     const linkedTargetIds = new Set(((linkRows ?? []) as any[]).map((r) => r.target.id));
@@ -171,7 +210,7 @@ export const getDashboard = createServerFn({ method: "GET" })
         createdAt: t.created_at,
       }));
 
-    const hasRunningDiscovery = (lawyers ?? []).some(
+    const hasRunningDiscovery = (targets ?? []).some(
       (l: any) => l.discovery_status === "running" || l.discovery_status === "pending",
     );
     const hasPendingSync = processes.some(
@@ -180,11 +219,12 @@ export const getDashboard = createServerFn({ method: "GET" })
 
     return {
       stats: {
-        totalProcesses: processes.length,
-        totalLawyers: lawyers?.length ?? 0,
-        totalNewMovements: totalNew,
+        totalProcesses: (totalProcesses ?? 0) + pendingProcesses.length,
+        totalAlvos: (targets ?? []).length + ((pendingProcessTargets ?? []).length > 0 || processes.some(p => p.target?.type === 'process') ? 1 : 0),
+        countProcessesWithRecentUpdates: countProcessesWithRecentUpdates,
+        totalUrgent: urgentProcessIds.size,
       },
-      lawyers: lawyers ?? [],
+      targets: targets ?? [],
       processes,
       pendingProcesses,
       recentNewMovements,

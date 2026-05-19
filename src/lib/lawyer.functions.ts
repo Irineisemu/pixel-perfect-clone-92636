@@ -43,7 +43,10 @@ const CreateLawyerSchema = z.object({
 
 export const createLawyerTarget = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => CreateLawyerSchema.parse(input))
+  .inputValidator((input: any) => {
+    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : (input ?? {});
+    return CreateLawyerSchema.parse(payload);
+  })
   .handler(async ({ data, context }) => {
     const userId = context.userId;
     console.log("[createLawyerTarget] userId=", userId);
@@ -130,9 +133,10 @@ export const createLawyerTarget = createServerFn({ method: "POST" })
 // ============================================================
 export const getDiscoveryStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({ targetId: z.string().uuid() }).parse(input),
-  )
+  .inputValidator((input: any) => {
+    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : (input ?? {});
+    return z.object({ targetId: z.string().uuid() }).parse(payload);
+  })
   .handler(async ({ data, context }) => {
     // Confirma ownership
     const { data: target } = await supabaseAdmin
@@ -168,9 +172,10 @@ export const getDiscoveryStatus = createServerFn({ method: "GET" })
 // ============================================================
 export const triggerRediscovery = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({ targetId: z.string().uuid() }).parse(input),
-  )
+  .inputValidator((input: any) => {
+    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : (input ?? {});
+    return z.object({ targetId: z.string().uuid() }).parse(payload);
+  })
   .handler(async ({ data, context }) => {
     const { data: target } = await supabaseAdmin
       .from("monitoring_targets")

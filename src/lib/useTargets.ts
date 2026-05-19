@@ -85,7 +85,9 @@ function rowToUi(r: any) {
     active: r.is_active,
     createdAt: new Date(r.created_at).getTime(),
     full_name: r.full_name || "",
+    lawyer_name: r.lawyer_name || "",
     oab: r.oab || "",
+    oab_numbers: r.oab_numbers || [],
     qualification: r.qualification || "Outro",
     aliases: r.aliases || [],
     process_number: r.process_number || "",
@@ -95,10 +97,11 @@ function rowToUi(r: any) {
     class_codes: r.class_codes || [],
     keywords: r.keywords || [],
     against_state_only: !!r.against_state_only,
-    cpf: "", // never returned from db
-    notes: "", // not persisted
+    cpf: r.cpf_hash ? "CPF Cadastrado" : "", 
+    notes: "", 
     stats30d: 0,
     sparkline: [0, 0, 0, 0, 0, 0, 0],
+    processCount: r.process_count?.[0]?.count ?? 0,
   };
 }
 
@@ -147,7 +150,7 @@ export function useTargets() {
     setLoading(true);
     const { data, error } = await supabase
       .from("monitoring_targets")
-      .select("*")
+      .select("*, process_count:target_process_links(count)")
       .order("created_at", { ascending: false });
     if (error) {
       console.error("[useTargets] load", error);
@@ -225,9 +228,12 @@ export function useTargets() {
   const counters = useMemo(() => ({
     total: items.length,
     active: items.filter((t) => t.active).length,
+    activeEntities: items.filter((t) => t.active && t.type !== "process").length,
+    activeProcesses: items.filter((t) => t.active && t.type === "process").length,
     person: items.filter((t) => t.type === "person").length,
     process: items.filter((t) => t.type === "process").length,
     radar: items.filter((t) => t.type === "radar").length,
+    lawyer: items.filter((t) => t.type === "lawyer").length,
     radarActive: items.filter((t) => t.type === "radar" && t.active).length,
   }), [items]);
 

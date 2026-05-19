@@ -27,7 +27,10 @@ function maskCNJ(value: string): string {
 
 export const createProcessTargets = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => CreateProcessSchema.parse(data))
+  .inputValidator((input: any) => {
+    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : (input ?? {});
+    return CreateProcessSchema.parse(payload);
+  })
   .handler(async ({ data, context }) => {
     const sb = context.supabase;
     const userId = context.userId;
@@ -147,7 +150,10 @@ const SyncNowSchema = z.object({
 
 export const syncProcessNow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => SyncNowSchema.parse(data))
+  .inputValidator((input: any) => {
+    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : (input ?? {});
+    return SyncNowSchema.parse(payload);
+  })
   .handler(async ({ data, context }) => {
     const sb = context.supabase;
     const userId = context.userId;
@@ -195,17 +201,28 @@ export const syncProcessNow = createServerFn({ method: "POST" })
 
 const ListMovementsSchema = z.object({
   processId: z.string().uuid(),
-  page: z.number().int().min(1).default(1),
-  pageSize: z.number().int().min(1).max(100).default(20),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
 
-export const listProcessMovements = createServerFn({ method: "GET" })
+export const listProcessMovements = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => ListMovementsSchema.parse(data))
+  .inputValidator((input: any) => {
+    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : (input ?? {});
+    return ListMovementsSchema.parse(payload);
+  })
   .handler(async ({ data, context }) => {
     const sb = context.supabase;
-    const from = (data.page - 1) * data.pageSize;
-    const to = from + data.pageSize - 1;
+    
+    // Fallback para quando o inputValidator passa o objeto direto ou dentro de data
+    const processId = data.processId;
+    const page = data.page || 1;
+    const pageSize = data.pageSize || 20;
+
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    console.log(`[listProcessMovements] Fetching movements for ${processId}, range ${from}-${to}`);
 
     const { data: rows, count, error } = await sb
       .from("process_movements")
@@ -213,18 +230,92 @@ export const listProcessMovements = createServerFn({ method: "GET" })
         "id, movement_code, movement_name, occurred_at, organ_name, organ_code, complements, is_new",
         { count: "exact" },
       )
-      .eq("process_id", data.processId)
+      .eq("process_id", processId)
       .order("occurred_at", { ascending: false })
       .range(from, to);
 
     if (error) {
-      return { movements: [], total: 0, page: data.page, pageSize: data.pageSize, error: error.message };
+      console.error("[listProcessMovements] DB error:", error);
+      return { movements: [], total: 0, page, pageSize, error: error.message };
     }
 
     return {
       movements: rows ?? [],
       total: count ?? 0,
-      page: data.page,
-      pageSize: data.pageSize,
+      page,
+      pageSize,
     };
+  });
+
+export const syncAll = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const sb = context.supabase;
+    const userId = context.userId;
+    const supabaseUrl = process.env.SUPABASE_URL!;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+    // 1. Gatilha redescoberta para todos os alvos OAB/Pessoa ativos do usuário
+    const { data: targets } = await sb
+      .from("monitoring_targets")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("is_active", true)
+      .in("type", ["lawyer", "person"]);
+
+    for (const t of targets ?? []) {
+      // Usamos fetch interno para a função triggerRediscovery (que está em lawyer.functions)
+      // Ou simplesmente duplicamos a lógica de enfileirar o job aqui para ser mais eficiente
+      // Para manter DRY, vamos enfileirar diretamente
+      const { data: run } = await sb
+        .from("discovery_runs")
+        .insert({
+          target_id: t.id,
+          user_id: userId,
+          status: "running",
+          triggered_by: "manual",
+        })
+        .select("id")
+        .single();
+
+      if (run) {
+        await sb.from("monitoring_targets").update({ discovery_status: "running" }).eq("id", t.id);
+        
+        // Pega as OABs para o payload
+        const { data: tData } = await sb.from("monitoring_targets").select("oab_numbers").eq("id", t.id).single();
+
+        await sb.from("ingestion_jobs").insert({
+          process_number: `LAWYER:${t.id}`,
+          tribunal: "TJRJ",
+          target_ids: [t.id],
+          priority: 6,
+          kind: "lawyer_discovery",
+          scheduled_for: new Date().toISOString(),
+          payload: {
+            kind: "lawyer_discovery",
+            targetId: t.id,
+            runId: run.id,
+            oabs: tData?.oab_numbers ?? [],
+            triggeredBy: "manual",
+          },
+        });
+      }
+    }
+
+    // 2. Chama a edge function sync-all-processes para os processos manuais
+    // Nota: a edge function atual no banco filtra por targets de tipo 'process'
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/sync-all-processes`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${serviceKey}`,
+        },
+        body: JSON.stringify({ userId }), // A edge function pode ser atualizada para filtrar por user
+      });
+    } catch (err) {
+      console.error("[syncAll] sync-all-processes edge function failed:", err);
+    }
+
+    return { ok: true };
   });

@@ -201,7 +201,11 @@ const ListMovementsSchema = z.object({
 
 export const listProcessMovements = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => ListMovementsSchema.parse(data))
+  .inputValidator((input: any) => {
+    // Handle both { data: T } and T formats
+    const payload = input?.data ?? input;
+    return ListMovementsSchema.parse(payload);
+  })
   .handler(async ({ data, context }) => {
     const sb = context.supabase;
     const from = (data.page - 1) * data.pageSize;

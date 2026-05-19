@@ -464,6 +464,11 @@ export function DashboardProcesses() {
                 <span className="ml-2 text-zinc-500 font-normal bg-zinc-100 px-1.5 py-0.5 rounded text-xs">
                   {otherProcesses.length}
                 </span>
+                {countOthersRecent > 0 && (
+                  <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium animate-pulse">
+                    {countOthersRecent} com novidades
+                  </span>
+                )}
               </h2>
             </div>
             <div className={`transition-transform duration-200 ${isOthersExpanded ? 'rotate-180' : ''}`}>

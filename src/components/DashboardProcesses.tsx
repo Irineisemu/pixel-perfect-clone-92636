@@ -206,76 +206,67 @@ export function DashboardProcesses() {
             <Link to="/alvos" className="text-[11px] font-bold text-zinc-900 bg-white border border-zinc-200 px-3 py-1.5 rounded-lg shadow-sm hover:bg-zinc-50 transition-all">GERENCIAR</Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="space-y-3">
             {targets.map((t: any) => {
               const st = statusLabel(t.discovery_status);
               const isRetrying = retryingId === t.id;
+              const isExpanded = expandedTargetId === t.id;
               const subtitle = t.type === 'lawyer' ? `OAB: ${(t.oab_numbers ?? []).map(oab => formatOABDisplay(oab)).join(", ")}` : t.type === 'person' ? "Pessoa/CPF" : "Radar";
+              const targetProcesses = processes.filter((p: any) => p.target?.id === t.id);
+              const recentCount = targetProcesses.filter((p: any) => p.lastMovement && new Date(p.lastMovement.occurredAt) >= yesterday).length;
 
               return (
-                <div key={t.id} className="p-5 border border-zinc-100 bg-white rounded-2xl shadow-sm flex items-center justify-between gap-4 transition-all hover:shadow-md">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-[14px] text-zinc-900 truncate">{t.lawyer_name || t.full_name || "Radar"}</span>
-                      {t.target_process_links?.[0]?.count !== undefined && (
-                        <span className="text-[9px] font-bold text-zinc-500 bg-zinc-50 px-1.5 py-0.5 rounded border border-zinc-100">{t.target_process_links[0].count}</span>
-                      )}
+                <div key={t.id} className="overflow-hidden border border-zinc-100 bg-white rounded-2xl shadow-sm transition-all hover:shadow-md">
+                  <div 
+                    onClick={() => setExpandedTargetId(isExpanded ? null : t.id)}
+                    className="p-5 flex items-center justify-between gap-4 cursor-pointer hover:bg-zinc-50/50 transition-colors"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-[14px] text-zinc-900 truncate">{t.lawyer_name || t.full_name || "Radar"}</span>
+                        {targetProcesses.length > 0 && (
+                          <span className="text-[9px] font-bold text-zinc-500 bg-zinc-50 px-1.5 py-0.5 rounded border border-zinc-100">{targetProcesses.length}</span>
+                        )}
+                        {recentCount > 0 && <span className="px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[8px] font-bold tracking-tighter animate-pulse uppercase">Novo</span>}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[11px] text-zinc-500 font-medium truncate">{subtitle}</span>
+                        <span className={`text-[10px] font-bold uppercase tracking-tighter ${st.cls.split(' ')[1]}`}>{st.text}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[11px] text-zinc-500 font-medium truncate">{subtitle}</span>
-                      <span className={`text-[10px] font-bold uppercase tracking-tighter ${st.cls.split(' ')[1]}`}>{st.text}</span>
+                    
+                    <div className="flex items-center gap-3">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleRetry(t.id); }} 
+                        disabled={isRetrying} 
+                        className="h-8 px-3 rounded-lg bg-zinc-900 text-white text-[11px] font-bold hover:bg-zinc-800 disabled:opacity-50"
+                      >
+                        {isRetrying ? "..." : "SYNC"}
+                      </button>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className={`text-zinc-300 transition-transform ${isExpanded ? 'rotate-180 text-zinc-900' : ''}`}><path d="m6 9 6 6 6-6"/></svg>
                     </div>
                   </div>
-                  <button onClick={() => handleRetry(t.id)} disabled={isRetrying} className="h-8 px-3 rounded-lg bg-zinc-900 text-white text-[11px] font-bold hover:bg-zinc-800 disabled:opacity-50">
-                    {isRetrying ? "..." : "SYNC"}
-                  </button>
+
+                  {isExpanded && (
+                    <div className="px-4 pb-4 border-t border-zinc-50 bg-zinc-50/10">
+                      {targetProcesses.length > 0 ? (
+                        <div className="mt-2 divide-y divide-zinc-50 max-h-[400px] overflow-y-auto pr-1">
+                          {targetProcesses.map((p: any) => (
+                            <div key={p.id + p.target.id} id={`process-${p.id}`} className="py-1">
+                              <ProcessCard process={p} isSyncing={syncingId === p.id} onSyncNow={handleSyncNow} isHighlighted={highlightedProcessId === p.id} />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="py-8 text-center">
+                          <p className="text-[11px] text-zinc-400 font-medium">Nenhum processo localizado para este alvo ainda.</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
-          </div>
-
-          <div className="space-y-1">
-            {oabProcesses.length > 0 && (
-              <div className="overflow-hidden bg-white border border-zinc-100 rounded-2xl px-4 shadow-sm">
-                <button onClick={() => setIsOabExpanded(!isOabExpanded)} className={`w-full text-left py-4 flex items-center justify-between group ${isOabExpanded ? 'border-b border-zinc-50' : ''}`}>
-                  <h2 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 group-hover:text-zinc-700 transition-colors">
-                    Processos encontrados (OAB)
-                    <span className="text-zinc-300">[{oabProcesses.length}]</span>
-                    {countOabRecent > 0 && <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[9px] font-bold">{countOabRecent} NOVOS</span>}
-                  </h2>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" className={`text-zinc-200 transition-transform ${isOabExpanded ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6"/></svg>
-                </button>
-                {isOabExpanded && (
-                  <div className="mt-2 divide-y divide-zinc-50 max-h-[400px] overflow-y-auto">
-                    {oabProcesses.map((p: any) => (
-                      <div key={p.id + p.target.id} id={`process-${p.id}`} className="py-1">
-                        <ProcessCard process={p} isSyncing={syncingId === p.id} onSyncNow={handleSyncNow} isHighlighted={highlightedProcessId === p.id} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-            {otherProcesses.length > 0 && (
-              <div className="overflow-hidden bg-white border border-zinc-100 rounded-2xl px-4 shadow-sm">
-                <button onClick={() => setIsOthersExpanded(!isOthersExpanded)} className={`w-full text-left py-4 flex items-center justify-between group ${isOthersExpanded ? 'border-b border-zinc-50' : ''}`}>
-                  <h2 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 group-hover:text-zinc-700 transition-colors">
-                    Outros de alvos
-                    <span className="text-zinc-300">[{otherProcesses.length}]</span>
-                  </h2>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" className={`text-zinc-200 transition-transform ${isOthersExpanded ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6"/></svg>
-                </button>
-                {isOthersExpanded && (
-                  <div className="mt-2 divide-y divide-zinc-50 max-h-[400px] overflow-y-auto">
-                    {otherProcesses.map((p: any) => (
-                      <div key={p.id + p.target.id} id={`process-${p.id}`} className="py-1">
-                        <ProcessCard process={p} isSyncing={syncingId === p.id} onSyncNow={handleSyncNow} isHighlighted={highlightedProcessId === p.id} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </section>
       )}

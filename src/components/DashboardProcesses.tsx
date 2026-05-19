@@ -42,6 +42,8 @@ export function DashboardProcesses() {
   const [loading, setLoading] = useState(!cachedDashboard);
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [isMovementsExpanded, setIsMovementsExpanded] = useState(false);
+
   
 
   const handleSyncNow = async (processId: string) => {

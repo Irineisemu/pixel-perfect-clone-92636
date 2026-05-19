@@ -342,11 +342,11 @@ export function DashboardProcesses() {
                 {recentNewMovements.map((m: any) => (
                   <button key={m.id} onClick={() => locateProcess(m.processId)} className="w-full text-left py-3 px-1 flex items-start justify-between gap-4 hover:bg-zinc-50 transition-colors group">
                     <div className="min-w-0 flex-1">
-                      <div className="text-[13px] font-black text-zinc-900 leading-tight group-hover:text-zinc-600">
+                      <div className="text-[13px] font-bold text-zinc-900 leading-tight group-hover:text-zinc-600">
                         {m.movementName}
-                        {m.isRecent && <span className="ml-2 px-1.5 py-0.5 rounded bg-rose-100 text-rose-600 text-[9px] font-black">NOVO</span>}
+                        {m.isRecent && <span className="ml-2 px-1.5 py-0.5 rounded bg-rose-100 text-rose-600 text-[9px] font-bold">NOVO</span>}
                       </div>
-                      <div className="mt-1 text-[11px] text-zinc-400 font-bold uppercase tracking-tight flex items-center gap-2">
+                      <div className="mt-1 text-[11px] text-zinc-500 font-medium uppercase tracking-tight flex items-center gap-2">
                         <span className="font-mono text-zinc-900 tracking-tighter">{m.processNumber}</span>
                         <span className="text-zinc-200">•</span>
                         <span className="truncate">{m.processClass}</span>

@@ -213,12 +213,18 @@ const ACCENT_FIXES: Record<string, string> = {
   "DE": "de",
   "DO": "do",
   "E": "e",
+  "DEFINITIVO": "Arquivamento Definitivo",
 };
 
-function cleanDataJudText(input: any): any {
+function cleanDataJudText(input: any, code?: number): any {
   if (input == null) return input;
-  if (Array.isArray(input)) return input.map(cleanDataJudText);
+  if (Array.isArray(input)) return input.map((item) => cleanDataJudText(item, code));
   if (typeof input !== "string") return input;
+
+  // Se o código for 246 (Baixa) e o nome for "Definitivo", expandimos para algo claro.
+  if (code === 246 && input.toUpperCase().trim() === "DEFINITIVO") {
+    return "Arquivamento Definitivo";
+  }
 
   // Remove a sequência mojibake "ï¿½" (3 chars) e o próprio U+FFFD
   let s = input.replace(/ï¿½/g, "").replace(/\uFFFD/g, "");
@@ -324,10 +330,10 @@ async function upsertMovements(
         {
           process_id: processId,
           movement_code: m.codigo ?? null,
-          movement_name: cleanDataJudText(m.nome),
+          movement_name: cleanDataJudText(m.nome, m.codigo),
           occurred_at: m.dataHora,
           organ_code: m.orgaoJulgador?.codigo ?? null,
-          organ_name: cleanDataJudText(m.orgaoJulgador?.nome) ?? null,
+          organ_name: cleanDataJudText(m.orgaoJulgador?.nome, m.orgaoJulgador?.codigo) ?? null,
           complements: m.complementosTabelados ?? null,
           raw_data: m,
           is_new: !isInitialSync,

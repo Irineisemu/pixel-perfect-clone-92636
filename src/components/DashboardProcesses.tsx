@@ -284,10 +284,10 @@ export function DashboardProcesses() {
       {(manualProcesses.length > 0 || pendingProcesses.length > 0) && (
         <section className="space-y-4">
           <div className="flex items-center gap-3 px-1">
-            <span className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center text-xs font-black shadow-sm">2</span>
+            <span className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center text-xs font-bold shadow-sm">2</span>
             <div>
-              <h2 className="text-sm font-black text-zinc-900 uppercase tracking-tight">Monitoramentos Diretos</h2>
-              <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-0.5">Processos por número CNJ</p>
+              <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-tight">Monitoramentos Diretos</h2>
+              <p className="text-[10px] text-zinc-500 font-medium uppercase tracking-widest mt-0.5">Processos por número CNJ</p>
             </div>
           </div>
 

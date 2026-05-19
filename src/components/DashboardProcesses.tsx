@@ -381,8 +381,8 @@ export function DashboardProcesses() {
       )}
 
       {(manualProcesses.length > 0 || pendingProcesses.length > 0) && (
-        <div className="pt-2 px-1">
-          <div className="flex items-center gap-2 mb-4">
+        <section className="space-y-4 pt-2">
+          <div className="flex items-center gap-2 px-1">
             <span className="p-1 rounded bg-zinc-900 text-white">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             </span>
@@ -391,77 +391,46 @@ export function DashboardProcesses() {
               <p className="text-[11px] text-zinc-500">Processos acompanhados especificamente pelo número CNJ.</p>
             </div>
           </div>
-        </div>
-      )}
 
-
-
-
-      {processes.length === 0 && (
-        <section className="bg-white rounded-xl border border-zinc-200 overflow-hidden">
-          <div className="p-10 text-center">
-            <div className="text-3xl mb-2">📭</div>
-            {targets.length === 0 ? (
-              <>
-                <p className="text-sm text-zinc-600 mb-3">Nenhum processo ou alvo monitorado ainda.</p>
-                <Link
-                  to="/alvos"
-                  className="inline-block px-3 py-1.5 rounded-md bg-zinc-900 text-white text-[13px] font-medium hover:bg-zinc-800"
-                >
-                  Adicionar alvo ou processo
-                </Link>
-              </>
-            ) : hasRunningDiscovery ? (
-              <p className="text-sm text-zinc-600">
-                Sincronização em andamento. Esta página atualiza sozinha.
-              </p>
-            ) : (
-              <p className="text-sm text-zinc-600">
-                Nenhum processo vinculado ainda. Vá em <Link to="/alvos" className="underline">Alvos</Link> para adicionar mais fontes.
-              </p>
-            )}
-          </div>
-        </section>
-      )}
-
-
-      {manualProcesses.length > 0 && (
-        <section className="bg-white rounded-xl border border-zinc-200 overflow-hidden transition-all">
-          <button
-            onClick={() => setIsManualExpanded(!isManualExpanded)}
-            className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-zinc-50 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold text-zinc-700">
-                Processos individuais
-                <span className="ml-2 text-zinc-500 font-normal bg-zinc-100 px-1.5 py-0.5 rounded text-xs">
-                  {manualProcesses.length}
-                </span>
-                {countManualRecent > 0 && (
-                  <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium animate-pulse">
-                    {countManualRecent} com novidades
-                  </span>
-                )}
-              </h2>
-            </div>
-            <div className={`transition-transform duration-200 ${isManualExpanded ? 'rotate-180' : ''}`}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
-                <path d="m6 9 6 6 6-6"/>
-              </svg>
-            </div>
-          </button>
-          {isManualExpanded && (
-            <div className="border-t border-zinc-100 max-h-[500px] overflow-y-auto divide-y divide-zinc-100">
-              {manualProcesses.map((p: any) => (
-                <div key={p.id + p.target.id} id={`process-${p.id}`}>
-                  <ProcessCard
-                    process={p}
-                    isSyncing={syncingId === p.id}
-                    onSyncNow={handleSyncNow}
-                    isHighlighted={highlightedProcessId === p.id}
-                  />
+          {manualProcesses.length > 0 && (
+            <div className="overflow-hidden transition-all">
+              <button
+                onClick={() => setIsManualExpanded(!isManualExpanded)}
+                className="w-full text-left py-2.5 px-1 flex items-center justify-between hover:bg-zinc-50 transition-colors border-b border-zinc-100"
+              >
+                <div className="flex items-center gap-2">
+                  <h2 className="text-[12px] font-bold text-zinc-600 uppercase tracking-wider">
+                    Processos individuais
+                    <span className="ml-2 text-zinc-400 font-medium">
+                      {manualProcesses.length}
+                    </span>
+                    {countManualRecent > 0 && (
+                      <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[10px] font-bold">
+                        {countManualRecent} NOVIDADES
+                      </span>
+                    )}
+                  </h2>
                 </div>
-              ))}
+                <div className={`transition-transform duration-200 ${isManualExpanded ? 'rotate-180' : ''}`}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
+                    <path d="m6 9 6 6 6-6"/>
+                  </svg>
+                </div>
+              </button>
+              {isManualExpanded && (
+                <div className="mt-2 space-y-2 max-h-[500px] overflow-y-auto pr-1">
+                  {manualProcesses.map((p: any) => (
+                    <div key={p.id + p.target.id} id={`process-${p.id}`}>
+                      <ProcessCard
+                        process={p}
+                        isSyncing={syncingId === p.id}
+                        onSyncNow={handleSyncNow}
+                        isHighlighted={highlightedProcessId === p.id}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </section>

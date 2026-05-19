@@ -764,8 +764,6 @@ export function Alvos() {
             { id: "lawyer", label: "OABs", emoji: "⚖️" },
             { id: "radar", label: "Radares de captação", emoji: "📡" },
           ].map((group) => {
-            // const groupItems = items.filter(t => t.type === group.id);
-            // if (groupItems.length === 0) return null;
             const groupItems = items.filter(t => t.type === group.id);
             const isExpanded = expandedGroups[group.id];
 

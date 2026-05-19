@@ -184,9 +184,9 @@ export function DashboardProcesses() {
   const countOthersRecent = otherProcesses.filter((p: any) => p.lastMovement && new Date(p.lastMovement.occurredAt) >= yesterday).length;
 
   return (
-    <div className="space-y-10 pb-10">
+    <div className="space-y-6 pb-10">
       {hasRunningDiscovery && (
-        <div className="rounded-xl border border-sky-100 bg-sky-50/50 px-4 py-3 text-[12px] text-sky-700 font-semibold flex items-center gap-2">
+        <div className="rounded-2xl border border-sky-100 bg-sky-50/50 px-5 py-4 text-[12px] text-sky-700 font-semibold flex items-center gap-2 shadow-sm">
           <span className="inline-block h-2.5 w-2.5 rounded-full bg-sky-500 animate-pulse" />
           Sincronização em andamento…
         </div>
@@ -194,8 +194,8 @@ export function DashboardProcesses() {
 
       {/* 1. ALVOS & DESCOBERTAS */}
       {(targets.length > 0 || oabProcesses.length > 0 || otherProcesses.length > 0) && (
-        <section className="space-y-4">
-          <div className="flex items-center justify-between px-1">
+        <section className="bg-zinc-50/50 border border-zinc-100 rounded-[32px] p-5 md:p-8 space-y-6">
+          <div className="flex items-center justify-between px-2">
             <div className="flex items-center gap-3">
               <span className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center text-xs font-bold shadow-sm">1</span>
               <div>
@@ -213,7 +213,7 @@ export function DashboardProcesses() {
               const subtitle = t.type === 'lawyer' ? `OAB: ${(t.oab_numbers ?? []).map(oab => formatOABDisplay(oab)).join(", ")}` : t.type === 'person' ? "Pessoa/CPF" : "Radar";
 
               return (
-                <div key={t.id} className="p-4 border border-zinc-100 bg-white rounded-2xl shadow-[0_2px_4px_rgba(0,0,0,0.02)] flex items-center justify-between gap-4">
+                <div key={t.id} className="p-5 border border-zinc-100 bg-white rounded-2xl shadow-sm flex items-center justify-between gap-4 transition-all hover:shadow-md">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-[14px] text-zinc-900 truncate">{t.lawyer_name || t.full_name || "Radar"}</span>
@@ -236,8 +236,8 @@ export function DashboardProcesses() {
 
           <div className="space-y-1">
             {oabProcesses.length > 0 && (
-              <div className="overflow-hidden">
-                <button onClick={() => setIsOabExpanded(!isOabExpanded)} className="w-full text-left py-3 px-1 flex items-center justify-between border-b border-zinc-100 group">
+              <div className="overflow-hidden bg-white border border-zinc-100 rounded-2xl px-4 shadow-sm">
+                <button onClick={() => setIsOabExpanded(!isOabExpanded)} className={`w-full text-left py-4 flex items-center justify-between group ${isOabExpanded ? 'border-b border-zinc-50' : ''}`}>
                   <h2 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 group-hover:text-zinc-700 transition-colors">
                     Processos encontrados (OAB)
                     <span className="text-zinc-300">[{oabProcesses.length}]</span>
@@ -257,8 +257,8 @@ export function DashboardProcesses() {
               </div>
             )}
             {otherProcesses.length > 0 && (
-              <div className="overflow-hidden">
-                <button onClick={() => setIsOthersExpanded(!isOthersExpanded)} className="w-full text-left py-3 px-1 flex items-center justify-between border-b border-zinc-100 group">
+              <div className="overflow-hidden bg-white border border-zinc-100 rounded-2xl px-4 shadow-sm">
+                <button onClick={() => setIsOthersExpanded(!isOthersExpanded)} className={`w-full text-left py-4 flex items-center justify-between group ${isOthersExpanded ? 'border-b border-zinc-50' : ''}`}>
                   <h2 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 group-hover:text-zinc-700 transition-colors">
                     Outros de alvos
                     <span className="text-zinc-300">[{otherProcesses.length}]</span>
@@ -282,8 +282,8 @@ export function DashboardProcesses() {
 
       {/* 2. MONITORAMENTOS DIRETOS */}
       {(manualProcesses.length > 0 || pendingProcesses.length > 0) && (
-        <section className="space-y-4">
-          <div className="flex items-center gap-3 px-1">
+        <section className="bg-zinc-50/50 border border-zinc-100 rounded-[32px] p-5 md:p-8 space-y-6">
+          <div className="flex items-center gap-3 px-2">
             <span className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center text-xs font-bold shadow-sm">2</span>
             <div>
               <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-tight">Monitoramentos Diretos</h2>
@@ -293,8 +293,8 @@ export function DashboardProcesses() {
 
           <div className="space-y-1">
             {manualProcesses.length > 0 && (
-              <div className="overflow-hidden">
-                <button onClick={() => setIsManualExpanded(!isManualExpanded)} className="w-full text-left py-3 px-1 flex items-center justify-between border-b border-zinc-100 group">
+              <div className="overflow-hidden bg-white border border-zinc-100 rounded-2xl px-4 shadow-sm">
+                <button onClick={() => setIsManualExpanded(!isManualExpanded)} className={`w-full text-left py-4 flex items-center justify-between group ${isManualExpanded ? 'border-b border-zinc-50' : ''}`}>
                   <h2 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 group-hover:text-zinc-700 transition-colors">
                     Processos individuais
                     <span className="text-zinc-300">[{manualProcesses.length}]</span>
@@ -319,8 +319,8 @@ export function DashboardProcesses() {
 
       {/* 3. ÚLTIMAS MOVIMENTAÇÕES */}
       {recentNewMovements.length > 0 && (
-        <section className="space-y-4">
-          <div className="flex items-center gap-3 px-1">
+        <section className="bg-zinc-50/50 border border-zinc-100 rounded-[32px] p-5 md:p-8 space-y-6">
+          <div className="flex items-center gap-3 px-2">
             <span className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center text-xs font-bold shadow-sm">3</span>
             <div>
               <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-tight">Últimas Movimentações</h2>
@@ -328,8 +328,8 @@ export function DashboardProcesses() {
             </div>
           </div>
 
-          <div className="overflow-hidden">
-            <button onClick={() => setIsMovementsExpanded(!isMovementsExpanded)} className="w-full text-left py-3 px-1 flex items-center justify-between border-b border-rose-100 group">
+          <div className="overflow-hidden bg-white border border-zinc-100 rounded-2xl px-4 shadow-sm">
+            <button onClick={() => setIsMovementsExpanded(!isMovementsExpanded)} className={`w-full text-left py-4 flex items-center justify-between group ${isMovementsExpanded ? 'border-b border-rose-50' : ''}`}>
               <h2 className="text-[11px] font-bold text-rose-600 uppercase tracking-widest flex items-center gap-2">
                 <span className={`w-1.5 h-1.5 rounded-full bg-rose-500 ${stats?.countProcessesWithRecentUpdates > 0 ? 'animate-pulse' : 'opacity-50'}`} />
                 Resumo de andamentos
@@ -340,7 +340,7 @@ export function DashboardProcesses() {
             {isMovementsExpanded && (
               <div className="mt-2 divide-y divide-zinc-50 max-h-[400px] overflow-y-auto">
                 {recentNewMovements.map((m: any) => (
-                  <button key={m.id} onClick={() => locateProcess(m.processId)} className="w-full text-left py-3 px-1 flex items-start justify-between gap-4 hover:bg-zinc-50 transition-colors group">
+                  <button key={m.id} onClick={() => locateProcess(m.processId)} className="w-full text-left py-4 px-1 flex items-start justify-between gap-4 hover:bg-zinc-50 transition-colors group">
                     <div className="min-w-0 flex-1">
                       <div className="text-[13px] font-bold text-zinc-900 leading-tight group-hover:text-zinc-600">
                         {m.movementName}

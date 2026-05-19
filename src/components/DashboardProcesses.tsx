@@ -236,7 +236,7 @@ export function DashboardProcesses() {
                 </span>
               </h2>
               <span className="text-[11px] text-rose-500 font-normal ml-2 hidden sm:inline">
-                (Andamentos recentes nos seus processos monitorados)
+                (Aqui está as ultimas movimentações dos seus processos)
               </span>
             </div>
             <div className={`transition-transform duration-200 ${isMovementsExpanded ? 'rotate-180' : ''}`}>

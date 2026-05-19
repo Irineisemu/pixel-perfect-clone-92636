@@ -24,18 +24,19 @@ export function KpiRow({ stats }) {
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       <Kpi 
         icon="layers" 
-        label="Monitoramento"
+        label="Processos"
         value={stats.totalMonitorado.toLocaleString("pt-BR")}
         hint={
           <div className="flex flex-col">
-            <span>{stats.totalMonitorado === 1 ? "alvo ativo" : "alvos ativos"}</span>
-            {hasProcesses && (
+            <span>{stats.totalMonitorado === 1 ? "processo monitorado" : "processos monitorados"}</span>
+            {stats.totalAlvos > 0 && (
               <span className="text-[10px] text-zinc-400">
-                + {stats.totalProcessos} processo{stats.totalProcessos !== 1 ? 's' : ''} avulso{stats.totalProcessos !== 1 ? 's' : ''}
+                vinculados a {stats.totalAlvos} alvo{stats.totalAlvos !== 1 ? 's' : ''}
               </span>
             )}
           </div>
         } 
+
       />
       <Kpi icon="activity" label="Novas mov. (24h)" value={stats.novas24h} hint="últimas 24 horas" />
       <Kpi icon="alert-octagon" label="Urgentes pendentes" value={stats.urgentes} hint="prazos < 48h ou intimações" />

@@ -307,7 +307,58 @@ export function DashboardProcesses() {
           </div>
         )}
       </section>
+
+      {pendingProcesses.length > 0 && (
+        <section className="bg-amber-50/30 rounded-xl border border-amber-100 overflow-hidden transition-all">
+          <button
+            onClick={() => setIsPendingExpanded(!isPendingExpanded)}
+            className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-amber-50/50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="inline-block h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+              <h2 className="text-sm font-semibold text-zinc-700">
+                Processos sendo localizados
+                <span className="ml-2 text-amber-600 font-bold bg-amber-100 px-1.5 py-0.5 rounded text-xs">
+                  {pendingProcesses.length}
+                </span>
+              </h2>
+              <span className="text-[11px] text-amber-500 font-normal ml-2 hidden sm:inline">
+                (Novos processos em fila de busca inicial)
+              </span>
+            </div>
+            <div className={`transition-transform duration-200 ${isPendingExpanded ? 'rotate-180' : ''}`}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
+                <path d="m6 9 6 6 6-6"/>
+              </svg>
+            </div>
+          </button>
+          
+          {isPendingExpanded && (
+            <div className="border-t border-amber-100 bg-white/50 divide-y divide-amber-100 max-h-[300px] overflow-y-auto">
+              <div className="px-4 py-2 bg-amber-50/50 text-[11px] text-amber-700 leading-relaxed border-b border-amber-100">
+                Estes processos foram encontrados pelo sistema e estão tendo seus dados e movimentações sincronizados pela primeira vez. 
+                Isso pode levar alguns minutos.
+              </div>
+              {pendingProcesses.map((p: any) => (
+                <div key={p.targetId} className="p-3 px-4 flex items-start justify-between gap-3 hover:bg-amber-50/30 transition-colors">
+                  <div className="min-w-0">
+                    <div className="text-[13px] font-medium text-zinc-900 font-mono">{p.displayNumber}</div>
+                    <div className="mt-1 text-[11.5px] text-zinc-600">
+                      {p.tribunal}
+                      {p.nickname && <span className="text-zinc-400"> · {p.nickname}</span>}
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-amber-200 bg-amber-50 text-amber-700 text-[11px] flex-shrink-0 font-medium">
+                    ⏳ Sincronizando
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </div>
+
   );
 }
 

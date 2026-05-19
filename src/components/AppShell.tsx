@@ -125,7 +125,7 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
             <aside className="lg:sticky lg:top-[72px] lg:self-start space-y-4">
               <TribunalStatus tribunais={tribunais} compact />
               <div className="text-[11.5px] text-zinc-500 px-1">
-                Monitorando: <button onClick={() => onNav("alvos")} className="text-zinc-700 hover:text-zinc-900 hover:underline font-medium">{targetsCount.activeEntities} alvo{targetsCount.activeEntities !== 1 ? "s" : ""}</button> · {targetsCount.activeProcesses} processo{targetsCount.activeProcesses !== 1 ? "s" : ""} avulso{targetsCount.activeProcesses !== 1 ? "s" : ""}
+                Monitorando: <button onClick={() => onNav("alvos")} className="text-zinc-700 hover:text-zinc-900 hover:underline font-medium">{stats.totalMonitorado} processo{stats.totalMonitorado !== 1 ? "s" : ""}</button> · {stats.totalAlvos} alvo{stats.totalAlvos !== 1 ? "s" : ""} ativo{stats.totalAlvos !== 1 ? "s" : ""}
               </div>
             </aside>
           </div>

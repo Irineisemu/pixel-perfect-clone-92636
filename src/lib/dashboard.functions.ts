@@ -169,7 +169,9 @@ export const getDashboard = createServerFn({ method: "GET" })
               processId: m.process_id,
               processNumber: p?.displayNumber,
               processClass: p?.className,
-              isRecent
+              isRecent,
+              urgency: m.urgency,
+              deadline: m.deadline
             });
           }
         }

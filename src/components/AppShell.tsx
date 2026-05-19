@@ -129,7 +129,7 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
               <h1 className="font-display text-2xl md:text-[28px] tracking-tight text-zinc-900">Bom dia, {greetingName}.</h1>
               <p className="text-[13.5px] text-zinc-600 mt-0.5">
                 Monitorando {stats.totalMonitorado} processo{stats.totalMonitorado !== 1 ? "s" : ""} 
-                {stats.totalAlvos > 0 && ` a partir de ${stats.totalAlvos} fonte${stats.totalAlvos !== 1 ? "s" : ""} de descoberta (OAB/CPF)`}.
+                {stats.totalAlvos > 0 && ` a partir de ${stats.totalAlvos} fonte${stats.totalAlvos !== 1 ? "s" : ""} de descoberta`}.
               </p>
             </div>
           </div>

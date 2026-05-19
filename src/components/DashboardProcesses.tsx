@@ -223,7 +223,7 @@ export function DashboardProcesses() {
 
       {/* 1. ALVOS & DESCOBERTAS */}
       {targets.length > 0 && (
-        <section className="bg-white border border-zinc-200/60 rounded-[32px] p-5 md:p-8 space-y-6 shadow-[0_20px_40px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.02)] relative overflow-hidden before:absolute before:inset-0 before:rounded-[32px] before:shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] before:pointer-events-none">
+        <section id="section-targets" className="bg-white border border-zinc-200/60 rounded-[32px] p-5 md:p-8 space-y-6 shadow-[0_20px_40px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.02)] relative overflow-hidden before:absolute before:inset-0 before:rounded-[32px] before:shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] before:pointer-events-none">
           <div className="flex items-center justify-between px-2">
             <div className="flex items-center gap-3">
               <span className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center text-xs font-bold shadow-sm">1</span>

@@ -153,7 +153,7 @@ export function DashboardProcesses() {
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-zinc-100 bg-white p-12 text-center text-sm text-zinc-400 font-medium">
+      <div className="rounded-xl border border-zinc-100 bg-white p-12 text-center text-sm text-zinc-500 font-normal">
         Carregando painel…
       </div>
     );

@@ -220,7 +220,7 @@ export const getDashboard = createServerFn({ method: "GET" })
     return {
       stats: {
         totalProcesses: totalProcesses ?? 0,
-        totalAlvos: (targets ?? []).length,
+        totalAlvos: (targets ?? []).length + ((pendingProcessTargets ?? []).length > 0 || processes.some(p => p.target?.type === 'process') ? 1 : 0),
         countProcessesWithRecentUpdates: countProcessesWithRecentUpdates,
         totalUrgent: urgentProcessIds.size,
       },

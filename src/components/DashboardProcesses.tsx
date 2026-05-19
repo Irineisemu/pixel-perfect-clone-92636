@@ -290,7 +290,7 @@ export function DashboardProcesses() {
                 )}
               </h2>
               <span className="text-[11px] text-rose-500 font-normal ml-2 hidden sm:inline">
-                (Aqui está as ultimas movimentações dos seus processos)
+                (Aqui estão as últimas movimentações dos seus processos)
               </span>
             </div>
             <div className={`transition-transform duration-200 ${isMovementsExpanded ? 'rotate-180' : ''}`}>

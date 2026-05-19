@@ -136,9 +136,13 @@ export const createLawyerTarget = createServerFn({ method: "POST" })
 // ============================================================
 export const getDiscoveryStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({ targetId: z.string().uuid() }).parse(input),
-  )
+  .inputValidator((input: any) => {
+    const payload = input?.data ?? input;
+    if (!payload || typeof payload !== 'object') {
+      throw new Error("Dados de entrada inválidos.");
+    }
+    return z.object({ targetId: z.string().uuid() }).parse(payload);
+  })
   .handler(async ({ data, context }) => {
     // Confirma ownership
     const { data: target } = await supabaseAdmin

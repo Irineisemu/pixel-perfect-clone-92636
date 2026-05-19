@@ -85,7 +85,9 @@ function rowToUi(r: any) {
     active: r.is_active,
     createdAt: new Date(r.created_at).getTime(),
     full_name: r.full_name || "",
+    lawyer_name: r.lawyer_name || "",
     oab: r.oab || "",
+    oab_numbers: r.oab_numbers || [],
     qualification: r.qualification || "Outro",
     aliases: r.aliases || [],
     process_number: r.process_number || "",
@@ -95,8 +97,8 @@ function rowToUi(r: any) {
     class_codes: r.class_codes || [],
     keywords: r.keywords || [],
     against_state_only: !!r.against_state_only,
-    cpf: "", // never returned from db
-    notes: "", // not persisted
+    cpf: r.cpf_hash ? "CPF Cadastrado" : "", 
+    notes: "", 
     stats30d: 0,
     sparkline: [0, 0, 0, 0, 0, 0, 0],
   };

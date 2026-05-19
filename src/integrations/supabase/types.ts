@@ -448,6 +448,7 @@ export type Database = {
         Row: {
           complements: Json | null
           created_at: string
+          deadline: string | null
           id: string
           is_new: boolean | null
           movement_code: number | null
@@ -458,10 +459,12 @@ export type Database = {
           organ_name: string | null
           process_id: string
           raw_data: Json | null
+          urgency: string | null
         }
         Insert: {
           complements?: Json | null
           created_at?: string
+          deadline?: string | null
           id?: string
           is_new?: boolean | null
           movement_code?: number | null
@@ -472,10 +475,12 @@ export type Database = {
           organ_name?: string | null
           process_id: string
           raw_data?: Json | null
+          urgency?: string | null
         }
         Update: {
           complements?: Json | null
           created_at?: string
+          deadline?: string | null
           id?: string
           is_new?: boolean | null
           movement_code?: number | null
@@ -486,6 +491,7 @@ export type Database = {
           organ_name?: string | null
           process_id?: string
           raw_data?: Json | null
+          urgency?: string | null
         }
         Relationships: [
           {

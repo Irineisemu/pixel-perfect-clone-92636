@@ -301,8 +301,8 @@ export function DashboardProcesses() {
                 </button>
                 {isOabExpanded && (
                   <div className="mt-3 space-y-3 max-h-[400px] overflow-y-auto pr-1">
-                    {oabProcesses.map((p: any) => (
-                      <div key={p.id + p.target.id} id={`process-${p.id}`} className="border border-zinc-100 rounded-xl overflow-hidden bg-white shadow-sm">
+                    {oabProcesses.map((p: any, idx: number) => (
+                      <div key={p.id + p.target.id} id={`process-${p.id}`} className={idx !== 0 ? "border-t border-zinc-50" : ""}>
                         <ProcessCard
                           process={p}
                           isSyncing={syncingId === p.id}

@@ -309,7 +309,7 @@ export function DashboardProcesses() {
               )}
               {stats?.countProcessesWithUpdates > 0 && (
                 <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium animate-pulse">
-                  {stats.countProcessesWithUpdates} processo{stats.countProcessesWithUpdates > 1 ? "s" : ""} com novidades
+                  {stats.countProcessesWithUpdates} com movimentação recente
                 </span>
               )}
             </h2>

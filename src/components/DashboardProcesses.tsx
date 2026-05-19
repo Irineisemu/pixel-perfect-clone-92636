@@ -103,7 +103,7 @@ export function DashboardProcesses() {
   const handleSyncNow = async (processId: string) => {
     setSyncingId(processId);
     try {
-      const res: any = await syncNowFn({ data: { processId } });
+      const res: any = await syncNowFn({ processId });
       if (res?.ok) {
         toast.success("Sincronização concluída.");
         await load();

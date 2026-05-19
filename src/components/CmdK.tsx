@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { Icon } from "./Icon";
 import { supabase } from "@/integrations/supabase/client";
 

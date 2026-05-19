@@ -593,7 +593,7 @@ function TargetCard({ t, onEdit, onDuplicate, onDelete, onToggle }) {
 }
 
 function EmptyState({ filter, onCreate }) {
-  const labels: any = { todos: "Você ainda não tem alvos", person: "Nenhuma pessoa monitorada", process: "Nenhum processo específico", radar: "Nenhum radar de captação" };
+  const labels: any = { todos: "Você ainda não tem monitoramentos", person: "Nenhuma pessoa monitorada", process: "Nenhum processo específico", radar: "Nenhum radar de captação", lawyer: "Nenhum advogado monitorado" };
   return (
     <div className="rounded-lg border border-dashed border-zinc-200 bg-zinc-50/50 p-12 text-center">
       <div className="grid place-items-center mx-auto h-12 w-12 rounded-full bg-white border border-zinc-200">

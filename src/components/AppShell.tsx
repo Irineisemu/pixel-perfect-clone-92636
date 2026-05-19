@@ -62,8 +62,8 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
 
   const stats = useMemo(() => {
     const NOW = Date.now();
-    const novas24h = dashboardData?.stats?.totalNewMovements ?? movements.filter((m) => NOW - new Date(m.occurred_at).getTime() < 24 * 3600e3).length;
-    const urgentes = dashboardData?.stats?.countUrgentMovements ?? movements.filter((m) => m.urgency === "critical" || m.urgency === "high").length;
+    const novas24h = dashboardData?.stats?.countProcessesWithRecentUpdates ?? movements.filter((m) => NOW - new Date(m.occurred_at).getTime() < 24 * 3600e3).length;
+    const urgentes = dashboardData?.stats?.totalUrgent ?? movements.filter((m) => m.urgency === "critical" || m.urgency === "high").length;
     const tribunaisAtivos = tribunais.filter((t) => t.status === "ativo").length;
     const tribunaisAtrasados = tribunais.filter((t) => t.status !== "ativo").length;
     

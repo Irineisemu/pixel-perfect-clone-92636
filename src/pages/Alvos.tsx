@@ -827,14 +827,16 @@ export function Alvos() {
                           onDelete={() => setConfirm({ id: t.id, name: targetIdentifier(t).primary })}
                           onToggle={() => toggle(t.id)} />
                       ))}
-                    </div>
-                  </div>
-                )}
-              </section>
-            );
-          })}
-        </div>
-      )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </section>
+          );
+        })}
+      </div>
+    )}
 
       <CreateDrawer
         open={drawer.open}

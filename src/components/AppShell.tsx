@@ -76,7 +76,7 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
     
     return {
       totalMonitorado: dashboardData?.stats?.totalProcesses ?? targetsCount.activeProcesses,
-      totalAlvos: dashboardData?.stats?.totalLawyers ?? targetsCount.activeEntities,
+      totalAlvos: dashboardData?.stats?.totalAlvos ?? targetsCount.activeEntities,
       novas24h, urgentes,
       tribunaisAtivos, tribunaisTotal: tribunais.length, tribunaisAtrasados,
     };

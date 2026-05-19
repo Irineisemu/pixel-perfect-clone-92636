@@ -203,8 +203,8 @@ export function DashboardProcesses() {
   }
 
 
-  const { lawyers, processes, pendingProcesses = [], hasRunningDiscovery, recentNewMovements = [], stats } = data;
-
+  const { targets = [], processes, pendingProcesses = [], hasRunningDiscovery, recentNewMovements = [], stats } = data;
+  
   const oabProcesses = processes.filter((p: any) => p.target?.type === 'lawyer');
   const manualProcesses = processes.filter((p: any) => p.target?.type === 'process');
   const otherProcesses = processes.filter((p: any) => p.target?.type !== 'lawyer' && p.target?.type !== 'process');
@@ -225,56 +225,73 @@ export function DashboardProcesses() {
         </div>
       )}
 
-      {lawyers.length > 0 && (
-
-        <section>
-          <h2 className="text-sm font-semibold text-zinc-700 mb-2 px-1">Advogados monitorados</h2>
+      {targets.length > 0 && (
+        <section className="bg-zinc-50/50 rounded-xl border border-zinc-100 p-4 mb-2">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
+                <span className="p-1 rounded bg-zinc-900 text-white">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                </span>
+                Alvos de Descoberta
+              </h2>
+              <p className="text-[11px] text-zinc-500 mt-0.5">Fontes usadas para encontrar novos processos automaticamente (OABs, CPFs e Radares).</p>
+            </div>
+            <Link to="/alvos" className="text-[11px] font-medium text-zinc-600 hover:text-zinc-900 bg-white border border-zinc-200 px-2 py-1 rounded shadow-sm transition-all hover:shadow">Gerenciar alvos</Link>
+          </div>
           <div className="max-h-[300px] overflow-y-auto pr-1">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-1">
-              {lawyers.map((lw: any) => {
-                const st = statusLabel(lw.discovery_status);
-                const isRetrying = retryingId === lw.id;
+              {targets.map((t: any) => {
+                const st = statusLabel(t.discovery_status);
+                const isRetrying = retryingId === t.id;
+                
+                let title = t.lawyer_name || t.full_name || "Radar de Busca";
+                let subtitle = "";
+                
+                if (t.type === 'lawyer') {
+                  subtitle = `OAB: ${(t.oab_numbers ?? []).map(oab => formatOABDisplay(oab)).join(", ")}`;
+                } else if (t.type === 'person') {
+                  subtitle = "Monitoramento de Pessoa/CPF";
+                } else if (t.type === 'radar') {
+                  subtitle = "Radar de Captação";
+                }
+
                 return (
-                  <div key={lw.id} className="rounded-xl border border-zinc-200 bg-white p-4">
+                  <div key={t.id} className="rounded-xl border border-zinc-200 bg-white p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <div className="font-medium text-zinc-900 truncate">{lw.lawyer_name}</div>
-                          {lw.target_process_links?.[0]?.count !== undefined && (
+                          <div className="font-medium text-zinc-900 truncate">{title}</div>
+                          {t.target_process_links?.[0]?.count !== undefined && (
                             <span className="shrink-0 text-[10px] font-medium text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded-full">
-                              {lw.target_process_links[0].count} processos
+                              {t.target_process_links[0].count} processos
                             </span>
                           )}
                         </div>
                         <div className="mt-1 flex flex-wrap gap-1">
-                          {(lw.oab_numbers ?? []).map((oab: string) => (
-                            <span
-                              key={oab}
-                              className="inline-flex items-center px-1.5 py-0.5 rounded border border-zinc-200 bg-zinc-50 text-[11px] text-zinc-700"
-                            >
-                              OAB {formatOABDisplay(oab)}
-                            </span>
-                          ))}
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded border border-zinc-200 bg-zinc-50 text-[11px] text-zinc-700">
+                            {subtitle}
+                          </span>
                         </div>
                         <div className="mt-2">
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] ${st.cls}`}>
                             <span>{st.icon}</span>
                             <span>{st.text}</span>
                           </span>
-                          {lw.last_discovery_at && (
+                          {t.last_discovery_at && (
                             <span className="ml-2 text-[11px] text-zinc-500">
-                              · {new Date(lw.last_discovery_at).toLocaleString("pt-BR")}
+                              · {new Date(t.last_discovery_at).toLocaleString("pt-BR")}
                             </span>
                           )}
                         </div>
                       </div>
-                      {canRetry(lw.discovery_status) && (
+                      {canRetry(t.discovery_status) && (
                         <button
-                          onClick={() => handleRetry(lw.id)}
+                          onClick={() => handleRetry(t.id)}
                           disabled={isRetrying}
                           className="px-3 py-1.5 rounded-md bg-zinc-900 text-white text-[12px] font-medium hover:bg-zinc-800 disabled:opacity-50 flex-shrink-0"
                         >
-                          {isRetrying ? "Iniciando…" : "Buscar processos"}
+                          {isRetrying ? "Iniciando…" : "Sincronizar"}
                         </button>
                       )}
                     </div>
@@ -374,14 +391,14 @@ export function DashboardProcesses() {
         <section className="bg-white rounded-xl border border-zinc-200 overflow-hidden">
           <div className="p-10 text-center">
             <div className="text-3xl mb-2">📭</div>
-            {lawyers.length === 0 ? (
+            {targets.length === 0 ? (
               <>
-                <p className="text-sm text-zinc-600 mb-3">Nenhum processo monitorado ainda.</p>
+                <p className="text-sm text-zinc-600 mb-3">Nenhum processo ou alvo monitorado ainda.</p>
                 <Link
                   to="/alvos"
                   className="inline-block px-3 py-1.5 rounded-md bg-zinc-900 text-white text-[13px] font-medium hover:bg-zinc-800"
                 >
-                  Adicionar processo
+                  Adicionar alvo ou processo
                 </Link>
               </>
             ) : hasRunningDiscovery ? (
@@ -390,11 +407,25 @@ export function DashboardProcesses() {
               </p>
             ) : (
               <p className="text-sm text-zinc-600">
-                Nenhum processo vinculado ainda. Vá em <Link to="/alvos" className="underline">Alvos</Link> para adicionar.
+                Nenhum processo vinculado ainda. Vá em <Link to="/alvos" className="underline">Alvos</Link> para adicionar mais fontes.
               </p>
             )}
           </div>
         </section>
+      )}
+
+      {(manualProcesses.length > 0 || oabProcesses.length > 0 || otherProcesses.length > 0) && (
+        <div className="pt-2 px-1">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="p-1 rounded bg-zinc-200 text-zinc-700">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </span>
+            <div>
+              <h2 className="text-sm font-bold text-zinc-900">Monitoramentos Diretos</h2>
+              <p className="text-[11px] text-zinc-500">Processos específicos sendo acompanhados pelo número CNJ.</p>
+            </div>
+          </div>
+        </div>
       )}
 
       {manualProcesses.length > 0 && (

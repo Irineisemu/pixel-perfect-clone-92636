@@ -29,10 +29,10 @@ export const getDashboard = createServerFn({ method: "GET" })
     // we'll fetch and unique-ify or use a better query if needed. 
     // For now, let's fetch enough to show the unique ones.
 
-    const { data: lawyers } = await sb
+    const { data: targets } = await sb
       .from("monitoring_targets")
-      .select("id, lawyer_name, oab_numbers, discovery_status, last_discovery_at, created_at, target_process_links(count)")
-      .eq("type", "lawyer")
+      .select("id, lawyer_name, full_name, type, oab_numbers, discovery_status, last_discovery_at, created_at, target_process_links(count)")
+      .in("type", ["lawyer", "person", "radar"])
       .eq("is_active", true)
       .order("created_at", { ascending: false });
 
@@ -210,7 +210,7 @@ export const getDashboard = createServerFn({ method: "GET" })
         createdAt: t.created_at,
       }));
 
-    const hasRunningDiscovery = (lawyers ?? []).some(
+    const hasRunningDiscovery = (targets ?? []).some(
       (l: any) => l.discovery_status === "running" || l.discovery_status === "pending",
     );
     const hasPendingSync = processes.some(
@@ -220,11 +220,11 @@ export const getDashboard = createServerFn({ method: "GET" })
     return {
       stats: {
         totalProcesses: totalProcesses ?? 0,
-        totalLawyers: lawyers?.length ?? 0,
+        totalAlvos: (targets ?? []).length,
         countProcessesWithRecentUpdates: countProcessesWithRecentUpdates,
         totalUrgent: urgentProcessIds.size,
       },
-      lawyers: lawyers ?? [],
+      targets: targets ?? [],
       processes,
       pendingProcesses,
       recentNewMovements,

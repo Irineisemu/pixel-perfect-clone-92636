@@ -55,7 +55,8 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
     const tribunaisAtivos = tribunais.filter((t) => t.status === "ativo").length;
     const tribunaisAtrasados = tribunais.filter((t) => t.status !== "ativo").length;
     return {
-      totalMonitorado: targetsCount.active,
+      totalMonitorado: targetsCount.activeEntities,
+      totalProcessos: targetsCount.activeProcesses,
       novas24h, urgentes,
       tribunaisAtivos, tribunaisTotal: tribunais.length, tribunaisAtrasados,
     };

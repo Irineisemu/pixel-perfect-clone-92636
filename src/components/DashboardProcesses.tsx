@@ -216,17 +216,17 @@ export function DashboardProcesses() {
                 <div key={t.id} className="p-4 border border-zinc-100 bg-white rounded-2xl shadow-[0_2px_4px_rgba(0,0,0,0.02)] flex items-center justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-black text-[14px] text-zinc-900 truncate">{t.lawyer_name || t.full_name || "Radar"}</span>
+                      <span className="font-bold text-[14px] text-zinc-900 truncate">{t.lawyer_name || t.full_name || "Radar"}</span>
                       {t.target_process_links?.[0]?.count !== undefined && (
-                        <span className="text-[9px] font-black text-zinc-400 bg-zinc-50 px-1.5 py-0.5 rounded border border-zinc-100">{t.target_process_links[0].count}</span>
+                        <span className="text-[9px] font-bold text-zinc-500 bg-zinc-50 px-1.5 py-0.5 rounded border border-zinc-100">{t.target_process_links[0].count}</span>
                       )}
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[11px] text-zinc-400 font-bold truncate">{subtitle}</span>
-                      <span className={`text-[10px] font-black uppercase tracking-tighter ${st.cls.split(' ')[1]}`}>{st.text}</span>
+                      <span className="text-[11px] text-zinc-500 font-medium truncate">{subtitle}</span>
+                      <span className={`text-[10px] font-bold uppercase tracking-tighter ${st.cls.split(' ')[1]}`}>{st.text}</span>
                     </div>
                   </div>
-                  <button onClick={() => handleRetry(t.id)} disabled={isRetrying} className="h-8 px-3 rounded-lg bg-zinc-900 text-white text-[11px] font-black hover:bg-zinc-800 disabled:opacity-50">
+                  <button onClick={() => handleRetry(t.id)} disabled={isRetrying} className="h-8 px-3 rounded-lg bg-zinc-900 text-white text-[11px] font-bold hover:bg-zinc-800 disabled:opacity-50">
                     {isRetrying ? "..." : "SYNC"}
                   </button>
                 </div>

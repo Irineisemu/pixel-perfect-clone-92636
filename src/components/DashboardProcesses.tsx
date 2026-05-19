@@ -499,7 +499,7 @@ export function DashboardProcesses() {
         </section>
       )}
 
-      {(manualProcesses.length > 0 || oabProcesses.length > 0 || otherProcesses.length > 0) && (
+      {manualProcesses.length > 0 && (
         <div className="pt-2 px-1">
           <div className="flex items-center gap-2 mb-2">
             <span className="p-1 rounded bg-zinc-200 text-zinc-700">

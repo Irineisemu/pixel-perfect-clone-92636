@@ -293,8 +293,8 @@ export function DashboardProcesses() {
 
           <div className="space-y-1">
             {manualProcesses.length > 0 && (
-              <div className="overflow-hidden">
-                <button onClick={() => setIsManualExpanded(!isManualExpanded)} className="w-full text-left py-3 px-1 flex items-center justify-between border-b border-zinc-100 group">
+              <div className="overflow-hidden bg-white border border-zinc-100 rounded-2xl px-4 shadow-sm">
+                <button onClick={() => setIsManualExpanded(!isManualExpanded)} className={`w-full text-left py-4 flex items-center justify-between group ${isManualExpanded ? 'border-b border-zinc-50' : ''}`}>
                   <h2 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 group-hover:text-zinc-700 transition-colors">
                     Processos individuais
                     <span className="text-zinc-300">[{manualProcesses.length}]</span>

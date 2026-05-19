@@ -47,7 +47,7 @@ export function KpiRow({ stats }) {
 
       />
       <Kpi icon="activity" label="Novas mov. (24h)" value={stats.novas24h} hint="últimas 24 horas" />
-      <Kpi icon="alert-octagon" label="Urgentes pendentes" value={stats.urgentes} hint="prazos < 48h ou intimações" />
+      <Kpi icon="alert-octagon" label="Urgentes pendentes" value={stats.urgentes} hint="prazos < 48h ou intimações" isUrgent />
       <Kpi icon="bell" label="Tribunais ativos"
         value={`${stats.tribunaisAtivos}/${stats.tribunaisTotal}`}
         hint={stats.tribunaisAtrasados ? `${stats.tribunaisAtrasados} atrasado(s)` : "—"} />

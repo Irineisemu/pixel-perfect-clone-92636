@@ -319,7 +319,7 @@ export function DashboardProcesses() {
 
       {/* 3. ÚLTIMAS MOVIMENTAÇÕES */}
       {recentNewMovements.length > 0 && (
-        <section className="space-y-4">
+        <section className="bg-zinc-50/50 border border-zinc-100 rounded-[32px] p-5 md:p-8 space-y-6">
           <div className="flex items-center gap-3 px-1">
             <span className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center text-xs font-bold shadow-sm">3</span>
             <div>

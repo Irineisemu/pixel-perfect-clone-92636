@@ -6,7 +6,7 @@ function Kpi({ icon, label, value, hint, isUrgent, onClick }) {
   return (
     <div 
       onClick={onClick}
-      className={`rounded-lg border bg-white p-4 transition shadow-sm ${onClick ? "cursor-pointer" : ""} ${
+      className={`rounded-lg border bg-white p-4 transition shadow-sm ${onClick ? "cursor-pointer active:scale-95" : ""} ${
       isUrgent && value > 0 
         ? "border-rose-200 bg-rose-50/30 hover:border-rose-300" 
         : "border-zinc-200 hover:border-zinc-300"

@@ -631,6 +631,7 @@ export function Alvos() {
 
   const filtered = useMemo(() => {
     if (filter === "todos") return items;
+    if (filter === "person") return items.filter((t) => t.type === "person" || t.type === "radar");
     return items.filter((t) => t.type === filter);
   }, [items, filter]);
 
@@ -701,9 +702,8 @@ export function Alvos() {
         {[
           { id: "todos",   label: "Todos",     n: counters.total },
           { id: "process", label: "Processos", n: counters.process },
-          { id: "person",  label: "Pessoas/CPF",   n: counters.person },
+          { id: "person",  label: "Pessoas/CPF",   n: counters.person + counters.radar },
           { id: "lawyer",  label: "Advogados", n: counters.lawyer },
-          { id: "radar",   label: "Radares",   n: counters.radar },
         ].map((c) => (
           <button key={c.id} onClick={() => setFilter(c.id)} aria-pressed={filter === c.id}
             className={Utils.cx(
@@ -759,12 +759,11 @@ export function Alvos() {
       ) : (
         <div className="space-y-4">
           {[
-            { id: "process", label: "Processos", emoji: "📄" },
-            { id: "person", label: "Pessoas / CPF", emoji: "👤" },
-            { id: "lawyer", label: "OABs", emoji: "⚖️" },
-            { id: "radar", label: "Radares de captação", emoji: "📡" },
+            { id: "process", ids: ["process"], label: "Processos", emoji: "📄" },
+            { id: "person",  ids: ["person", "radar"], label: "Pessoas / CPF", emoji: "👤" },
+            { id: "lawyer",  ids: ["lawyer"], label: "OABs", emoji: "⚖️" },
           ].map((group) => {
-            const groupItems = items.filter(t => t.type === group.id);
+            const groupItems = items.filter(t => group.ids.includes(t.type));
             const isExpanded = expandedGroups[group.id];
 
             return (

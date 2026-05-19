@@ -97,6 +97,17 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
     return () => window.removeEventListener("toast", onToast);
   }, []);
 
+  useEffect(() => {
+    const onLocate = (e: any) => {
+      if (route !== "inicio") {
+        window.pendingLocateId = e.detail?.processId;
+        onNav("inicio");
+      }
+    };
+    window.addEventListener("locate-process", onLocate);
+    return () => window.removeEventListener("locate-process", onLocate);
+  }, [route]);
+
   return (
     <div className="min-h-screen bg-zinc-50/70 text-zinc-900">
       <Header route={route} onNav={onNav}

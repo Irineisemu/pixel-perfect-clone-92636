@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { Icon } from "./Icon";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -31,6 +32,7 @@ function Item({ icon, primary, secondary, onSelect }) {
 }
 
 export function CmdK({ open, onClose }) {
+  const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [processes, setProcesses] = useState([]);
   const inputRef = useRef(null);
@@ -40,27 +42,39 @@ export function CmdK({ open, onClose }) {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKey);
     setTimeout(() => inputRef.current?.focus(), 50);
-    (async () => {
-      const { data } = await supabase
-        .from("processes")
-        .select("id, process_number, class_name, organ_name")
-        .order("last_synced_at", { ascending: false })
-        .limit(50);
-      setProcesses(data || []);
-    })();
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  useEffect(() => {
+    if (!open) return;
+    
+    const fetchProcesses = async () => {
+      let query = supabase
+        .from("processes")
+        .select("id, process_number, class_name, organ_name")
+        .order("last_synced_at", { ascending: false });
+
+      if (q.trim()) {
+        const ql = q.trim().toLowerCase();
+        const digits = ql.replace(/\D/g, "");
+        
+        if (digits) {
+          query = query.or(`process_number.ilike.%${digits}%,class_name.ilike.%${ql}%,organ_name.ilike.%${ql}%`);
+        } else {
+          query = query.or(`class_name.ilike.%${ql}%,organ_name.ilike.%${ql}%`);
+        }
+      }
+
+      const { data } = await query.limit(20);
+      setProcesses(data || []);
+    };
+
+    const timer = setTimeout(fetchProcesses, 300);
+    return () => clearTimeout(timer);
+  }, [open, q]);
+
   if (!open) return null;
-  const ql = q.trim().toLowerCase();
-  const matches = processes.filter((p) => {
-    if (!ql) return true;
-    return (
-      (p.process_number || "").includes(ql.replace(/\D/g, "")) ||
-      (p.class_name || "").toLowerCase().includes(ql) ||
-      (p.organ_name || "").toLowerCase().includes(ql)
-    );
-  }).slice(0, 8);
+  const matches = processes;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-start justify-center pt-[12vh] px-4">
@@ -81,7 +95,10 @@ export function CmdK({ open, onClose }) {
                 <Item key={p.id} icon="hash"
                   primary={formatProcessNumber(p.process_number)}
                   secondary={[p.class_name, p.organ_name].filter(Boolean).join(" — ") || "—"}
-                  onSelect={onClose} />
+                  onSelect={() => {
+                    window.dispatchEvent(new CustomEvent("locate-process", { detail: { processId: p.id } }));
+                    onClose();
+                  }} />
               ))}
             </Group>
           ) : (

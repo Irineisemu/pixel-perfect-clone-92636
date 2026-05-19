@@ -226,10 +226,18 @@ export function DashboardProcesses() {
       )}
 
       {targets.length > 0 && (
-        <section>
-          <div className="flex items-center justify-between mb-2 px-1">
-            <h2 className="text-sm font-semibold text-zinc-700">Alvos Ativos</h2>
-            <Link to="/alvos" className="text-[11px] text-zinc-500 hover:text-zinc-900 underline">Gerenciar alvos</Link>
+        <section className="bg-zinc-50/50 rounded-xl border border-zinc-100 p-4 mb-2">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
+                <span className="p-1 rounded bg-zinc-900 text-white">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                </span>
+                Alvos de Descoberta
+              </h2>
+              <p className="text-[11px] text-zinc-500 mt-0.5">Fontes usadas para encontrar novos processos automaticamente (OABs, CPFs e Radares).</p>
+            </div>
+            <Link to="/alvos" className="text-[11px] font-medium text-zinc-600 hover:text-zinc-900 bg-white border border-zinc-200 px-2 py-1 rounded shadow-sm transition-all hover:shadow">Gerenciar alvos</Link>
           </div>
           <div className="max-h-[300px] overflow-y-auto pr-1">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-1">

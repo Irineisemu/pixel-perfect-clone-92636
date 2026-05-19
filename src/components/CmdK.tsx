@@ -32,6 +32,7 @@ function Item({ icon, primary, secondary, onSelect }) {
 }
 
 export function CmdK({ open, onClose }) {
+  const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [processes, setProcesses] = useState([]);
   const inputRef = useRef(null);

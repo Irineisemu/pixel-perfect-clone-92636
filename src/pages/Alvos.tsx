@@ -54,8 +54,9 @@ function StatusToggle({ active, onToggle }) {
 }
 
 function targetIdentifier(t) {
-  if (t.type === "person") return { primary: t.full_name, secondary: t.qualification + (t.aliases?.length ? ` · ${t.aliases.length} variação${t.aliases.length>1?"es":""}` : "") };
+  if (t.type === "person") return { primary: t.full_name, secondary: (t.cpf ? t.cpf + " · " : "") + t.qualification + (t.aliases?.length ? ` · ${t.aliases.length} variação${t.aliases.length>1?"es":""}` : "") };
   if (t.type === "process") return { primary: maskCNJ(t.process_number), secondary: `${t.tribunal_alias || "—"}${t.nickname ? ` · ${t.nickname}` : ""}`, mono: true };
+  if (t.type === "lawyer") return { primary: t.lawyer_name, secondary: `OAB: ${(t.oab_numbers || []).join(", ")}` };
   const tribunais = (t.tribunal_aliases || []).join(", ") || "Todos";
   const classes = (t.class_codes || []).slice(0, 2).join(" · ");
   const kw = (t.keywords || []).slice(0, 2).map((k) => `"${k}"`).join(" ");
@@ -620,10 +621,10 @@ export function Alvos() {
   const [drawer, setDrawer] = useState<any>({ open: false, mode: "create", initial: null });
   const [confirm, setConfirm] = useState<any>(null);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
-    process: false,
-    person: false,
-    lawyer: false,
-    radar: false
+    process: true,
+    person: true,
+    lawyer: true,
+    radar: true
   });
   const navigate = useNavigate();
   const createLawyer = useServerFn(createLawyerTarget);
@@ -699,8 +700,9 @@ export function Alvos() {
       <div className="flex flex-wrap items-center gap-2 mb-4">
         {[
           { id: "todos",   label: "Todos",     n: counters.total },
-          { id: "person",  label: "Pessoas",   n: counters.person },
           { id: "process", label: "Processos", n: counters.process },
+          { id: "person",  label: "Pessoas/CPF",   n: counters.person },
+          { id: "lawyer",  label: "Advogados", n: counters.lawyer },
           { id: "radar",   label: "Radares",   n: counters.radar },
         ].map((c) => (
           <button key={c.id} onClick={() => setFilter(c.id)} aria-pressed={filter === c.id}
@@ -763,7 +765,6 @@ export function Alvos() {
             { id: "radar", label: "Radares de captação", emoji: "📡" },
           ].map((group) => {
             const groupItems = items.filter(t => t.type === group.id);
-            if (groupItems.length === 0) return null;
             const isExpanded = expandedGroups[group.id];
 
             return (
@@ -790,7 +791,13 @@ export function Alvos() {
 
                 {isExpanded && (
                   <div className="border-t border-zinc-100">
-                    <div className="hidden lg:block overflow-hidden">
+                    {groupItems.length === 0 ? (
+                      <div className="p-8 text-center text-zinc-400 text-[13px]">
+                        Nenhum item cadastrado nesta categoria.
+                      </div>
+                    ) : (
+                      <>
+                        <div className="hidden lg:block overflow-hidden">
                       <table className="w-full text-left">
                         <thead className="bg-zinc-50/30 border-b border-zinc-100">
                           <tr className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
@@ -820,14 +827,16 @@ export function Alvos() {
                           onDelete={() => setConfirm({ id: t.id, name: targetIdentifier(t).primary })}
                           onToggle={() => toggle(t.id)} />
                       ))}
-                    </div>
-                  </div>
-                )}
-              </section>
-            );
-          })}
-        </div>
-      )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </section>
+          );
+        })}
+      </div>
+    )}
 
       <CreateDrawer
         open={drawer.open}

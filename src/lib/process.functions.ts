@@ -214,19 +214,10 @@ const ListMovementsSchema = z.object({
 export const listProcessMovements = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: any) => {
-    console.log("[listProcessMovements] inputValidator received:", JSON.stringify(input));
-    // TanStack Start might wrap the input in a 'data' property or pass it directly
-    // Or it might be the input directly.
-    let payload = input;
-    if (input && typeof input === 'object' && 'data' in input) {
-      payload = input.data;
+    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : input;
+    if (!payload || typeof payload !== 'object') {
+      throw new Error("Parâmetros de entrada inválidos.");
     }
-    
-    if (!payload) {
-      console.error("[listProcessMovements] No payload found in input");
-      throw new Error("Dados de entrada ausentes.");
-    }
-    
     return ListMovementsSchema.parse(payload);
   })
   .handler(async ({ data, context }) => {

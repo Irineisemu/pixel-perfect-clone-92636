@@ -48,19 +48,31 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
     })();
   }, []);
 
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  useEffect(() => {
+    let active = true;
+    import("@/lib/dashboard.functions").then(({ getDashboard }) => {
+      getDashboard().then((res) => {
+        if (active) setDashboardData(res);
+      });
+    });
+    return () => { active = false; };
+  }, []);
+
   const stats = useMemo(() => {
     const NOW = Date.now();
-    const novas24h = movements.filter((m) => NOW - new Date(m.occurred_at).getTime() < 24 * 3600e3).length;
+    const novas24h = dashboardData?.stats?.totalNewMovements ?? movements.filter((m) => NOW - new Date(m.occurred_at).getTime() < 24 * 3600e3).length;
     const urgentes = movements.filter((m) => m.urgency === "critical" || m.urgency === "high").length;
     const tribunaisAtivos = tribunais.filter((t) => t.status === "ativo").length;
     const tribunaisAtrasados = tribunais.filter((t) => t.status !== "ativo").length;
+    
     return {
-      totalMonitorado: targetsCount.activeEntities,
-      totalProcessos: targetsCount.activeProcesses,
+      totalMonitorado: dashboardData?.stats?.totalProcesses ?? targetsCount.activeProcesses,
+      totalAlvos: dashboardData?.stats?.totalLawyers ?? targetsCount.activeEntities,
       novas24h, urgentes,
       tribunaisAtivos, tribunaisTotal: tribunais.length, tribunaisAtrasados,
     };
-  }, [movements, tribunais, targetsCount.activeEntities, targetsCount.activeProcesses]);
+  }, [movements, tribunais, dashboardData, targetsCount]);
 
   const [selected, setSelected] = useState(null);
   const [cmdkOpen, setCmdkOpen] = useState(false);

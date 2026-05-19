@@ -406,6 +406,12 @@ export function DashboardProcesses() {
         </section>
       )}
 
+      {(manualProcesses.length > 0 || oabProcesses.length > 0 || otherProcesses.length > 0) && (
+        <div className="pt-2 px-1">
+          <h2 className="text-sm font-semibold text-zinc-700">Monitoramentos Diretos</h2>
+        </div>
+      )}
+
       {manualProcesses.length > 0 && (
         <section className="bg-white rounded-xl border border-zinc-200 overflow-hidden transition-all">
           <button

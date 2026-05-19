@@ -24,9 +24,11 @@ export function ProcessMovementsTree({ processId }: { processId: string }) {
     setError(null);
     try {
       const res: any = await fetchMovements({
-        processId,
-        page: nextPage,
-        pageSize: PAGE_SIZE,
+        data: {
+          processId,
+          page: nextPage,
+          pageSize: PAGE_SIZE,
+        }
       });
 
       console.log("[ProcessMovementsTree] Response:", res);

@@ -154,9 +154,9 @@ const SyncNowSchema = z.object({
 export const syncProcessNow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: any) => {
-    const payload = input?.data ?? input;
+    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : input;
     if (!payload || typeof payload !== 'object') {
-      throw new Error("Dados de entrada inválidos.");
+      throw new Error("Parâmetros de entrada inválidos.");
     }
     return SyncNowSchema.parse(payload);
   })

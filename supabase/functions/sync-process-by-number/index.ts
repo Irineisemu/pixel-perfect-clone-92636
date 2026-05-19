@@ -213,12 +213,18 @@ const ACCENT_FIXES: Record<string, string> = {
   "DE": "de",
   "DO": "do",
   "E": "e",
+  "DEFINITIVO": "Arquivamento Definitivo",
 };
 
-function cleanDataJudText(input: any): any {
+function cleanDataJudText(input: any, code?: number): any {
   if (input == null) return input;
-  if (Array.isArray(input)) return input.map(cleanDataJudText);
+  if (Array.isArray(input)) return input.map((item) => cleanDataJudText(item, code));
   if (typeof input !== "string") return input;
+
+  // Se o código for 246 (Baixa) e o nome for "Definitivo", expandimos para algo claro.
+  if (code === 246 && input.toUpperCase().trim() === "DEFINITIVO") {
+    return "Arquivamento Definitivo";
+  }
 
   // Remove a sequência mojibake "ï¿½" (3 chars) e o próprio U+FFFD
   let s = input.replace(/ï¿½/g, "").replace(/\uFFFD/g, "");

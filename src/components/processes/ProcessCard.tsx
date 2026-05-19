@@ -55,7 +55,9 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow, isHighlighted }:
   const [showSummary, setShowSummary] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
 
-  const hasNew = (p.newMovementsCount ?? 0) > 0;
+  const lastMovementDate = p.lastMovementAt ? new Date(p.lastMovementAt) : null;
+  const isRecent = lastMovementDate && (Date.now() - lastMovementDate.getTime()) < 24 * 60 * 60 * 1000;
+  const hasNew = isRecent;
   const notFound = p.syncStatus === "not_found";
   const failed = p.syncStatus === "failed";
   const pending = p.syncStatus === "pending";

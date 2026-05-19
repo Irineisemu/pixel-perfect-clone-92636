@@ -759,12 +759,11 @@ export function Alvos() {
       ) : (
         <div className="space-y-4">
           {[
-            { id: "process", label: "Processos", emoji: "📄" },
-            { id: "person", label: "Pessoas / CPF", emoji: "👤" },
-            { id: "lawyer", label: "OABs", emoji: "⚖️" },
-            { id: "radar", label: "Pessoas / CPF", emoji: "👤" },
+            { id: "process", ids: ["process"], label: "Processos", emoji: "📄" },
+            { id: "person",  ids: ["person", "radar"], label: "Pessoas / CPF", emoji: "👤" },
+            { id: "lawyer",  ids: ["lawyer"], label: "OABs", emoji: "⚖️" },
           ].map((group) => {
-            const groupItems = items.filter(t => t.type === group.id);
+            const groupItems = items.filter(t => group.ids.includes(t.type));
             const isExpanded = expandedGroups[group.id];
 
             return (

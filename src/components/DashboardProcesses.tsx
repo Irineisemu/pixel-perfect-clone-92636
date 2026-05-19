@@ -64,6 +64,16 @@ export function DashboardProcesses() {
       }
     }, 150);
   };
+  
+  useEffect(() => {
+    const onLocate = (e: any) => {
+      if (e.detail?.processId) {
+        locateProcess(e.detail.processId);
+      }
+    };
+    window.addEventListener("locate-process", onLocate);
+    return () => window.removeEventListener("locate-process", onLocate);
+  }, []);
 
 
   

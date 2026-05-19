@@ -13,10 +13,6 @@ export const getDashboard = createServerFn({ method: "GET" })
     const sb = context.supabase;
 
     // 1. Get total counts directly for accurate stats
-    const { data: counts } = await sb.rpc('get_dashboard_stats');
-    // If RPC doesn't exist, we'll fall back to manual queries or just use what we have, 
-    // but let's check if we can add an RPC or just do the queries here.
-    
     const { count: totalProcesses } = await sb
       .from("target_process_links")
       .select("*", { count: "exact", head: true })
@@ -161,8 +157,6 @@ export const getDashboard = createServerFn({ method: "GET" })
         };
       });
     }
-
-    const totalNew = processes.reduce((sum, p) => sum + (p.newMovementsCount || 0), 0);
 
     // Process-type targets pending scrape (still not linked to a process row)
     const linkedTargetIds = new Set(((linkRows ?? []) as any[]).map((r) => r.target.id));

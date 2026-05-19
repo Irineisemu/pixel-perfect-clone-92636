@@ -19,10 +19,8 @@ export const getDashboard = createServerFn({ method: "GET" })
       .is("unlinked_at", null);
 
     // 1. Get total count of processes with new movements
-    const { count: totalProcessesWithUpdates } = await sb
-      .from("process_movements")
-      .select("process_id", { count: "exact", head: true })
-      .eq("is_new", true);
+    // Note: totalNewMovements is now calculated by processes with at least one new movement
+    // in the grouping logic below.
     // Note: head: true and count: exact with select("process_id") doesn't do distinct naturally in PostgREST.
     // However, to keep it simple and accurate based on what the user expects (unique items in the list), 
     // we'll fetch and unique-ify or use a better query if needed. 

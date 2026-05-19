@@ -54,8 +54,9 @@ function StatusToggle({ active, onToggle }) {
 }
 
 function targetIdentifier(t) {
-  if (t.type === "person") return { primary: t.full_name, secondary: t.qualification + (t.aliases?.length ? ` · ${t.aliases.length} variação${t.aliases.length>1?"es":""}` : "") };
+  if (t.type === "person") return { primary: t.full_name, secondary: (t.cpf ? t.cpf + " · " : "") + t.qualification + (t.aliases?.length ? ` · ${t.aliases.length} variação${t.aliases.length>1?"es":""}` : "") };
   if (t.type === "process") return { primary: maskCNJ(t.process_number), secondary: `${t.tribunal_alias || "—"}${t.nickname ? ` · ${t.nickname}` : ""}`, mono: true };
+  if (t.type === "lawyer") return { primary: t.lawyer_name, secondary: `OAB: ${(t.oab_numbers || []).join(", ")}` };
   const tribunais = (t.tribunal_aliases || []).join(", ") || "Todos";
   const classes = (t.class_codes || []).slice(0, 2).join(" · ");
   const kw = (t.keywords || []).slice(0, 2).map((k) => `"${k}"`).join(" ");

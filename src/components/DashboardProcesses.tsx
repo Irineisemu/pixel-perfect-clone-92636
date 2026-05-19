@@ -162,9 +162,9 @@ export function DashboardProcesses() {
   if (error || !data) {
     return (
       <div className="rounded-xl border border-rose-100 bg-rose-50/30 p-8 text-sm text-rose-700">
-        <h3 className="font-bold mb-2">Erro ao carregar painel</h3>
+        <h3 className="font-semibold mb-2">Erro ao carregar painel</h3>
         <p className="mb-4 text-rose-600/80">{error || "Não foi possível recuperar os dados."}</p>
-        <button onClick={() => { setLoading(true); load(); }} className="px-4 py-2 bg-rose-600 text-white rounded-lg font-bold">
+        <button onClick={() => { setLoading(true); load(); }} className="px-4 py-2 bg-rose-600 text-white rounded-lg font-semibold">
           Tentar novamente
         </button>
       </div>

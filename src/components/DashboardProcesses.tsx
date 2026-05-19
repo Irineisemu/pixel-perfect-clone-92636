@@ -230,7 +230,7 @@ export function DashboardProcesses() {
             <div className="flex items-center gap-2">
               <span className="inline-block h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
               <h2 className="text-sm font-semibold text-zinc-700">
-                Novas movimentações detectadas
+                Últimas movimentações detectadas
                 <span className="ml-2 text-rose-600 font-bold bg-rose-100 px-1.5 py-0.5 rounded text-xs">
                   {stats?.totalNewMovements ?? recentNewMovements.length}
                 </span>

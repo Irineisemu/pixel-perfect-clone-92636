@@ -11,17 +11,8 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-  const authHeader = req.headers.get("Authorization");
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
-  }
-
-  // Enforce service_role key for internal sync operations
-  if (authHeader !== `Bearer ${serviceKey}`) {
-    console.error("[sync] Unauthorized attempt with header:", authHeader?.slice(0, 15) + "...");
-    return jsonResponse(401, { error: "unauthorized" });
   }
 
   let body: { processNumber?: string; targetId?: string; isInitialSync?: boolean };
@@ -36,6 +27,7 @@ Deno.serve(async (req) => {
 
   const apiKey = Deno.env.get("DATAJUD_API_KEY");
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   if (!apiKey) {
     return jsonResponse(500, {
       error: "datajud_key_missing",

@@ -233,9 +233,9 @@ export function DashboardProcesses() {
                 <span className="p-1 rounded bg-zinc-900 text-white">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
                 </span>
-                Alvos de Descoberta
+                1. Alvos de Descoberta
               </h2>
-              <p className="text-[11px] text-zinc-500 mt-0.5">Fontes usadas para encontrar novos processos automaticamente (OABs, CPFs e Radares).</p>
+              <p className="text-[11px] text-zinc-500 mt-0.5">Fontes usadas para encontrar novos processos automaticamente.</p>
             </div>
             <Link to="/alvos" className="text-[11px] font-medium text-zinc-600 hover:text-zinc-900 bg-white border border-zinc-200 px-2 py-1 rounded shadow-sm transition-all hover:shadow">Gerenciar alvos</Link>
           </div>

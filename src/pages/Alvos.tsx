@@ -532,7 +532,14 @@ function TargetRow({ t, onEdit, onDuplicate, onDelete, onToggle }) {
     <tr onClick={onEdit} className="group cursor-pointer border-b border-zinc-100 hover:bg-zinc-50/70 transition">
       <td className="py-3 pl-4 pr-2 align-middle"><TypeBadge type={t.type} /></td>
       <td className="py-3 px-3 align-middle min-w-0">
-        <div className={Utils.cx("text-[13px] text-zinc-900 truncate", id.mono && "font-mono tabular-nums")}>{id.primary}</div>
+        <div className="flex items-center gap-2">
+          <div className={Utils.cx("text-[13px] text-zinc-900 truncate", id.mono && "font-mono tabular-nums")}>{id.primary}</div>
+          {id.processCount !== undefined && t.type === 'lawyer' && (
+            <span className="shrink-0 text-[10px] font-medium text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded-full">
+              {id.processCount} processos
+            </span>
+          )}
+        </div>
         {id.secondary && <div className="text-[11.5px] text-zinc-500 truncate mt-0.5">{id.secondary}</div>}
       </td>
       <td className="py-3 px-3 align-middle">

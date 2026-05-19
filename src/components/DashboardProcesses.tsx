@@ -45,6 +45,25 @@ export function DashboardProcesses() {
   const [isMovementsExpanded, setIsMovementsExpanded] = useState(false);
   const [isPendingExpanded, setIsPendingExpanded] = useState(false);
   const [isProcessesExpanded, setIsProcessesExpanded] = useState(false);
+  const [highlightedProcessId, setHighlightedProcessId] = useState<string | null>(null);
+
+  const locateProcess = (processId: string) => {
+    setIsProcessesExpanded(true);
+    setHighlightedProcessId(processId);
+    
+    // Pequeno delay para garantir que a aba de processos esteja aberta e renderizada
+    setTimeout(() => {
+      const el = document.getElementById(`process-${processId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        
+        // Remove o destaque após 3 segundos
+        setTimeout(() => {
+          setHighlightedProcessId(null);
+        }, 3000);
+      }
+    }, 150);
+  };
 
 
   
@@ -235,9 +254,13 @@ export function DashboardProcesses() {
                 Elas aparecerão aqui até a próxima sincronização geral.
               </div>
               {recentNewMovements.map((m: any) => (
-                <div key={m.id} className="p-3 px-4 flex items-start justify-between gap-3 hover:bg-rose-50/30 transition-colors">
+                <button 
+                  key={m.id} 
+                  onClick={() => locateProcess(m.processId)}
+                  className="w-full text-left p-3 px-4 flex items-start justify-between gap-3 hover:bg-rose-50 transition-colors group"
+                >
                   <div className="min-w-0">
-                    <div className="text-[13px] font-medium text-zinc-900 leading-snug">{m.movementName}</div>
+                    <div className="text-[13px] font-medium text-zinc-900 leading-snug group-hover:text-rose-700 transition-colors">{m.movementName}</div>
                     <div className="mt-1 text-[11.5px] text-zinc-600 flex flex-wrap items-center gap-x-2">
                       <span className="font-mono text-zinc-900 font-medium">{m.processNumber}</span>
                       <span className="text-zinc-300">|</span>
@@ -250,10 +273,16 @@ export function DashboardProcesses() {
                       )}
                     </div>
                   </div>
-                  <div className="text-[11px] text-zinc-500 flex-shrink-0 font-medium whitespace-nowrap bg-zinc-100 px-1.5 py-0.5 rounded">
-                    {new Date(m.occurredAt).toLocaleDateString("pt-BR")}
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    <div className="text-[11px] text-zinc-500 font-medium whitespace-nowrap bg-zinc-100 px-1.5 py-0.5 rounded">
+                      {new Date(m.occurredAt).toLocaleDateString("pt-BR")}
+                    </div>
+                    <span className="text-[10px] text-rose-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+                      Ver processo
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                    </span>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}
@@ -316,12 +345,14 @@ export function DashboardProcesses() {
             ) : (
               <div className="divide-y divide-zinc-100">
                 {processes.map((p: any) => (
-                  <ProcessCard
-                    key={p.id + p.target.id}
-                    process={p}
-                    isSyncing={syncingId === p.id}
-                    onSyncNow={handleSyncNow}
-                  />
+                  <div key={p.id + p.target.id} id={`process-${p.id}`}>
+                    <ProcessCard
+                      process={p}
+                      isSyncing={syncingId === p.id}
+                      onSyncNow={handleSyncNow}
+                      isHighlighted={highlightedProcessId === p.id}
+                    />
+                  </div>
                 ))}
               </div>
             )}

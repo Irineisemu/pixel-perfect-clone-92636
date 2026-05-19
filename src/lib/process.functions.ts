@@ -28,10 +28,7 @@ function maskCNJ(value: string): string {
 export const createProcessTargets = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: any) => {
-    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : input;
-    if (!payload || typeof payload !== 'object') {
-      throw new Error("Parâmetros de entrada inválidos.");
-    }
+    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : (input ?? {});
     return CreateProcessSchema.parse(payload);
   })
   .handler(async ({ data, context }) => {
@@ -154,10 +151,7 @@ const SyncNowSchema = z.object({
 export const syncProcessNow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: any) => {
-    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : input;
-    if (!payload || typeof payload !== 'object') {
-      throw new Error("Parâmetros de entrada inválidos.");
-    }
+    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : (input ?? {});
     return SyncNowSchema.parse(payload);
   })
   .handler(async ({ data, context }) => {
@@ -214,10 +208,7 @@ const ListMovementsSchema = z.object({
 export const listProcessMovements = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: any) => {
-    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : input;
-    if (!payload || typeof payload !== 'object') {
-      throw new Error("Parâmetros de entrada inválidos.");
-    }
+    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : (input ?? {});
     return ListMovementsSchema.parse(payload);
   })
   .handler(async ({ data, context }) => {
@@ -254,4 +245,77 @@ export const listProcessMovements = createServerFn({ method: "POST" })
       page,
       pageSize,
     };
+  });
+
+export const syncAll = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const sb = context.supabase;
+    const userId = context.userId;
+    const supabaseUrl = process.env.SUPABASE_URL!;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+    // 1. Gatilha redescoberta para todos os alvos OAB/Pessoa ativos do usuário
+    const { data: targets } = await sb
+      .from("monitoring_targets")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("is_active", true)
+      .in("type", ["lawyer", "person"]);
+
+    for (const t of targets ?? []) {
+      // Usamos fetch interno para a função triggerRediscovery (que está em lawyer.functions)
+      // Ou simplesmente duplicamos a lógica de enfileirar o job aqui para ser mais eficiente
+      // Para manter DRY, vamos enfileirar diretamente
+      const { data: run } = await sb
+        .from("discovery_runs")
+        .insert({
+          target_id: t.id,
+          user_id: userId,
+          status: "running",
+          triggered_by: "manual",
+        })
+        .select("id")
+        .single();
+
+      if (run) {
+        await sb.from("monitoring_targets").update({ discovery_status: "running" }).eq("id", t.id);
+        
+        // Pega as OABs para o payload
+        const { data: tData } = await sb.from("monitoring_targets").select("oab_numbers").eq("id", t.id).single();
+
+        await sb.from("ingestion_jobs").insert({
+          process_number: `LAWYER:${t.id}`,
+          tribunal: "TJRJ",
+          target_ids: [t.id],
+          priority: 6,
+          kind: "lawyer_discovery",
+          scheduled_for: new Date().toISOString(),
+          payload: {
+            kind: "lawyer_discovery",
+            targetId: t.id,
+            runId: run.id,
+            oabs: tData?.oab_numbers ?? [],
+            triggeredBy: "manual",
+          },
+        });
+      }
+    }
+
+    // 2. Chama a edge function sync-all-processes para os processos manuais
+    // Nota: a edge function atual no banco filtra por targets de tipo 'process'
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/sync-all-processes`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${serviceKey}`,
+        },
+        body: JSON.stringify({ userId }), // A edge function pode ser atualizada para filtrar por user
+      });
+    } catch (err) {
+      console.error("[syncAll] sync-all-processes edge function failed:", err);
+    }
+
+    return { ok: true };
   });

@@ -15,13 +15,20 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const admin = createClient(supabaseUrl, serviceKey);
+  const { userId } = await req.json().catch(() => ({}));
 
-  const { data: targets, error } = await admin
+  let query = admin
     .from("monitoring_targets")
     .select("id, process_number")
     .eq("type", "process")
     .eq("is_active", true)
     .not("process_number", "is", null);
+
+  if (userId) {
+    query = query.eq("user_id", userId);
+  }
+
+  const { data: targets, error } = await query;
 
   if (error) {
     console.error("[sync-all] query error:", error.message);

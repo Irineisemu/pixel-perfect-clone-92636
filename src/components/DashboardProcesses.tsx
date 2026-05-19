@@ -149,8 +149,8 @@ export function DashboardProcesses() {
         </div>
       )}
 
-
       {lawyers.length > 0 && (
+
         <section>
           <h2 className="text-sm font-semibold text-zinc-700 mb-2 px-1">Advogados monitorados</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

@@ -18,11 +18,25 @@ function Kpi({ icon, label, value, hint }) {
 }
 
 export function KpiRow({ stats }) {
+  const hasProcesses = stats.totalProcessos > 0;
+  
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      <Kpi icon="layers" label="Total monitorado"
+      <Kpi 
+        icon="layers" 
+        label="Monitoramento"
         value={stats.totalMonitorado.toLocaleString("pt-BR")}
-        hint={stats.totalMonitorado === 1 ? "alvo ativo" : "alvos ativos"} />
+        hint={
+          <div className="flex flex-col">
+            <span>{stats.totalMonitorado === 1 ? "alvo ativo" : "alvos ativos"}</span>
+            {hasProcesses && (
+              <span className="text-[10px] text-zinc-400">
+                + {stats.totalProcessos} processo{stats.totalProcessos !== 1 ? 's' : ''} avulso{stats.totalProcessos !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+        } 
+      />
       <Kpi icon="activity" label="Novas mov. (24h)" value={stats.novas24h} hint="últimas 24 horas" />
       <Kpi icon="alert-octagon" label="Urgentes pendentes" value={stats.urgentes} hint="prazos < 48h ou intimações" />
       <Kpi icon="bell" label="Tribunais ativos"

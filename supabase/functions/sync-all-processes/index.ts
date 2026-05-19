@@ -8,12 +8,20 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
+  const authHeader = req.headers.get("Authorization");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Enforce service_role key for internal sync operations
+  if (authHeader !== `Bearer ${serviceKey}`) {
+    console.error("[sync-all] Unauthorized attempt");
+    return jsonResponse(401, { error: "unauthorized" });
+  }
+
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const admin = createClient(supabaseUrl, serviceKey);
   const { userId } = await req.json().catch(() => ({}));
 

@@ -142,12 +142,12 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow, isHighlighted }:
         <div className={`mt-3 rounded-lg border-l-2 ${hasNew ? "border-rose-400 bg-rose-50/40" : "border-sky-300 bg-sky-50/40"} px-3 py-2`}>
           <div className="flex items-baseline justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
+              <div className="text-[10px] font-medium uppercase tracking-wider text-zinc-600 flex items-center gap-1.5">
                 <span>Última movimentação</span>
                 <span className="text-zinc-300 font-normal select-none">•</span>
-                <span className="text-zinc-500 font-medium normal-case">{formatDateBR(p.lastMovement.occurredAt)}</span>
+                <span className="text-zinc-600 font-semibold normal-case">{formatDateBR(p.lastMovement.occurredAt)}</span>
               </div>
-              <div className="mt-0.5 text-[13px] font-medium text-zinc-900 truncate">
+              <div className="mt-0.5 text-[13px] font-semibold text-zinc-900 truncate">
                 {p.lastMovement.name}
               </div>
             </div>

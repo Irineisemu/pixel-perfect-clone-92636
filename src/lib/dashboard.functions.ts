@@ -153,6 +153,7 @@ export const getDashboard = createServerFn({ method: "GET" })
       const seenProcesses = new Set();
       
       for (const m of (movs ?? []) as any[]) {
+        totalNewMovementsCount++;
         if (!seenProcesses.has(m.process_id)) {
           seenProcesses.add(m.process_id);
           const p = procById.get(m.process_id);
@@ -165,10 +166,16 @@ export const getDashboard = createServerFn({ method: "GET" })
             processNumber: p?.displayNumber,
             processClass: p?.className,
           });
-          if (recentNewMovements.length >= 20) break;
+          // We still want to count all, so we don't break yet, 
+          // but we only add to recentNewMovements up to 20 unique processes
         }
       }
       countProcessesWithUpdates = seenProcesses.size;
+      // Truncate the list for display if needed (though we already break in a sense if we wanted 20)
+      // Actually, if we want 20 unique ones, we should continue until we have 20.
+      if (recentNewMovements.length > 20) {
+        recentNewMovements = recentNewMovements.slice(0, 20);
+      }
     }
 
     // Process-type targets pending scrape (still not linked to a process row)

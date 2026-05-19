@@ -702,9 +702,8 @@ export function Alvos() {
         {[
           { id: "todos",   label: "Todos",     n: counters.total },
           { id: "process", label: "Processos", n: counters.process },
-          { id: "person",  label: "Pessoas/CPF",   n: counters.person },
+          { id: "person",  label: "Pessoas/CPF",   n: counters.person + counters.radar },
           { id: "lawyer",  label: "Advogados", n: counters.lawyer },
-          { id: "radar",   label: "Radares",   n: counters.radar },
         ].map((c) => (
           <button key={c.id} onClick={() => setFilter(c.id)} aria-pressed={filter === c.id}
             className={Utils.cx(

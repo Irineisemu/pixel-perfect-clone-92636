@@ -147,7 +147,10 @@ const SyncNowSchema = z.object({
 
 export const syncProcessNow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => SyncNowSchema.parse(data))
+  .inputValidator((input: any) => {
+    const payload = input?.data ?? input;
+    return SyncNowSchema.parse(payload);
+  })
   .handler(async ({ data, context }) => {
     const sb = context.supabase;
     const userId = context.userId;

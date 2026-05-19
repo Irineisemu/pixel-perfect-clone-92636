@@ -167,7 +167,7 @@ export const getDashboard = createServerFn({ method: "GET" })
           if (isRecent) countProcessesWithRecentUpdates++;
           
           if (m.urgency === 'critical' || m.urgency === 'high') {
-            countUrgentMovements++;
+            urgentProcessIds.add(m.process_id);
           }
 
           if (recentNewMovements.length < 20) {

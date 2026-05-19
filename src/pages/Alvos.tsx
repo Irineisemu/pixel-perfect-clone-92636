@@ -746,7 +746,7 @@ export function Alvos() {
               </tbody>
             </table>
           </div>
-          <div className="lg:hidden grid gap-2">
+          <div className="lg:hidden grid gap-2 max-h-[600px] overflow-y-auto pr-1">
             {filtered.map((t) => (
               <TargetCard key={t.id} t={t}
                 onEdit={() => setDrawer({ open: true, mode: "edit", initial: t })}

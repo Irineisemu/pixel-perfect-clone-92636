@@ -149,31 +149,6 @@ export function DashboardProcesses() {
         </div>
       )}
 
-      {pendingProcesses.length > 0 && (
-        <section>
-          <h2 className="text-sm font-semibold text-zinc-700 mb-2 px-1 flex items-center gap-2">
-            <span className="inline-block h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-            Processos em busca
-            <span className="text-zinc-500 font-normal">({pendingProcesses.length})</span>
-          </h2>
-          <div className="rounded-xl border border-amber-200 bg-amber-50/40 divide-y divide-amber-100">
-            {pendingProcesses.map((p: any) => (
-              <div key={p.targetId} className="p-3 flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="text-[13px] font-medium text-zinc-900 font-mono">{p.displayNumber}</div>
-                  <div className="mt-0.5 text-[11.5px] text-zinc-600">
-                    {p.tribunal}
-                    {p.nickname && <span> · {p.nickname}</span>}
-                  </div>
-                </div>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-amber-200 bg-amber-50 text-amber-700 text-[11px] flex-shrink-0">
-                  ⏳ Buscando no TJRJ/PJe
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
 
       {lawyers.length > 0 && (
         <section>

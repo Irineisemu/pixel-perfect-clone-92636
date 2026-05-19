@@ -68,7 +68,7 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow, isHighlighted }:
       {/* Header — meta tags em cima, número grande, classe/órgão como subtítulo */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+          <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-zinc-600">
             <span className="px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600">{p.tribunal}</span>
             {p.instanceLabel && (
               <span className="px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600">{p.instanceLabel}</span>

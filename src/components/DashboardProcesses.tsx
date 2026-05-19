@@ -261,7 +261,12 @@ export function DashboardProcesses() {
                   className="w-full text-left p-3 px-4 flex items-start justify-between gap-3 hover:bg-rose-50 transition-colors group"
                 >
                   <div className="min-w-0">
-                    <div className="text-[13px] font-medium text-zinc-900 leading-snug group-hover:text-rose-700 transition-colors">{m.movementName}</div>
+                    <div className="text-[13px] font-medium text-zinc-900 leading-snug group-hover:text-rose-700 transition-colors flex items-center gap-2">
+                      {m.movementName}
+                      {m.isRecent && (
+                        <span className="px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-600 text-[10px] font-bold animate-pulse">NOVO</span>
+                      )}
+                    </div>
                     <div className="mt-1 text-[11.5px] text-zinc-600 flex flex-wrap items-center gap-x-2">
                       <span className="font-mono text-zinc-900 font-medium">{m.processNumber}</span>
                       <span className="text-zinc-300">|</span>

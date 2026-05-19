@@ -60,7 +60,7 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
       novas24h, urgentes,
       tribunaisAtivos, tribunaisTotal: tribunais.length, tribunaisAtrasados,
     };
-  }, [movements, tribunais, targetsCount.active]);
+  }, [movements, tribunais, targetsCount.activeEntities, targetsCount.activeProcesses]);
 
   const [selected, setSelected] = useState(null);
   const [cmdkOpen, setCmdkOpen] = useState(false);

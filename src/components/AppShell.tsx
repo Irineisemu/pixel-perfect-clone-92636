@@ -1,10 +1,12 @@
 // @ts-nocheck
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTargets } from "../lib/useTargets";
 import { useAuth } from "../lib/auth";
+import { getDashboard } from "@/lib/dashboard.functions";
 import { Header } from "./Header";
 import { KpiRow } from "./Kpis";
 import { Feed } from "./Feed";

@@ -282,7 +282,7 @@ export function DashboardProcesses() {
                 <button onClick={() => setIsManualExpanded(!isManualExpanded)} className={`w-full text-left py-4 flex items-center justify-between group ${isManualExpanded ? 'border-b border-zinc-50' : ''}`}>
                   <h2 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 group-hover:text-zinc-700 transition-colors">
                     Processos individuais
-                    <span className="text-zinc-300">[{manualProcesses.length}]</span>
+                    <span className="text-[9px] font-bold text-zinc-500 bg-zinc-50 px-1.5 py-0.5 rounded border border-zinc-100">{manualProcesses.length}</span>
                     {countManualRecent > 0 && <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[9px] font-bold">{countManualRecent} NOVOS</span>}
                   </h2>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" className={`text-zinc-200 transition-transform ${isManualExpanded ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6"/></svg>

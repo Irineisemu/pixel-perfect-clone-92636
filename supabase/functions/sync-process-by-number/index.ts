@@ -36,7 +36,6 @@ Deno.serve(async (req) => {
 
   const apiKey = Deno.env.get("DATAJUD_API_KEY");
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   if (!apiKey) {
     return jsonResponse(500, {
       error: "datajud_key_missing",

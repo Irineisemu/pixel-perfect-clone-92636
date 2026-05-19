@@ -151,6 +151,11 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
                                 <div className="text-[12px] font-bold text-zinc-900 truncate leading-tight">
                                   {t.lawyer_name || t.full_name || "Radar"}
                                 </div>
+                                {t.type === 'lawyer' && t.oab_numbers?.length > 0 && (
+                                  <div className="text-[9px] text-zinc-400 font-mono truncate mt-0.5">
+                                    {(t.oab_numbers as string[]).map(oab => oab.split('/')[0]).join(", ")}
+                                  </div>
+                                )}
                                 <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-tighter mt-0.5">
                                   {t.type === 'lawyer' ? 'Advogado' : t.type === 'person' ? 'Pessoa/CPF' : 'Radar'}
                                 </div>

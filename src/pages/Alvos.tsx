@@ -631,6 +631,7 @@ export function Alvos() {
 
   const filtered = useMemo(() => {
     if (filter === "todos") return items;
+    if (filter === "person") return items.filter((t) => t.type === "person" || t.type === "radar");
     return items.filter((t) => t.type === filter);
   }, [items, filter]);
 

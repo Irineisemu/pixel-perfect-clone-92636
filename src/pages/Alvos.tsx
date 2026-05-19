@@ -775,7 +775,7 @@ export function Alvos() {
           {[
             { id: "process", ids: ["process"], label: "Processos", emoji: "📄" },
             { id: "person",  ids: ["person", "radar"], label: "Pessoas / CPF", emoji: "👤" },
-            { id: "lawyer",  ids: ["lawyer"], label: "OABs", emoji: "⚖️" },
+            { id: "lawyer",  ids: ["lawyer"], label: "Advogados", emoji: "⚖️" },
           ].map((group) => {
             const groupItems = items.filter(t => group.ids.includes(t.type));
             const isExpanded = expandedGroups[group.id];

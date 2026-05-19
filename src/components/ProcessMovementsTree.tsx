@@ -14,24 +14,36 @@ export function ProcessMovementsTree({ processId }: { processId: string }) {
   const [error, setError] = useState<string | null>(null);
 
   const loadPage = async (nextPage: number) => {
+    console.log("[ProcessMovementsTree] Loading page", nextPage, "for process", processId);
     setLoading(true);
     setError(null);
     try {
+      // For TanStack Start GET functions, we pass the parameters directly.
+      // We also handle the case where the server might expect a 'data' wrapper if needed.
       const res: any = await fetchMovements({
-        data: { processId, page: nextPage, pageSize: PAGE_SIZE },
+        processId,
+        page: nextPage,
+        pageSize: PAGE_SIZE,
       });
+
+      console.log("[ProcessMovementsTree] Response:", res);
+
       if (res?.error) {
         setError(res.error);
+      } else if (!res || !Array.isArray(res.movements)) {
+        console.error("[ProcessMovementsTree] Invalid response format:", res);
+        setError("Formato de resposta inválido do servidor.");
       } else {
         setPages((prev) => {
           const copy = [...prev];
           copy[nextPage - 1] = res.movements;
           return copy;
         });
-        setTotal(res.total);
+        setTotal(res.total ?? 0);
         setPage(nextPage);
       }
     } catch (err: any) {
+      console.error("[ProcessMovementsTree] Error fetching movements:", err);
       setError(err?.message ?? String(err));
     } finally {
       setLoading(false);

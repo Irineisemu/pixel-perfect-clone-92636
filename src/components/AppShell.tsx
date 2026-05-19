@@ -52,13 +52,20 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
   }, []);
 
   const [dashboardData, setDashboardData] = useState<any>(null);
-  useEffect(() => {
-    let active = true;
-    fetchDashboard().then((res) => {
-      if (active) setDashboardData(res);
-    });
-    return () => { active = false; };
+  const loadDashboard = useCallback(async () => {
+    try {
+      const res = await fetchDashboard();
+      setDashboardData(res);
+    } catch (err) {
+      console.error("[AppShell] dashboard error:", err);
+    }
   }, [fetchDashboard]);
+
+  useEffect(() => {
+    loadDashboard();
+    const it = setInterval(loadDashboard, 30000); // 30s polling
+    return () => clearInterval(it);
+  }, [loadDashboard]);
 
   const stats = useMemo(() => {
     const NOW = Date.now();

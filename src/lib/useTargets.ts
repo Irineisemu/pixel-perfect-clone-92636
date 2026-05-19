@@ -225,9 +225,12 @@ export function useTargets() {
   const counters = useMemo(() => ({
     total: items.length,
     active: items.filter((t) => t.active).length,
+    activeEntities: items.filter((t) => t.active && t.type !== "process").length,
+    activeProcesses: items.filter((t) => t.active && t.type === "process").length,
     person: items.filter((t) => t.type === "person").length,
     process: items.filter((t) => t.type === "process").length,
     radar: items.filter((t) => t.type === "radar").length,
+    lawyer: items.filter((t) => t.type === "lawyer").length,
     radarActive: items.filter((t) => t.type === "radar" && t.active).length,
   }), [items]);
 

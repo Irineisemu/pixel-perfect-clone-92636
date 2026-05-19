@@ -55,11 +55,12 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
     const tribunaisAtivos = tribunais.filter((t) => t.status === "ativo").length;
     const tribunaisAtrasados = tribunais.filter((t) => t.status !== "ativo").length;
     return {
-      totalMonitorado: targetsCount.active,
+      totalMonitorado: targetsCount.activeEntities,
+      totalProcessos: targetsCount.activeProcesses,
       novas24h, urgentes,
       tribunaisAtivos, tribunaisTotal: tribunais.length, tribunaisAtrasados,
     };
-  }, [movements, tribunais, targetsCount.active]);
+  }, [movements, tribunais, targetsCount.activeEntities, targetsCount.activeProcesses]);
 
   const [selected, setSelected] = useState(null);
   const [cmdkOpen, setCmdkOpen] = useState(false);
@@ -96,7 +97,8 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
               <div className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">Painel</div>
               <h1 className="font-display text-2xl md:text-[28px] tracking-tight text-zinc-900">Bom dia, {greetingName}.</h1>
               <p className="text-[13.5px] text-zinc-600 mt-0.5">
-                Você está monitorando {targetsCount.active} alvo{targetsCount.active !== 1 ? "s" : ""} ativo{targetsCount.active !== 1 ? "s" : ""}.
+                Você está monitorando {targetsCount.activeEntities} alvo{targetsCount.activeEntities !== 1 ? "s" : ""} ativo{targetsCount.activeEntities !== 1 ? "s" : ""}
+                {targetsCount.activeProcesses > 0 && ` e ${targetsCount.activeProcesses} processo${targetsCount.activeProcesses !== 1 ? "s" : ""} avulso${targetsCount.activeProcesses !== 1 ? "s" : ""}`}.
               </p>
             </div>
           </div>
@@ -111,7 +113,7 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
             <aside className="lg:sticky lg:top-[72px] lg:self-start space-y-4">
               <TribunalStatus tribunais={tribunais} compact />
               <div className="text-[11.5px] text-zinc-500 px-1">
-                Monitorando: <button onClick={() => onNav("alvos")} className="text-zinc-700 hover:text-zinc-900 hover:underline font-medium">{targetsCount.active} alvo{targetsCount.active !== 1 ? "s" : ""}</button> · {targetsCount.process} processo{targetsCount.process !== 1 ? "s" : ""}
+                Monitorando: <button onClick={() => onNav("alvos")} className="text-zinc-700 hover:text-zinc-900 hover:underline font-medium">{targetsCount.activeEntities} alvo{targetsCount.activeEntities !== 1 ? "s" : ""}</button> · {targetsCount.activeProcesses} processo{targetsCount.activeProcesses !== 1 ? "s" : ""} avulso{targetsCount.activeProcesses !== 1 ? "s" : ""}
               </div>
             </aside>
           </div>

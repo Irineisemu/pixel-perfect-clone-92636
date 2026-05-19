@@ -37,11 +37,13 @@ export function DashboardProcesses() {
   const fetchDashboard = useServerFn(getDashboard);
   const retryFn = useServerFn(triggerRediscovery);
   const syncNowFn = useServerFn(syncProcessNow);
+  const syncAllFn = useServerFn(syncAll);
 
   const [data, setData] = useState<any>(cachedDashboard);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(!cachedDashboard);
   const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [isSyncingAll, setIsSyncingAll] = useState(false);
 
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [isMovementsExpanded, setIsMovementsExpanded] = useState(false);

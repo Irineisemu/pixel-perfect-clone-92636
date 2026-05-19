@@ -39,8 +39,10 @@ export function DashboardProcesses() {
   const syncNowFn = useServerFn(syncProcessNow);
 
   const [data, setData] = useState<any>(cachedDashboard);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(!cachedDashboard);
   const [retryingId, setRetryingId] = useState<string | null>(null);
+
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [isMovementsExpanded, setIsMovementsExpanded] = useState(false);
   const [isPendingExpanded, setIsPendingExpanded] = useState(false);
@@ -122,12 +124,15 @@ export function DashboardProcesses() {
       const result = await fetchDashboard();
       cachedDashboard = result;
       setData(result);
+      setError(null);
     } catch (err: any) {
       console.error("[Dashboard] load error:", err);
+      setError(err?.message || String(err));
     } finally {
       setLoading(false);
     }
   }, [fetchDashboard]);
+
 
   useEffect(() => {
     load();
@@ -182,13 +187,21 @@ export function DashboardProcesses() {
       </div>
     );
   }
-  if (!data) {
+  if (error || !data) {
     return (
       <div className="rounded-xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
-        Erro ao carregar painel. Recarregue a página.
+        <h3 className="font-semibold mb-1">Erro ao carregar painel</h3>
+        <p className="text-rose-600 mb-4">{error || "Não foi possível recuperar os dados do servidor."}</p>
+        <button 
+          onClick={() => { setLoading(true); load(); }}
+          className="px-4 py-2 bg-rose-600 text-white rounded-md hover:bg-rose-700 transition-colors"
+        >
+          Tentar novamente
+        </button>
       </div>
     );
   }
+
 
   const { lawyers, processes, pendingProcesses = [], hasRunningDiscovery, recentNewMovements = [], stats } = data;
 

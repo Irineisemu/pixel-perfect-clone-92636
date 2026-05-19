@@ -12,6 +12,9 @@ export const getDashboard = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const sb = context.supabase;
 
+    let countUrgentMovements = 0;
+    let countUrgentProcesses = 0;
+
     // 1. Get total counts directly for accurate stats
     const { count: totalProcesses } = await sb
       .from("target_process_links")
@@ -140,8 +143,7 @@ export const getDashboard = createServerFn({ method: "GET" })
     const processIds = processes.map((p) => p.id);
     let recentNewMovements: any[] = [];
     let countProcessesWithRecentUpdates = 0;
-    let countUrgentMovements = 0;
-    let countUrgentProcesses = 0;
+
     
     const yesterday = new Date();
     yesterday.setHours(yesterday.getHours() - 24);

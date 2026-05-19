@@ -137,9 +137,9 @@ export const createLawyerTarget = createServerFn({ method: "POST" })
 export const getDiscoveryStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: any) => {
-    const payload = input?.data ?? input;
+    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : input;
     if (!payload || typeof payload !== 'object') {
-      throw new Error("Dados de entrada inválidos.");
+      throw new Error("Parâmetros de entrada inválidos.");
     }
     return z.object({ targetId: z.string().uuid() }).parse(payload);
   })

@@ -109,8 +109,8 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
               <div className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">Painel</div>
               <h1 className="font-display text-2xl md:text-[28px] tracking-tight text-zinc-900">Bom dia, {greetingName}.</h1>
               <p className="text-[13.5px] text-zinc-600 mt-0.5">
-                Você está monitorando {targetsCount.activeEntities} alvo{targetsCount.activeEntities !== 1 ? "s" : ""} ativo{targetsCount.activeEntities !== 1 ? "s" : ""}
-                {targetsCount.activeProcesses > 0 && ` e ${targetsCount.activeProcesses} processo${targetsCount.activeProcesses !== 1 ? "s" : ""} avulso${targetsCount.activeProcesses !== 1 ? "s" : ""}`}.
+                Você tem {stats.totalMonitorado} processo{stats.totalMonitorado !== 1 ? "s" : ""} sendo monitorado{stats.totalMonitorado !== 1 ? "s" : ""}
+                {stats.totalAlvos > 0 && ` vinculados a ${stats.totalAlvos} alvo${stats.totalAlvos !== 1 ? "s" : ""} ativo${stats.totalAlvos !== 1 ? "s" : ""}`}.
               </p>
             </div>
           </div>

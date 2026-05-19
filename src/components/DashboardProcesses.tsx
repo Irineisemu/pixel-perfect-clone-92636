@@ -44,11 +44,24 @@ export function DashboardProcesses() {
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [isMovementsExpanded, setIsMovementsExpanded] = useState(false);
   const [isPendingExpanded, setIsPendingExpanded] = useState(false);
-  const [isProcessesExpanded, setIsProcessesExpanded] = useState(false);
+  const [isOabExpanded, setIsOabExpanded] = useState(false);
+  const [isManualExpanded, setIsManualExpanded] = useState(false);
+  const [isOthersExpanded, setIsOthersExpanded] = useState(false);
   const [highlightedProcessId, setHighlightedProcessId] = useState<string | null>(null);
 
   const locateProcess = (processId: string) => {
-    setIsProcessesExpanded(true);
+    // Tenta encontrar em qual grupo o processo está para expandir a aba correta
+    const p = data?.processes?.find(proc => proc.id === processId);
+    if (p) {
+      if (p.target?.type === 'lawyer') setIsOabExpanded(true);
+      else if (p.target?.type === 'process') setIsManualExpanded(true);
+      else setIsOthersExpanded(true);
+    } else {
+      // Fallback: expande as principais
+      setIsOabExpanded(true);
+      setIsManualExpanded(true);
+    }
+    
     setHighlightedProcessId(processId);
     
     // Pequeno delay para garantir que a aba de processos esteja aberta e renderizada

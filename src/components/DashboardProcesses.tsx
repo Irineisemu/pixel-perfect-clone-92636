@@ -184,7 +184,7 @@ export function DashboardProcesses() {
   const countOthersRecent = otherProcesses.filter((p: any) => p.lastMovement && new Date(p.lastMovement.occurredAt) >= yesterday).length;
 
   return (
-    <div className="space-y-10 pb-10">
+    <div className="space-y-6 pb-10">
       {hasRunningDiscovery && (
         <div className="rounded-xl border border-sky-100 bg-sky-50/50 px-4 py-3 text-[12px] text-sky-700 font-semibold flex items-center gap-2">
           <span className="inline-block h-2.5 w-2.5 rounded-full bg-sky-500 animate-pulse" />

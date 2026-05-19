@@ -100,6 +100,7 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
   useEffect(() => {
     const onLocate = (e: any) => {
       if (route !== "inicio") {
+        window.pendingLocateId = e.detail?.processId;
         onNav("inicio");
       }
     };

@@ -17,6 +17,7 @@ import { CmdK } from "./CmdK";
 
 export function AppShell({ route, children }: { route: "inicio" | "alvos" | "configuracoes"; children?: React.ReactNode }) {
   const navigate = useNavigate();
+  const fetchDashboard = useServerFn(getDashboard);
   const { user } = useAuth();
   const greetingName = ((user?.user_metadata as any)?.name || user?.email?.split("@")[0] || "advogado(a)").split(" ")[0];
   const onNav = (id: string) => {

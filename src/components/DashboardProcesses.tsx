@@ -92,7 +92,7 @@ export function DashboardProcesses() {
   const handleSyncNow = async (processId: string) => {
     setSyncingId(processId);
     try {
-      const res: any = await syncNowFn({ processId });
+      const res: any = await syncNowFn({ data: { processId } });
       if (res?.ok) {
         toast.success("Sincronização concluída.");
         await load();
@@ -155,7 +155,7 @@ export function DashboardProcesses() {
   const handleRetry = async (targetId: string) => {
     setRetryingId(targetId);
     try {
-      const res: any = await retryFn({ targetId });
+      const res: any = await retryFn({ data: { targetId } });
       if (res?.ok) toast.success("Sincronização iniciada.");
       await load();
     } catch (err: any) {

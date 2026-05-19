@@ -210,6 +210,10 @@ export const listProcessMovements = createServerFn({ method: "POST" })
   .inputValidator((input: any) => {
     // TanStack Start might wrap the input in a 'data' property or pass it directly
     const payload = input?.data ?? input;
+    if (!payload) {
+      console.error("[listProcessMovements] Received empty input:", input);
+      throw new Error("Dados de entrada não fornecidos.");
+    }
     return ListMovementsSchema.parse(payload);
   })
   .handler(async ({ data, context }) => {

@@ -196,6 +196,13 @@ export function DashboardProcesses() {
   const manualProcesses = processes.filter((p: any) => p.target?.type === 'process');
   const otherProcesses = processes.filter((p: any) => p.target?.type !== 'lawyer' && p.target?.type !== 'process');
 
+  const yesterday = new Date();
+  yesterday.setHours(yesterday.getHours() - 24);
+
+  const countOabRecent = oabProcesses.filter((p: any) => p.lastMovement && new Date(p.lastMovement.occurredAt) >= yesterday).length;
+  const countManualRecent = manualProcesses.filter((p: any) => p.lastMovement && new Date(p.lastMovement.occurredAt) >= yesterday).length;
+  const countOthersRecent = otherProcesses.filter((p: any) => p.lastMovement && new Date(p.lastMovement.occurredAt) >= yesterday).length;
+
   return (
     <div className="space-y-6">
       {hasRunningDiscovery && (

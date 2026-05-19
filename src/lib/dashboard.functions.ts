@@ -28,7 +28,7 @@ export const getDashboard = createServerFn({ method: "GET" })
 
     const { data: lawyers } = await sb
       .from("monitoring_targets")
-      .select("id, lawyer_name, oab_numbers, discovery_status, last_discovery_at, created_at")
+      .select("id, lawyer_name, oab_numbers, discovery_status, last_discovery_at, created_at, target_process_links(count)")
       .eq("type", "lawyer")
       .eq("is_active", true)
       .order("created_at", { ascending: false });

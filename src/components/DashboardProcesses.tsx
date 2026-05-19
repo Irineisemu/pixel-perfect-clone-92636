@@ -105,6 +105,19 @@ export function DashboardProcesses() {
     }
   };
 
+  const handleSyncAll = async () => {
+    setIsSyncingAll(true);
+    try {
+      await syncAllFn();
+      toast.success("Sincronização global iniciada. Todos os alvos e processos serão atualizados.");
+      await load();
+    } catch (err: any) {
+      toast.error(`Erro: ${err?.message ?? err}`);
+    } finally {
+      setIsSyncingAll(false);
+    }
+  };
+
   const load = useCallback(async () => {
     try {
       const result = await fetchDashboard();

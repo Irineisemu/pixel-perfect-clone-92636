@@ -170,9 +170,7 @@ export function DashboardProcesses() {
   }
 
   const { targets = [], processes, pendingProcesses = [], hasRunningDiscovery, recentNewMovements = [], stats } = data;
-  const oabProcesses = processes.filter((p: any) => p.target?.type === 'lawyer');
   const manualProcesses = processes.filter((p: any) => p.target?.type === 'process');
-  const otherProcesses = processes.filter((p: any) => p.target?.type !== 'lawyer' && p.target?.type !== 'process');
 
   const yesterday = new Date();
   yesterday.setHours(yesterday.getHours() - 24);

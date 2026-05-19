@@ -14,16 +14,21 @@ export function ProcessMovementsTree({ processId }: { processId: string }) {
   const [error, setError] = useState<string | null>(null);
 
   const loadPage = async (nextPage: number) => {
+    if (!processId) {
+      console.warn("[ProcessMovementsTree] No processId provided");
+      return;
+    }
+
     console.log("[ProcessMovementsTree] Loading page", nextPage, "for process", processId);
     setLoading(true);
     setError(null);
     try {
-      // For TanStack Start GET functions, we pass the parameters directly.
-      // We also handle the case where the server might expect a 'data' wrapper if needed.
       const res: any = await fetchMovements({
-        processId,
-        page: nextPage,
-        pageSize: PAGE_SIZE,
+        data: {
+          processId,
+          page: nextPage,
+          pageSize: PAGE_SIZE,
+        }
       });
 
       console.log("[ProcessMovementsTree] Response:", res);

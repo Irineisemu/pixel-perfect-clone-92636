@@ -201,21 +201,40 @@ export const syncProcessNow = createServerFn({ method: "POST" })
 
 const ListMovementsSchema = z.object({
   processId: z.string().uuid(),
-  page: z.number().int().min(1).default(1),
-  pageSize: z.number().int().min(1).max(100).default(20),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
 
-export const listProcessMovements = createServerFn({ method: "GET" })
+export const listProcessMovements = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: any) => {
-    // Handle both { data: T } and T formats
-    const payload = input?.data ?? input;
+    console.log("[listProcessMovements] inputValidator received:", JSON.stringify(input));
+    // TanStack Start might wrap the input in a 'data' property or pass it directly
+    // Or it might be the input directly.
+    let payload = input;
+    if (input && typeof input === 'object' && 'data' in input) {
+      payload = input.data;
+    }
+    
+    if (!payload) {
+      console.error("[listProcessMovements] No payload found in input");
+      throw new Error("Dados de entrada ausentes.");
+    }
+    
     return ListMovementsSchema.parse(payload);
   })
   .handler(async ({ data, context }) => {
     const sb = context.supabase;
-    const from = (data.page - 1) * data.pageSize;
-    const to = from + data.pageSize - 1;
+    
+    // Fallback para quando o inputValidator passa o objeto direto ou dentro de data
+    const processId = data.processId;
+    const page = data.page || 1;
+    const pageSize = data.pageSize || 20;
+
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    console.log(`[listProcessMovements] Fetching movements for ${processId}, range ${from}-${to}`);
 
     const { data: rows, count, error } = await sb
       .from("process_movements")
@@ -223,18 +242,19 @@ export const listProcessMovements = createServerFn({ method: "GET" })
         "id, movement_code, movement_name, occurred_at, organ_name, organ_code, complements, is_new",
         { count: "exact" },
       )
-      .eq("process_id", data.processId)
+      .eq("process_id", processId)
       .order("occurred_at", { ascending: false })
       .range(from, to);
 
     if (error) {
-      return { movements: [], total: 0, page: data.page, pageSize: data.pageSize, error: error.message };
+      console.error("[listProcessMovements] DB error:", error);
+      return { movements: [], total: 0, page, pageSize, error: error.message };
     }
 
     return {
       movements: rows ?? [],
       total: count ?? 0,
-      page: data.page,
-      pageSize: data.pageSize,
+      page,
+      pageSize,
     };
   });

@@ -157,21 +157,21 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow, isHighlighted }:
 
       {/* Stats inline compacto */}
       {!notFound && (
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11.5px] text-zinc-600">
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11.5px] text-zinc-700">
           {p.filedAt && (
             <span className="inline-flex items-center gap-1">
               <Calendar className="h-3 w-3 text-zinc-400" />
-              Ajuizado em <strong className="text-zinc-800 font-medium">{formatDateBR(p.filedAt)}</strong>
+              Ajuizado em <strong className="text-zinc-900 font-semibold">{formatDateBR(p.filedAt)}</strong>
             </span>
           )}
           <span className="inline-flex items-center gap-1">
             <Hash className="h-3 w-3 text-zinc-400" />
-            <strong className="text-zinc-800 font-medium">{p.totalMovements}</strong> movimento{p.totalMovements !== 1 ? "s" : ""}
+            <strong className="text-zinc-900 font-semibold">{p.totalMovements}</strong> movimento{p.totalMovements !== 1 ? "s" : ""}
           </span>
           {p.lastSyncedAt && (
             <span className="inline-flex items-center gap-1">
               <RefreshCw className="h-3 w-3 text-zinc-400" />
-              Verificado <strong className="text-zinc-800 font-medium">{formatRelativeBR(p.lastSyncedAt)}</strong>
+              Verificado <strong className="text-zinc-900 font-semibold">{formatRelativeBR(p.lastSyncedAt)}</strong>
             </span>
           )}
         </div>

@@ -45,7 +45,7 @@ export function DashboardProcesses() {
 
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [isMovementsExpanded, setIsMovementsExpanded] = useState(false);
-  const [isPendingExpanded, setIsPendingExpanded] = useState(false);
+  
   const [isOabExpanded, setIsOabExpanded] = useState(false);
   const [isManualExpanded, setIsManualExpanded] = useState(false);
   const [isOthersExpanded, setIsOthersExpanded] = useState(false);
@@ -307,31 +307,6 @@ export function DashboardProcesses() {
                     {manualProcesses.map((p: any) => (
                       <div key={p.id + p.target.id} id={`process-${p.id}`} className="py-1">
                         <ProcessCard process={p} isSyncing={syncingId === p.id} onSyncNow={handleSyncNow} isHighlighted={highlightedProcessId === p.id} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-            {pendingProcesses.length > 0 && (
-              <div className="overflow-hidden">
-                <button onClick={() => setIsPendingExpanded(!isPendingExpanded)} className="w-full text-left py-3 px-1 flex items-center justify-between border-b border-amber-100 group">
-                  <h2 className="text-[11px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                    Em busca inicial
-                    <span className="text-amber-200">[{pendingProcesses.length}]</span>
-                  </h2>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" className={`text-amber-200 transition-transform ${isPendingExpanded ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6"/></svg>
-                </button>
-                {isPendingExpanded && (
-                  <div className="mt-2 divide-y divide-zinc-50 max-h-[300px] overflow-y-auto px-1">
-                    {pendingProcesses.map((p: any) => (
-                      <div key={p.targetId} className="py-3 flex items-center justify-between gap-4">
-                        <div className="min-w-0">
-                          <div className="text-[13px] font-black text-zinc-900 font-mono tracking-tighter">{p.displayNumber}</div>
-                          <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight">{p.tribunal}</div>
-                        </div>
-                        <span className="text-[9px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-100 uppercase tracking-tighter">BUSCANDO</span>
                       </div>
                     ))}
                   </div>

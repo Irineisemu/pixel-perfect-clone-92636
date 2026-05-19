@@ -45,7 +45,7 @@ export function DashboardProcesses() {
 
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [isMovementsExpanded, setIsMovementsExpanded] = useState(false);
-  const [isPendingExpanded, setIsPendingExpanded] = useState(false);
+  
   const [isOabExpanded, setIsOabExpanded] = useState(false);
   const [isManualExpanded, setIsManualExpanded] = useState(false);
   const [isOthersExpanded, setIsOthersExpanded] = useState(false);

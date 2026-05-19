@@ -39,7 +39,7 @@ export function KpiRow({ stats }) {
             <span>{stats.totalMonitorado === 1 ? "processo monitorado" : "processos monitorados"}</span>
             {stats.totalAlvos > 0 && (
               <span className="text-[10px] text-zinc-400">
-                vinculados a {stats.totalAlvos} alvo{stats.totalAlvos !== 1 ? 's' : ''}
+                via {stats.totalAlvos} fonte{stats.totalAlvos !== 1 ? 's' : ''} de busca
               </span>
             )}
           </div>

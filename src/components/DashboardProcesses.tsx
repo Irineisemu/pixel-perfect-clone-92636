@@ -194,6 +194,25 @@ export function DashboardProcesses() {
 
   return (
     <div className="space-y-6 pb-10">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl font-bold text-zinc-900">Painel de Controle</h1>
+          <p className="text-[13px] text-zinc-500 font-medium mt-0.5">Acompanhe seus processos e alvos em tempo real</p>
+        </div>
+        <button
+          onClick={handleSyncAll}
+          disabled={isSyncingAll}
+          className="h-10 px-6 rounded-xl bg-zinc-900 text-white text-[13px] font-bold hover:bg-zinc-800 disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-zinc-200 transition-all active:scale-95"
+        >
+          {isSyncingAll ? (
+            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4" />
+          )}
+          {isSyncingAll ? "Sincronizando…" : "Sincronizar Tudo"}
+        </button>
+      </div>
+
       {hasRunningDiscovery && (
         <div className="rounded-2xl border border-sky-100 bg-sky-50/50 px-5 py-4 text-[12px] text-sky-700 font-semibold flex items-center gap-2 shadow-sm">
           <span className="inline-block h-2.5 w-2.5 rounded-full bg-sky-500 animate-pulse" />

@@ -12,6 +12,21 @@ export const getDashboard = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const sb = context.supabase;
 
+    // 1. Get total counts directly for accurate stats
+    const { data: counts } = await sb.rpc('get_dashboard_stats');
+    // If RPC doesn't exist, we'll fall back to manual queries or just use what we have, 
+    // but let's check if we can add an RPC or just do the queries here.
+    
+    const { count: totalProcesses } = await sb
+      .from("target_process_links")
+      .select("*", { count: "exact", head: true })
+      .is("unlinked_at", null);
+
+    const { count: totalNewMovements } = await sb
+      .from("process_movements")
+      .select("*", { count: "exact", head: true })
+      .eq("is_new", true);
+
     const { data: lawyers } = await sb
       .from("monitoring_targets")
       .select("id, lawyer_name, oab_numbers, discovery_status, last_discovery_at, created_at")
@@ -180,9 +195,9 @@ export const getDashboard = createServerFn({ method: "GET" })
 
     return {
       stats: {
-        totalProcesses: processes.length,
+        totalProcesses: totalProcesses ?? 0,
         totalLawyers: lawyers?.length ?? 0,
-        totalNewMovements: totalNew,
+        totalNewMovements: totalNewMovements ?? 0,
       },
       lawyers: lawyers ?? [],
       processes,

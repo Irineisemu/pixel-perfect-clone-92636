@@ -173,7 +173,8 @@ export function DashboardProcesses() {
 
         <section>
           <h2 className="text-sm font-semibold text-zinc-700 mb-2 px-1">Advogados monitorados</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {lawyers.map((lw: any) => {
               const st = statusLabel(lw.discovery_status);
               const isRetrying = retryingId === lw.id;

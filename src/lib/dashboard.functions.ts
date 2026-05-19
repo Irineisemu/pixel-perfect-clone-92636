@@ -138,6 +138,7 @@ export const getDashboard = createServerFn({ method: "GET" })
     const processIds = processes.map((p) => p.id);
     let recentNewMovements: any[] = [];
     let countProcessesWithUpdates = 0;
+    let totalNewMovementsCount = 0;
 
     if (processIds.length > 0) {
       // Fetch all new movements for these processes to group them correctly

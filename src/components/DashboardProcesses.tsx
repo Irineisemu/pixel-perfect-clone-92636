@@ -236,8 +236,8 @@ export function DashboardProcesses() {
 
           <div className="space-y-1">
             {oabProcesses.length > 0 && (
-              <div className="overflow-hidden">
-                <button onClick={() => setIsOabExpanded(!isOabExpanded)} className="w-full text-left py-3 px-1 flex items-center justify-between border-b border-zinc-100 group">
+              <div className="overflow-hidden bg-white border border-zinc-100 rounded-2xl px-4 shadow-sm">
+                <button onClick={() => setIsOabExpanded(!isOabExpanded)} className={`w-full text-left py-4 flex items-center justify-between group ${isOabExpanded ? 'border-b border-zinc-50' : ''}`}>
                   <h2 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 group-hover:text-zinc-700 transition-colors">
                     Processos encontrados (OAB)
                     <span className="text-zinc-300">[{oabProcesses.length}]</span>

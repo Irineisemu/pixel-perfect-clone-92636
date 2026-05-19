@@ -68,7 +68,7 @@ export function DashboardProcesses() {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
         setTimeout(() => setHighlightedProcessId(null), 3000);
       }
-    }, 150);
+    }, 300);
   };
   
   useEffect(() => {

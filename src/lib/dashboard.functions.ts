@@ -145,7 +145,7 @@ export const getDashboard = createServerFn({ method: "GET" })
     if (processIds.length > 0) {
       const { data: movs } = await sb
         .from("process_movements")
-        .select("id, movement_name, occurred_at, organ_name, process_id")
+        .select("id, movement_name, occurred_at, organ_name, process_id, urgency, deadline")
         .in("process_id", processIds)
         .order("occurred_at", { ascending: false });
 

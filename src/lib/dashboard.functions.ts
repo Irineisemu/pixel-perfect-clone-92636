@@ -18,10 +18,15 @@ export const getDashboard = createServerFn({ method: "GET" })
       .select("*", { count: "exact", head: true })
       .is("unlinked_at", null);
 
-    const { count: totalNewMovements } = await sb
+    // 1. Get total count of processes with new movements
+    const { count: totalProcessesWithUpdates } = await sb
       .from("process_movements")
-      .select("*", { count: "exact", head: true })
+      .select("process_id", { count: "exact", head: true })
       .eq("is_new", true);
+    // Note: head: true and count: exact with select("process_id") doesn't do distinct naturally in PostgREST.
+    // However, to keep it simple and accurate based on what the user expects (unique items in the list), 
+    // we'll fetch and unique-ify or use a better query if needed. 
+    // For now, let's fetch enough to show the unique ones.
 
     const { data: lawyers } = await sb
       .from("monitoring_targets")

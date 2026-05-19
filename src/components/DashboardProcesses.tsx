@@ -49,6 +49,7 @@ export function DashboardProcesses() {
   const [isOabExpanded, setIsOabExpanded] = useState(false);
   const [isManualExpanded, setIsManualExpanded] = useState(false);
   const [isOthersExpanded, setIsOthersExpanded] = useState(false);
+  const [expandedTargetId, setExpandedTargetId] = useState<string | null>(null);
   const [highlightedProcessId, setHighlightedProcessId] = useState<string | null>(null);
 
   const locateProcess = (processId: string) => {

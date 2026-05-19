@@ -12,8 +12,8 @@ export const getDashboard = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const sb = context.supabase;
 
-    let countUrgentMovements = 0;
-    let countUrgentProcesses = 0;
+    const urgentProcessIds = new Set<string>();
+
 
     // 1. Get total counts directly for accurate stats
     const { count: totalProcesses } = await sb

@@ -203,8 +203,8 @@ export function DashboardProcesses() {
   }
 
 
-  const { lawyers, processes, pendingProcesses = [], hasRunningDiscovery, recentNewMovements = [], stats } = data;
-
+  const { targets = [], processes, pendingProcesses = [], hasRunningDiscovery, recentNewMovements = [], stats } = data;
+  
   const oabProcesses = processes.filter((p: any) => p.target?.type === 'lawyer');
   const manualProcesses = processes.filter((p: any) => p.target?.type === 'process');
   const otherProcesses = processes.filter((p: any) => p.target?.type !== 'lawyer' && p.target?.type !== 'process');

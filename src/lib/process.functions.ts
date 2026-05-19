@@ -28,8 +28,9 @@ function maskCNJ(value: string): string {
 export const createProcessTargets = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: any) => {
-    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : (input ?? {});
-    return CreateProcessSchema.parse(payload);
+    let payload = input;
+    if (payload && typeof payload === 'object' && 'data' in payload) payload = payload.data;
+    return CreateProcessSchema.parse(payload ?? {});
   })
   .handler(async ({ data, context }) => {
     const sb = context.supabase;
@@ -151,8 +152,9 @@ const SyncNowSchema = z.object({
 export const syncProcessNow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: any) => {
-    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : (input ?? {});
-    return SyncNowSchema.parse(payload);
+    let payload = input;
+    if (payload && typeof payload === 'object' && 'data' in payload) payload = payload.data;
+    return SyncNowSchema.parse(payload ?? {});
   })
   .handler(async ({ data, context }) => {
     const sb = context.supabase;
@@ -208,8 +210,9 @@ const ListMovementsSchema = z.object({
 export const listProcessMovements = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: any) => {
-    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : (input ?? {});
-    return ListMovementsSchema.parse(payload);
+    let payload = input;
+    if (payload && typeof payload === 'object' && 'data' in payload) payload = payload.data;
+    return ListMovementsSchema.parse(payload ?? {});
   })
   .handler(async ({ data, context }) => {
     const sb = context.supabase;

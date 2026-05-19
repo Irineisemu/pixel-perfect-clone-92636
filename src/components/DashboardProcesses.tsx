@@ -197,13 +197,13 @@ export function DashboardProcesses() {
         <section className="space-y-4">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-3">
-              <span className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center text-xs font-black shadow-sm">1</span>
+              <span className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center text-xs font-bold shadow-sm">1</span>
               <div>
-                <h2 className="text-sm font-black text-zinc-900 uppercase tracking-tight">Alvos & Descobertas</h2>
-                <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-0.5">Fontes e processos automáticos</p>
+                <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-tight">Alvos & Descobertas</h2>
+                <p className="text-[10px] text-zinc-500 font-medium uppercase tracking-widest mt-0.5">Fontes e processos automáticos</p>
               </div>
             </div>
-            <Link to="/alvos" className="text-[11px] font-black text-zinc-900 bg-white border border-zinc-200 px-3 py-1.5 rounded-lg shadow-sm hover:bg-zinc-50 transition-all">GERENCIAR</Link>
+            <Link to="/alvos" className="text-[11px] font-bold text-zinc-900 bg-white border border-zinc-200 px-3 py-1.5 rounded-lg shadow-sm hover:bg-zinc-50 transition-all">GERENCIAR</Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

@@ -109,7 +109,13 @@ export const testCredential = createServerFn({ method: "POST" })
 
 export const getCredentialStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .inputValidator((input: any) => {
+    const payload = (input && typeof input === 'object' && 'data' in input) ? input.data : input;
+    if (!payload || typeof payload !== 'object') {
+      throw new Error("Parâmetros de entrada inválidos.");
+    }
+    return z.object({ id: z.string().uuid() }).parse(payload);
+  })
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: row, error } = await supabase

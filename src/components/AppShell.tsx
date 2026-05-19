@@ -9,6 +9,7 @@ import { useAuth } from "../lib/auth";
 import { getDashboard } from "@/lib/dashboard.functions";
 import { Header } from "./Header";
 import { KpiRow } from "./Kpis";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Feed } from "./Feed";
 import { DashboardProcesses } from "./DashboardProcesses";
 import { TribunalStatus } from "./TribunalStatus";

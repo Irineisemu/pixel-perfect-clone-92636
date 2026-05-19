@@ -303,6 +303,20 @@ export function DashboardProcesses() {
         </section>
       )}
 
+      {(oabProcesses.length > 0 || otherProcesses.length > 0 || manualProcesses.length > 0 || pendingProcesses.length > 0) && (
+        <div className="pt-2 px-1">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="p-1 rounded bg-zinc-900 text-white">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </span>
+            <div>
+              <h2 className="text-sm font-bold text-zinc-900">2. Monitoramentos</h2>
+              <p className="text-[11px] text-zinc-500">Todos os processos que estão sendo acompanhados pelo sistema.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {oabProcesses.length > 0 && (
         <section className="bg-white rounded-xl border border-zinc-200 overflow-hidden transition-all">
           <button

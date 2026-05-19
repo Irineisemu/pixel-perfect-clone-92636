@@ -213,7 +213,7 @@ export function DashboardProcesses() {
               <h2 className="text-sm font-semibold text-zinc-700">
                 Novas movimentações detectadas
                 <span className="ml-2 text-rose-600 font-bold bg-rose-100 px-1.5 py-0.5 rounded text-xs">
-                  {recentNewMovements.length}
+                  {stats?.totalNewMovements ?? recentNewMovements.length}
                 </span>
               </h2>
               <span className="text-[11px] text-rose-500 font-normal ml-2 hidden sm:inline">
@@ -230,7 +230,8 @@ export function DashboardProcesses() {
           {isMovementsExpanded && (
             <div className="border-t border-rose-100 bg-white/50 divide-y divide-rose-100 max-h-[400px] overflow-y-auto">
               <div className="px-4 py-2 bg-rose-50/50 text-[11px] text-rose-700 leading-relaxed border-b border-rose-100">
-                Estas são as últimas atualizações publicadas pelos tribunais nos processos que você monitora. 
+                Estas são as últimas atualizações (exibindo as 20 mais recentes de {stats?.totalNewMovements ?? recentNewMovements.length}) publicadas pelos tribunais nos processos que você monitora. 
+
                 Elas aparecerão aqui até a próxima sincronização geral.
               </div>
               {recentNewMovements.map((m: any) => (

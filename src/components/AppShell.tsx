@@ -1,10 +1,12 @@
 // @ts-nocheck
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTargets } from "../lib/useTargets";
 import { useAuth } from "../lib/auth";
+import { getDashboard } from "@/lib/dashboard.functions";
 import { Header } from "./Header";
 import { KpiRow } from "./Kpis";
 import { Feed } from "./Feed";
@@ -15,6 +17,7 @@ import { CmdK } from "./CmdK";
 
 export function AppShell({ route, children }: { route: "inicio" | "alvos" | "configuracoes"; children?: React.ReactNode }) {
   const navigate = useNavigate();
+  const fetchDashboard = useServerFn(getDashboard);
   const { user } = useAuth();
   const greetingName = ((user?.user_metadata as any)?.name || user?.email?.split("@")[0] || "advogado(a)").split(" ")[0];
   const onNav = (id: string) => {
@@ -48,19 +51,29 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
     })();
   }, []);
 
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  useEffect(() => {
+    let active = true;
+    fetchDashboard().then((res) => {
+      if (active) setDashboardData(res);
+    });
+    return () => { active = false; };
+  }, [fetchDashboard]);
+
   const stats = useMemo(() => {
     const NOW = Date.now();
-    const novas24h = movements.filter((m) => NOW - new Date(m.occurred_at).getTime() < 24 * 3600e3).length;
+    const novas24h = dashboardData?.stats?.totalNewMovements ?? movements.filter((m) => NOW - new Date(m.occurred_at).getTime() < 24 * 3600e3).length;
     const urgentes = movements.filter((m) => m.urgency === "critical" || m.urgency === "high").length;
     const tribunaisAtivos = tribunais.filter((t) => t.status === "ativo").length;
     const tribunaisAtrasados = tribunais.filter((t) => t.status !== "ativo").length;
+    
     return {
-      totalMonitorado: targetsCount.activeEntities,
-      totalProcessos: targetsCount.activeProcesses,
+      totalMonitorado: dashboardData?.stats?.totalProcesses ?? targetsCount.activeProcesses,
+      totalAlvos: dashboardData?.stats?.totalLawyers ?? targetsCount.activeEntities,
       novas24h, urgentes,
       tribunaisAtivos, tribunaisTotal: tribunais.length, tribunaisAtrasados,
     };
-  }, [movements, tribunais, targetsCount.activeEntities, targetsCount.activeProcesses]);
+  }, [movements, tribunais, dashboardData, targetsCount]);
 
   const [selected, setSelected] = useState(null);
   const [cmdkOpen, setCmdkOpen] = useState(false);
@@ -97,8 +110,8 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
               <div className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">Painel</div>
               <h1 className="font-display text-2xl md:text-[28px] tracking-tight text-zinc-900">Bom dia, {greetingName}.</h1>
               <p className="text-[13.5px] text-zinc-600 mt-0.5">
-                Você está monitorando {targetsCount.activeEntities} alvo{targetsCount.activeEntities !== 1 ? "s" : ""} ativo{targetsCount.activeEntities !== 1 ? "s" : ""}
-                {targetsCount.activeProcesses > 0 && ` e ${targetsCount.activeProcesses} processo${targetsCount.activeProcesses !== 1 ? "s" : ""} avulso${targetsCount.activeProcesses !== 1 ? "s" : ""}`}.
+                Você tem {stats.totalMonitorado} processo{stats.totalMonitorado !== 1 ? "s" : ""} sendo monitorado{stats.totalMonitorado !== 1 ? "s" : ""}
+                {stats.totalAlvos > 0 && ` vinculados a ${stats.totalAlvos} alvo${stats.totalAlvos !== 1 ? "s" : ""} ativo${stats.totalAlvos !== 1 ? "s" : ""}`}.
               </p>
             </div>
           </div>
@@ -113,7 +126,7 @@ export function AppShell({ route, children }: { route: "inicio" | "alvos" | "con
             <aside className="lg:sticky lg:top-[72px] lg:self-start space-y-4">
               <TribunalStatus tribunais={tribunais} compact />
               <div className="text-[11.5px] text-zinc-500 px-1">
-                Monitorando: <button onClick={() => onNav("alvos")} className="text-zinc-700 hover:text-zinc-900 hover:underline font-medium">{targetsCount.activeEntities} alvo{targetsCount.activeEntities !== 1 ? "s" : ""}</button> · {targetsCount.activeProcesses} processo{targetsCount.activeProcesses !== 1 ? "s" : ""} avulso{targetsCount.activeProcesses !== 1 ? "s" : ""}
+                Monitorando: <button onClick={() => onNav("alvos")} className="text-zinc-700 hover:text-zinc-900 hover:underline font-medium">{stats.totalMonitorado} processo{stats.totalMonitorado !== 1 ? "s" : ""}</button> · {stats.totalAlvos} alvo{stats.totalAlvos !== 1 ? "s" : ""} ativo{stats.totalAlvos !== 1 ? "s" : ""}
               </div>
             </aside>
           </div>

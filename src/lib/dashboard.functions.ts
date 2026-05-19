@@ -12,6 +12,17 @@ export const getDashboard = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const sb = context.supabase;
 
+    // 1. Get total counts directly for accurate stats
+    const { count: totalProcesses } = await sb
+      .from("target_process_links")
+      .select("*", { count: "exact", head: true })
+      .is("unlinked_at", null);
+
+    const { count: totalNewMovements } = await sb
+      .from("process_movements")
+      .select("*", { count: "exact", head: true })
+      .eq("is_new", true);
+
     const { data: lawyers } = await sb
       .from("monitoring_targets")
       .select("id, lawyer_name, oab_numbers, discovery_status, last_discovery_at, created_at")
@@ -147,8 +158,6 @@ export const getDashboard = createServerFn({ method: "GET" })
       });
     }
 
-    const totalNew = processes.reduce((sum, p) => sum + (p.newMovementsCount || 0), 0);
-
     // Process-type targets pending scrape (still not linked to a process row)
     const linkedTargetIds = new Set(((linkRows ?? []) as any[]).map((r) => r.target.id));
     const { data: pendingProcessTargets } = await sb
@@ -180,9 +189,9 @@ export const getDashboard = createServerFn({ method: "GET" })
 
     return {
       stats: {
-        totalProcesses: processes.length,
+        totalProcesses: totalProcesses ?? 0,
         totalLawyers: lawyers?.length ?? 0,
-        totalNewMovements: totalNew,
+        totalNewMovements: totalNewMovements ?? 0,
       },
       lawyers: lawyers ?? [],
       processes,

@@ -205,7 +205,7 @@ const ListMovementsSchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
 
-export const listProcessMovements = createServerFn({ method: "GET" })
+export const listProcessMovements = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: any) => {
     // Para GET, o input pode vir diretamente ou em um objeto

@@ -51,7 +51,7 @@ export const getDashboard = createServerFn({ method: "GET" })
           filed_at, organ_code, organ_name,
           municipality_ibge, secrecy_level,
           system_name, format_name, last_update_at,
-          parties_json
+          parties_json, is_urgent
         )
         `,
       )

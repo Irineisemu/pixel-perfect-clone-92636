@@ -56,6 +56,11 @@ export function DashboardProcesses() {
       const el = document.getElementById(`process-${processId}`);
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
+        
+        // Remove o destaque após 3 segundos
+        setTimeout(() => {
+          setHighlightedProcessId(null);
+        }, 3000);
       }
     }, 150);
   };

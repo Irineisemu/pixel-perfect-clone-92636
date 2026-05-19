@@ -68,7 +68,7 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow, isHighlighted }:
       {/* Header — meta tags em cima, número grande, classe/órgão como subtítulo */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+          <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-zinc-600">
             <span className="px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600">{p.tribunal}</span>
             {p.instanceLabel && (
               <span className="px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600">{p.instanceLabel}</span>
@@ -103,7 +103,7 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow, isHighlighted }:
             )}
           </div>
 
-          <div className="mt-1 text-[12.5px] text-zinc-600 truncate">
+          <div className="mt-1 text-[12.5px] text-zinc-700 truncate">
             {[p.className, p.organName].filter(Boolean).join(" · ")}
             {!p.className && !p.organName && p.target.name}
           </div>
@@ -142,12 +142,12 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow, isHighlighted }:
         <div className={`mt-3 rounded-lg border-l-2 ${hasNew ? "border-rose-400 bg-rose-50/40" : "border-sky-300 bg-sky-50/40"} px-3 py-2`}>
           <div className="flex items-baseline justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
+              <div className="text-[10px] font-medium uppercase tracking-wider text-zinc-600 flex items-center gap-1.5">
                 <span>Última movimentação</span>
                 <span className="text-zinc-300 font-normal select-none">•</span>
-                <span className="text-zinc-500 font-medium normal-case">{formatDateBR(p.lastMovement.occurredAt)}</span>
+                <span className="text-zinc-600 font-semibold normal-case">{formatDateBR(p.lastMovement.occurredAt)}</span>
               </div>
-              <div className="mt-0.5 text-[13px] font-medium text-zinc-900 truncate">
+              <div className="mt-0.5 text-[13px] font-semibold text-zinc-900 truncate">
                 {p.lastMovement.name}
               </div>
             </div>
@@ -157,21 +157,21 @@ export function ProcessCard({ process: p, isSyncing, onSyncNow, isHighlighted }:
 
       {/* Stats inline compacto */}
       {!notFound && (
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11.5px] text-zinc-600">
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11.5px] text-zinc-700">
           {p.filedAt && (
             <span className="inline-flex items-center gap-1">
               <Calendar className="h-3 w-3 text-zinc-400" />
-              Ajuizado em <strong className="text-zinc-800 font-medium">{formatDateBR(p.filedAt)}</strong>
+              Ajuizado em <strong className="text-zinc-900 font-semibold">{formatDateBR(p.filedAt)}</strong>
             </span>
           )}
           <span className="inline-flex items-center gap-1">
             <Hash className="h-3 w-3 text-zinc-400" />
-            <strong className="text-zinc-800 font-medium">{p.totalMovements}</strong> movimento{p.totalMovements !== 1 ? "s" : ""}
+            <strong className="text-zinc-900 font-semibold">{p.totalMovements}</strong> movimento{p.totalMovements !== 1 ? "s" : ""}
           </span>
           {p.lastSyncedAt && (
             <span className="inline-flex items-center gap-1">
               <RefreshCw className="h-3 w-3 text-zinc-400" />
-              Verificado <strong className="text-zinc-800 font-medium">{formatRelativeBR(p.lastSyncedAt)}</strong>
+              Verificado <strong className="text-zinc-900 font-semibold">{formatRelativeBR(p.lastSyncedAt)}</strong>
             </span>
           )}
         </div>

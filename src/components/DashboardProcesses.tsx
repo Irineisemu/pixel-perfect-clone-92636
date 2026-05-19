@@ -153,7 +153,7 @@ export function DashboardProcesses() {
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-zinc-100 bg-white p-12 text-center text-sm text-zinc-400 font-medium">
+      <div className="rounded-xl border border-zinc-100 bg-white p-12 text-center text-sm text-zinc-500 font-normal">
         Carregando painel…
       </div>
     );
@@ -162,9 +162,9 @@ export function DashboardProcesses() {
   if (error || !data) {
     return (
       <div className="rounded-xl border border-rose-100 bg-rose-50/30 p-8 text-sm text-rose-700">
-        <h3 className="font-bold mb-2">Erro ao carregar painel</h3>
+        <h3 className="font-semibold mb-2">Erro ao carregar painel</h3>
         <p className="mb-4 text-rose-600/80">{error || "Não foi possível recuperar os dados."}</p>
-        <button onClick={() => { setLoading(true); load(); }} className="px-4 py-2 bg-rose-600 text-white rounded-lg font-bold">
+        <button onClick={() => { setLoading(true); load(); }} className="px-4 py-2 bg-rose-600 text-white rounded-lg font-semibold">
           Tentar novamente
         </button>
       </div>
@@ -186,7 +186,7 @@ export function DashboardProcesses() {
   return (
     <div className="space-y-10 pb-10">
       {hasRunningDiscovery && (
-        <div className="rounded-xl border border-sky-100 bg-sky-50/50 px-4 py-3 text-[12px] text-sky-700 font-bold flex items-center gap-2">
+        <div className="rounded-xl border border-sky-100 bg-sky-50/50 px-4 py-3 text-[12px] text-sky-700 font-semibold flex items-center gap-2">
           <span className="inline-block h-2.5 w-2.5 rounded-full bg-sky-500 animate-pulse" />
           Sincronização em andamento…
         </div>
@@ -197,13 +197,13 @@ export function DashboardProcesses() {
         <section className="space-y-4">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-3">
-              <span className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center text-xs font-black shadow-sm">1</span>
+              <span className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center text-xs font-bold shadow-sm">1</span>
               <div>
-                <h2 className="text-sm font-black text-zinc-900 uppercase tracking-tight">Alvos & Descobertas</h2>
-                <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-0.5">Fontes e processos automáticos</p>
+                <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-tight">Alvos & Descobertas</h2>
+                <p className="text-[10px] text-zinc-500 font-medium uppercase tracking-widest mt-0.5">Fontes e processos automáticos</p>
               </div>
             </div>
-            <Link to="/alvos" className="text-[11px] font-black text-zinc-900 bg-white border border-zinc-200 px-3 py-1.5 rounded-lg shadow-sm hover:bg-zinc-50 transition-all">GERENCIAR</Link>
+            <Link to="/alvos" className="text-[11px] font-bold text-zinc-900 bg-white border border-zinc-200 px-3 py-1.5 rounded-lg shadow-sm hover:bg-zinc-50 transition-all">GERENCIAR</Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -216,17 +216,17 @@ export function DashboardProcesses() {
                 <div key={t.id} className="p-4 border border-zinc-100 bg-white rounded-2xl shadow-[0_2px_4px_rgba(0,0,0,0.02)] flex items-center justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-black text-[14px] text-zinc-900 truncate">{t.lawyer_name || t.full_name || "Radar"}</span>
+                      <span className="font-bold text-[14px] text-zinc-900 truncate">{t.lawyer_name || t.full_name || "Radar"}</span>
                       {t.target_process_links?.[0]?.count !== undefined && (
-                        <span className="text-[9px] font-black text-zinc-400 bg-zinc-50 px-1.5 py-0.5 rounded border border-zinc-100">{t.target_process_links[0].count}</span>
+                        <span className="text-[9px] font-bold text-zinc-500 bg-zinc-50 px-1.5 py-0.5 rounded border border-zinc-100">{t.target_process_links[0].count}</span>
                       )}
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[11px] text-zinc-400 font-bold truncate">{subtitle}</span>
-                      <span className={`text-[10px] font-black uppercase tracking-tighter ${st.cls.split(' ')[1]}`}>{st.text}</span>
+                      <span className="text-[11px] text-zinc-500 font-medium truncate">{subtitle}</span>
+                      <span className={`text-[10px] font-bold uppercase tracking-tighter ${st.cls.split(' ')[1]}`}>{st.text}</span>
                     </div>
                   </div>
-                  <button onClick={() => handleRetry(t.id)} disabled={isRetrying} className="h-8 px-3 rounded-lg bg-zinc-900 text-white text-[11px] font-black hover:bg-zinc-800 disabled:opacity-50">
+                  <button onClick={() => handleRetry(t.id)} disabled={isRetrying} className="h-8 px-3 rounded-lg bg-zinc-900 text-white text-[11px] font-bold hover:bg-zinc-800 disabled:opacity-50">
                     {isRetrying ? "..." : "SYNC"}
                   </button>
                 </div>
@@ -238,10 +238,10 @@ export function DashboardProcesses() {
             {oabProcesses.length > 0 && (
               <div className="overflow-hidden">
                 <button onClick={() => setIsOabExpanded(!isOabExpanded)} className="w-full text-left py-3 px-1 flex items-center justify-between border-b border-zinc-100 group">
-                  <h2 className="text-[11px] font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2 group-hover:text-zinc-600 transition-colors">
+                  <h2 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 group-hover:text-zinc-700 transition-colors">
                     Processos encontrados (OAB)
-                    <span className="text-zinc-200">[{oabProcesses.length}]</span>
-                    {countOabRecent > 0 && <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[9px] font-black">{countOabRecent} NOVOS</span>}
+                    <span className="text-zinc-300">[{oabProcesses.length}]</span>
+                    {countOabRecent > 0 && <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[9px] font-bold">{countOabRecent} NOVOS</span>}
                   </h2>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" className={`text-zinc-200 transition-transform ${isOabExpanded ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6"/></svg>
                 </button>
@@ -259,9 +259,9 @@ export function DashboardProcesses() {
             {otherProcesses.length > 0 && (
               <div className="overflow-hidden">
                 <button onClick={() => setIsOthersExpanded(!isOthersExpanded)} className="w-full text-left py-3 px-1 flex items-center justify-between border-b border-zinc-100 group">
-                  <h2 className="text-[11px] font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2 group-hover:text-zinc-600 transition-colors">
+                  <h2 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 group-hover:text-zinc-700 transition-colors">
                     Outros de alvos
-                    <span className="text-zinc-200">[{otherProcesses.length}]</span>
+                    <span className="text-zinc-300">[{otherProcesses.length}]</span>
                   </h2>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" className={`text-zinc-200 transition-transform ${isOthersExpanded ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6"/></svg>
                 </button>
@@ -284,10 +284,10 @@ export function DashboardProcesses() {
       {(manualProcesses.length > 0 || pendingProcesses.length > 0) && (
         <section className="space-y-4">
           <div className="flex items-center gap-3 px-1">
-            <span className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center text-xs font-black shadow-sm">2</span>
+            <span className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center text-xs font-bold shadow-sm">2</span>
             <div>
-              <h2 className="text-sm font-black text-zinc-900 uppercase tracking-tight">Monitoramentos Diretos</h2>
-              <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-0.5">Processos por número CNJ</p>
+              <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-tight">Monitoramentos Diretos</h2>
+              <p className="text-[10px] text-zinc-500 font-medium uppercase tracking-widest mt-0.5">Processos por número CNJ</p>
             </div>
           </div>
 
@@ -295,10 +295,10 @@ export function DashboardProcesses() {
             {manualProcesses.length > 0 && (
               <div className="overflow-hidden">
                 <button onClick={() => setIsManualExpanded(!isManualExpanded)} className="w-full text-left py-3 px-1 flex items-center justify-between border-b border-zinc-100 group">
-                  <h2 className="text-[11px] font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2 group-hover:text-zinc-600 transition-colors">
+                  <h2 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 group-hover:text-zinc-700 transition-colors">
                     Processos individuais
-                    <span className="text-zinc-200">[{manualProcesses.length}]</span>
-                    {countManualRecent > 0 && <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[9px] font-black">{countManualRecent} NOVOS</span>}
+                    <span className="text-zinc-300">[{manualProcesses.length}]</span>
+                    {countManualRecent > 0 && <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[9px] font-bold">{countManualRecent} NOVOS</span>}
                   </h2>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" className={`text-zinc-200 transition-transform ${isManualExpanded ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6"/></svg>
                 </button>
@@ -321,19 +321,19 @@ export function DashboardProcesses() {
       {recentNewMovements.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-center gap-3 px-1">
-            <span className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center text-xs font-black shadow-sm">3</span>
+            <span className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center text-xs font-bold shadow-sm">3</span>
             <div>
-              <h2 className="text-sm font-black text-zinc-900 uppercase tracking-tight">Últimas Movimentações</h2>
-              <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-0.5">Andamentos recentes detectados</p>
+              <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-tight">Últimas Movimentações</h2>
+              <p className="text-[10px] text-zinc-500 font-medium uppercase tracking-widest mt-0.5">Andamentos recentes detectados</p>
             </div>
           </div>
 
           <div className="overflow-hidden">
             <button onClick={() => setIsMovementsExpanded(!isMovementsExpanded)} className="w-full text-left py-3 px-1 flex items-center justify-between border-b border-rose-100 group">
-              <h2 className="text-[11px] font-black text-rose-600 uppercase tracking-widest flex items-center gap-2">
+              <h2 className="text-[11px] font-bold text-rose-600 uppercase tracking-widest flex items-center gap-2">
                 <span className={`w-1.5 h-1.5 rounded-full bg-rose-500 ${stats?.countProcessesWithRecentUpdates > 0 ? 'animate-pulse' : 'opacity-50'}`} />
                 Resumo de andamentos
-                {stats?.countProcessesWithRecentUpdates > 0 && <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[9px] font-black">{stats.countProcessesWithRecentUpdates} NOVOS</span>}
+                {stats?.countProcessesWithRecentUpdates > 0 && <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[9px] font-bold">{stats.countProcessesWithRecentUpdates} NOVOS</span>}
               </h2>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" className={`text-rose-200 transition-transform ${isMovementsExpanded ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6"/></svg>
             </button>
@@ -342,17 +342,17 @@ export function DashboardProcesses() {
                 {recentNewMovements.map((m: any) => (
                   <button key={m.id} onClick={() => locateProcess(m.processId)} className="w-full text-left py-3 px-1 flex items-start justify-between gap-4 hover:bg-zinc-50 transition-colors group">
                     <div className="min-w-0 flex-1">
-                      <div className="text-[13px] font-black text-zinc-900 leading-tight group-hover:text-zinc-600">
+                      <div className="text-[13px] font-bold text-zinc-900 leading-tight group-hover:text-zinc-600">
                         {m.movementName}
-                        {m.isRecent && <span className="ml-2 px-1.5 py-0.5 rounded bg-rose-100 text-rose-600 text-[9px] font-black">NOVO</span>}
+                        {m.isRecent && <span className="ml-2 px-1.5 py-0.5 rounded bg-rose-100 text-rose-600 text-[9px] font-bold">NOVO</span>}
                       </div>
-                      <div className="mt-1 text-[11px] text-zinc-400 font-bold uppercase tracking-tight flex items-center gap-2">
+                      <div className="mt-1 text-[11px] text-zinc-500 font-medium uppercase tracking-tight flex items-center gap-2">
                         <span className="font-mono text-zinc-900 tracking-tighter">{m.processNumber}</span>
                         <span className="text-zinc-200">•</span>
                         <span className="truncate">{m.processClass}</span>
                       </div>
                     </div>
-                    <div className="text-[10px] font-black text-zinc-400 bg-zinc-50 px-2 py-1 rounded border border-zinc-100">{new Date(m.occurredAt).toLocaleDateString("pt-BR")}</div>
+                    <div className="text-[10px] font-semibold text-zinc-600 bg-zinc-50 px-2 py-1 rounded border border-zinc-100">{new Date(m.occurredAt).toLocaleDateString("pt-BR")}</div>
                   </button>
                 ))}
               </div>

@@ -470,6 +470,7 @@ export async function runLawyerDiscoveryJob(job: JobRow): Promise<void> {
     runId,
     triggeredBy,
     totalFound,
+    skippedFinalized,
     durationMs: Date.now() - startedAt,
     status: finalStatus,
   });

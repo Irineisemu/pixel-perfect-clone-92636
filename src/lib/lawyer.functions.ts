@@ -318,12 +318,21 @@ export async function runLawyerDiscoveryJob(job: JobRow): Promise<void> {
     return;
   }
 
+  // Lê include_inactive do target (default false = filtra finalizados)
+  const { data: targetRow } = await supabaseAdmin
+    .from("monitoring_targets")
+    .select("include_inactive")
+    .eq("id", targetId)
+    .maybeSingle();
+  const includeInactive = targetRow?.include_inactive === true;
+
   const startedAt = Date.now();
   const isInitial = triggeredBy === "initial";
   const errors: Record<string, string> = {};
   const byOab: Record<string, number> = Object.fromEntries(oabs.map((o) => [o, 0]));
   const byTribunal: Record<string, number> = { [TRIBUNAL_KEY]: 0 };
   let totalFound = 0;
+  let skippedFinalized = 0;
   let cachedVariant: LawyerSearchVariant | null = null;
   const seenProcessIds: string[] = [];
   let hardCapped = false;

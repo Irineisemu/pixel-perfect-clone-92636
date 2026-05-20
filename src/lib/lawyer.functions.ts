@@ -363,6 +363,27 @@ export async function runLawyerDiscoveryJob(job: JobRow): Promise<void> {
           const processNumber = hit.source?.numeroProcesso as string | undefined;
           if (!processNumber) continue;
 
+          // Filtro de finalizados: olha o movimento MAIS RECENTE.
+          // Códigos de encerramento: 22 (Baixa Definitiva), 246 (Arquivamento Definitivo),
+          // 848 (Cancelamento de distribuição). 471 NÃO entra (pode ser fim de fase).
+          // Se depois do encerramento veio outro movimento, o processo voltou a tramitar.
+          if (!includeInactive) {
+            const movs = Array.isArray(hit.source?.movimentos) ? hit.source.movimentos : [];
+            if (movs.length > 0) {
+              const latest = movs.reduce((a: any, b: any) => {
+                const da = a?.dataHora ? Date.parse(a.dataHora) : 0;
+                const db = b?.dataHora ? Date.parse(b.dataHora) : 0;
+                return db > da ? b : a;
+              });
+              const code = Number(latest?.codigo);
+              if (code === 22 || code === 246 || code === 848) {
+                skippedFinalized++;
+                continue;
+              }
+            }
+          }
+
+
           const processId = await upsertProcessAndLink(
             processNumber,
             hit.source,
